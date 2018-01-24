@@ -32,6 +32,7 @@
     "no-relative-imports": false,
     "no-any": false,
     "no-backbone-get-set-outside-model": false,
-    "no-reserved-keywords": [false, "allow-quoted-properties"]
+    "no-reserved-keywords": [false, "allow-quoted-properties"],
+    "no-increment-decrement": false
   }
 }

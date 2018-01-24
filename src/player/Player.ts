@@ -9,6 +9,7 @@ import { Service } from '../interfaces/Service';
 import { PlayerAcceptedMessage } from '../interfaces/messages/PlayerAcceptedMessage';
 import { PlayerHelloMessage } from '../interfaces/messages/PlayerHelloMessage';
 import { PlayerRejectedMessage } from '../interfaces/messages/PlayerRejectedMessage';
+import { bindObjectProperties } from '../common/bindObjectProperties';
 
 export interface PlayerOptions {
   serverHostname: string;
@@ -36,10 +37,8 @@ export class Player implements Service {
   constructor(options: PlayerOptions) {
     this.options = options;
 
-    Object.keys(this.messageHandlers).forEach(messageType => {
-      // @ts-ignore
-      this.messageHandlers[messageType] = this.messageHandlers[messageType].bind(this);
-    });
+    bindObjectProperties(this.messageHandlers, this);
+    this.handleMessage = this.handleMessage.bind(this);
   }
 
   public init() {
