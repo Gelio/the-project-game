@@ -1,0 +1,37 @@
+{
+  "extends": "tslint-microsoft-contrib",
+  "rules": {
+    "no-import-side-effect": false,
+    "linebreak-style": [true, "CRLF"],
+    "missing-jsdoc": false,
+    "no-console": {
+      "severity": "warning"
+    },
+    "typedef": [true, "parameter", "property-declaration"],
+    "align": false,
+    "interface-name": [true, "never-prefix"],
+    "function-name": [
+      true,
+      {
+        "method-regex": "^[a-z][\\w\\d]+$",
+        "private-method-regex": "^[a-z][\\w\\d]+$",
+        "protected-method-regex": "^[a-z][\\w\\d]+$",
+        "static-method-regex": "^[a-z][\\w\\d]+$",
+        "function-regex": "^[A-Za-z][\\w\\d]+$"
+      }
+    ],
+    "variable-name": [
+      true,
+      "check-format",
+      "allow-leading-underscore",
+      "ban-keywords"
+    ],
+    "no-suspicious-comment": false,
+    "quotemark": [true, "single", "avoid-escape", "avoid-template"],
+    "no-multiline-string": false,
+    "no-relative-imports": false,
+    "no-any": false,
+    "no-backbone-get-set-outside-model": false,
+    "no-reserved-keywords": [false, "allow-quoted-properties"]
+  }
+}

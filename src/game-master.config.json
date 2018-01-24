@@ -1,0 +1,25 @@
+{
+  "serverHostname": "localhost",
+  "serverPort": 4200,
+  "roundLimit": 5,
+  "teamSize": 5,
+  "pointsLimit": 20,
+  "boardWidth": 10,
+  "taskAreaHeight": 15,
+  "goalAreaHeight": 4,
+  "shamChance": 0.6,
+  "generatePiecesInterval": 3000,
+  "piecesLimit": 10,
+  "resultFileName": "result.json",
+  "actionDelays": {
+    "move": 4000,
+    "pick": 1000,
+    "discover": 2500,
+    "destroy": 1000,
+    "test": 3000,
+    "communicationRequest": 4000,
+    "communicationAccept": 4000,
+    "tryPiece": 4000
+  },
+  "timeout": 10000
+}
