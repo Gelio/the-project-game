@@ -1,15 +1,21 @@
 import { Player } from './Player';
 
 import { Board } from '../common/Board';
-import { Message } from '../interfaces/Message';
-import { ProcessMessageResult, ValidMessageResult } from './ProcessMessageResult';
 import { createDelay } from '../common/createDelay';
+import { Point } from '../common/Point';
+import { TeamId } from '../common/TeamId';
+import { Message } from '../interfaces/Message';
 import { MessageWithRecipient } from '../interfaces/MessageWithRecipient';
+import { Piece } from './models/Piece';
+import { ProcessMessageResult } from './ProcessMessageResult';
 
 export class Game {
+  public hasStarted = false;
+  public players: Player[] = [];
+  public pieces: Piece[] = [];
+  public board: Board;
+
   private nextPlayerId = 1;
-  private players: Player[] = [];
-  private board: Board;
 
   constructor(board: Board) {
     this.board = board;
@@ -24,8 +30,11 @@ export class Game {
       throw new Error('Player already added');
     }
 
-    // TODO: add player on board
+    if (!player.position) {
+      this.setRandomPlayerPosition(player);
+    }
 
+    this.board.tiles[player.position.x][player.position.y].player = player;
     this.players.push(player);
   }
 
@@ -35,16 +44,24 @@ export class Game {
       throw new Error('Player is not added');
     }
 
-    // TODO: remove player from board
-
+    this.board.tiles[player.position.x][player.position.y].player = null;
     this.players.splice(playerIndex, 1);
   }
 
   public processMessage<T, U>(message: Message<T>): ProcessMessageResult<U> {
     const delay = 500;
 
-    // TODO: mark player as busy if action is valid
+    const sender = this.players.find(player => player.playerId === message.senderId);
+    if (!sender) {
+      return {
+        valid: false,
+        reason: 'Sender ID is invalid'
+      };
+    }
 
+    sender.isBusy = true;
+
+    // TODO: actually handle the message
     const response: MessageWithRecipient<U> = {
       type: 'TEST_RESPONSE',
       payload: <any>5,
@@ -52,10 +69,42 @@ export class Game {
       senderId: -1
     };
 
+    const responsePromise = createDelay(delay).then(() => {
+      sender.isBusy = false;
+
+      return response;
+    });
+
     return {
       delay,
-      responseMessage: createDelay(delay).then(() => response),
+      responseMessage: responsePromise,
       valid: true
     };
+  }
+
+  public getPlayersFromTeam(teamId: TeamId) {
+    return this.players.filter(player => player.teamId === teamId);
+  }
+
+  public getConnectedPlayers() {
+    return this.players.filter(player => player.isConnected);
+  }
+
+  private setRandomPlayerPosition(player: Player) {
+    const yRange = { min: 0, max: this.board.size.goalArea };
+    if (player.teamId === 2) {
+      yRange.min = this.board.size.goalArea + this.board.size.taskArea;
+      yRange.max = yRange.min + this.board.size.goalArea;
+    }
+
+    let position: Point;
+    do {
+      position = {
+        x: Math.floor(Math.random() * this.board.size.x),
+        y: yRange.min + Math.floor(Math.random() * (yRange.max - yRange.min))
+      };
+    } while (this.board.tiles[position.x][position.y].player);
+
+    player.position = position;
   }
 }
