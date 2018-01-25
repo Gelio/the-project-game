@@ -41,6 +41,18 @@ export class Player implements Service {
 
   private handleMessage<T>(message: Message<T>) {
     console.log('Received from player', message);
+
+    if (!this.isMessageValid(message)) {
+      console.warn(
+        'Received message with sender ID',
+        message.senderId,
+        'but player ID is',
+        this.id
+      );
+
+      return;
+    }
+
     if (!this._isAccepted) {
       if (message.type === 'PLAYER_HELLO') {
         return this.handlePlayerHelloMessage(<any>message);
@@ -73,5 +85,13 @@ export class Player implements Service {
       this.messageRouter.unregisterPlayerCommunicator(this._id);
       this.destroy();
     }
+  }
+
+  private isMessageValid<T>(message: Message<T>) {
+    if (!this.id) {
+      return true;
+    }
+
+    return this.id === message.senderId;
   }
 }
