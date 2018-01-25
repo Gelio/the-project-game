@@ -1,8 +1,14 @@
 import { Point } from '../common/Point';
+import { TeamId } from '../common/TeamId';
+import { Piece } from './models/Piece';
 
 export class Player {
-  public isConnected = true;
+  public isConnected: boolean;
+  public teamId: TeamId;
+  public isLeader: boolean;
+  public isBusy = false;
 
-  private playerId: number;
-  private position: Point;
+  public playerId: number;
+  public position: Point;
+  public heldPiece: Piece | null;
 }
