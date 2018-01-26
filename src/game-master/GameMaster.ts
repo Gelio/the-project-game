@@ -4,6 +4,7 @@ import { bindObjectProperties } from '../common/bindObjectProperties';
 import { Board } from '../common/Board';
 import { Communicator } from '../common/communicator';
 import { Point } from '../common/Point';
+import { reverseArrayCoordinates } from '../common/reverseArrayCoordinates';
 import { ActionDelays } from '../interfaces/ActionDelays';
 import { BoardSize } from '../interfaces/BoardSize';
 import { Message } from '../interfaces/Message';
@@ -227,7 +228,8 @@ export class GameMaster implements Service {
       this.options.goalAreaHeight + this.options.taskAreaHeight
     );
 
-    const tiles = team1Tiles.concat(neutralTiles, team2Tiles);
+    const reverseCoordinateTiles = team1Tiles.concat(neutralTiles, team2Tiles);
+    const tiles = reverseArrayCoordinates(reverseCoordinateTiles);
     this.generateGoals(tiles);
 
     return new Board(boardSize, tiles);
@@ -264,6 +266,7 @@ export class GameMaster implements Service {
 
     const boardWidth = this.options.boardWidth;
     const boardHeight = this.options.taskAreaHeight + this.options.goalAreaHeight * 2;
+    console.log(tiles, boardWidth, boardHeight);
     positions.forEach(position => {
       // Team 1
       const team1Tile = <TeamAreaTile>tiles[position.x][position.y];
