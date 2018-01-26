@@ -90,6 +90,10 @@ export class Game {
     return this.players.filter(player => player.isConnected);
   }
 
+  public start() {
+    this.hasStarted = true;
+  }
+
   private setRandomPlayerPosition(player: Player) {
     const yRange = { min: 0, max: this.board.size.goalArea };
     if (player.teamId === 2) {

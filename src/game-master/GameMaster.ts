@@ -3,8 +3,6 @@ import { createConnection } from 'net';
 import { bindObjectProperties } from '../common/bindObjectProperties';
 import { Board } from '../common/Board';
 import { Communicator } from '../common/communicator';
-import { Point } from '../common/Point';
-import { reverseArrayCoordinates } from '../common/reverseArrayCoordinates';
 import { ActionDelays } from '../interfaces/ActionDelays';
 import { BoardSize } from '../interfaces/BoardSize';
 import { Message } from '../interfaces/Message';
@@ -15,12 +13,15 @@ import { PlayerDisconnectedMessage } from '../interfaces/messages/PlayerDisconne
 import { PlayerHelloMessage } from '../interfaces/messages/PlayerHelloMessage';
 import { PlayerRejectedMessage } from '../interfaces/messages/PlayerRejectedMessage';
 import { Service } from '../interfaces/Service';
+import { GoalGenerator } from './board-generation/GoalGenerator';
+import { PieceGenerator } from './board-generation/PieceGenerator';
+import { TileGenerator } from './board-generation/TileGenerator';
 import { Game } from './Game';
-import { Piece } from './models/Piece';
-import { TeamAreaTile } from './models/tiles/TeamAreaTile';
-import { Tile } from './models/tiles/Tile';
 import { Player } from './Player';
-import { TileGenerator } from './TileGenerator';
+import {
+  RoundStartedMessage,
+  RoundStartedMessagePayload
+} from '../interfaces/messages/RoundStartedMessage';
 
 export interface GameMasterOptions {
   serverHostname: string;
@@ -169,6 +170,8 @@ export class GameMaster implements Service {
       throw new Error('Team already has a leader');
     }
 
+    // TODO: check if it's the last player and team still has no leader
+
     const newPlayer = new Player();
     newPlayer.playerId = this.game.getNextPlayerId();
     newPlayer.teamId = message.payload.teamId;
@@ -211,7 +214,7 @@ export class GameMaster implements Service {
   private initGame() {
     const board = this.generateBoard();
     this.game = new Game(board);
-    this.generatePieces(board.tiles);
+    this.generatePieces();
   }
 
   private generateBoard() {
@@ -221,18 +224,32 @@ export class GameMaster implements Service {
       taskArea: this.options.taskAreaHeight
     };
 
-    const tileGenerator = new TileGenerator(this.options);
-    const team1Tiles = tileGenerator.generateTeamAreaTiles(0);
-    const neutralTiles = tileGenerator.generateNeutralAreaTiles(this.options.goalAreaHeight);
-    const team2Tiles = tileGenerator.generateTeamAreaTiles(
-      this.options.goalAreaHeight + this.options.taskAreaHeight
-    );
+    const tileGenerator = new TileGenerator();
+    const tiles = tileGenerator.generateBoardTiles(boardSize);
 
-    const reverseCoordinateTiles = team1Tiles.concat(neutralTiles, team2Tiles);
-    const tiles = reverseArrayCoordinates(reverseCoordinateTiles);
-    this.generateGoals(tiles);
+    const goalGenerator = new GoalGenerator();
+    goalGenerator.generateGoals(this.options.pointsLimit, tiles, boardSize);
 
     return new Board(boardSize, tiles);
+  }
+
+  private generatePieces() {
+    const pieceGenerator = new PieceGenerator();
+    const board = this.game.board;
+    const tiles = board.tiles;
+
+    const pieces = pieceGenerator.generatePieces(
+      this.options.piecesLimit,
+      this.options.shamChance,
+      tiles,
+      board.size
+    );
+
+    pieces.forEach(piece => {
+      const { position } = piece;
+      tiles[position.x][position.y].piece = piece;
+      this.game.pieces.push(piece);
+    });
   }
 
   private tryStartGame() {
@@ -244,60 +261,49 @@ export class GameMaster implements Service {
     }
 
     console.log('Game should start');
-    // TODO: create initial pieces and set an interval for creating them periodically
-    // TODO: send ROUND_STARTED message to all players
+    // TODO: set an interval for creating pieces periodically
+    this.startGame();
   }
 
-  private generateGoals(tiles: Tile[][]) {
-    const positions: Point[] = [];
-    for (let i = 0; i < this.options.pointsLimit; i++) {
-      let position: Point;
-      do {
-        position = {
-          x: Math.floor(Math.random() * this.options.boardWidth),
-          y: Math.floor(Math.random() * this.options.goalAreaHeight)
-        };
-      } while (
-        positions.findIndex(point => point.x === position.x && point.y === position.y) !== -1
-      );
+  private startGame() {
+    const team1Players = this.game.getPlayersFromTeam(1);
+    const team2Players = this.game.getPlayersFromTeam(2);
+    const team1Leader = team1Players.find(player => player.isLeader);
+    const team2Leader = team2Players.find(player => player.isLeader);
 
-      positions.push(position);
+    if (!team1Leader || !team2Leader) {
+      throw new Error('Game cannot start without both leaders');
     }
 
-    const boardWidth = this.options.boardWidth;
-    const boardHeight = this.options.taskAreaHeight + this.options.goalAreaHeight * 2;
-    console.log(tiles, boardWidth, boardHeight);
-    positions.forEach(position => {
-      // Team 1
-      const team1Tile = <TeamAreaTile>tiles[position.x][position.y];
-      team1Tile.hasGoal = true;
+    const roundStartedPayload: RoundStartedMessagePayload = {
+      boardSize: this.game.board.size,
+      currentRound: 0,
+      delays: this.options.actionDelays,
+      goalLimit: this.options.pointsLimit,
+      maxRounds: this.options.roundLimit,
+      teams: {
+        1: {
+          players: team1Players.map(player => player.playerId),
+          leaderId: team1Leader.playerId
+        },
+        2: {
+          players: team2Players.map(player => player.playerId),
+          leaderId: team2Leader.playerId
+        }
+      }
+    };
 
-      // Team 2
-      const team2Tile = <TeamAreaTile>tiles[boardWidth - 1 - position.x][
-        boardHeight - 1 - position.y
-      ];
-      team2Tile.hasGoal = true;
+    this.game.start();
+
+    this.game.players.forEach(player => {
+      const message: RoundStartedMessage = {
+        senderId: -1,
+        recipientId: player.playerId,
+        type: 'ROUND_STARTED',
+        payload: roundStartedPayload
+      };
+
+      this.communicator.sendMessage(message);
     });
-  }
-
-  private generatePieces(tiles: Tile[][]) {
-    const minY = this.options.goalAreaHeight + 1;
-
-    for (let i = 0; i < this.options.piecesLimit; i++) {
-      let position: Point;
-      do {
-        position = {
-          x: Math.floor(Math.random() * this.options.boardWidth),
-          y: minY + Math.floor(Math.random() * this.options.taskAreaHeight)
-        };
-      } while (tiles[position.x][position.y].piece);
-
-      const piece = new Piece();
-      piece.isSham = Math.random() < this.options.shamChance;
-      piece.position = position;
-
-      tiles[position.x][position.y].piece = piece;
-      this.game.pieces.push(piece);
-    }
   }
 }
