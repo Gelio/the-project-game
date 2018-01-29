@@ -1,18 +1,15 @@
 import { Player } from './Player';
 
-import { Board } from '../common/Board';
 import { createDelay } from '../common/createDelay';
 import { Point } from '../common/Point';
 import { TeamId } from '../common/TeamId';
 import { Message } from '../interfaces/Message';
 import { MessageWithRecipient } from '../interfaces/MessageWithRecipient';
-import { Piece } from './models/Piece';
+import { Board } from './models/Board';
 import { ProcessMessageResult } from './ProcessMessageResult';
 
 export class Game {
   public hasStarted = false;
-  public players: Player[] = [];
-  public pieces: Piece[] = [];
   public board: Board;
 
   private nextPlayerId = 1;
@@ -25,33 +22,10 @@ export class Game {
     return this.nextPlayerId++;
   }
 
-  public addPlayer(player: Player) {
-    if (this.players.indexOf(player) !== -1) {
-      throw new Error('Player already added');
-    }
-
-    if (!player.position) {
-      this.setRandomPlayerPosition(player);
-    }
-
-    this.board.tiles[player.position.x][player.position.y].player = player;
-    this.players.push(player);
-  }
-
-  public removePlayer(player: Player) {
-    const playerIndex = this.players.indexOf(player);
-    if (playerIndex === -1) {
-      throw new Error('Player is not added');
-    }
-
-    this.board.tiles[player.position.x][player.position.y].player = null;
-    this.players.splice(playerIndex, 1);
-  }
-
   public processMessage<T, U>(message: Message<T>): ProcessMessageResult<U> {
     const delay = 500;
 
-    const sender = this.players.find(player => player.playerId === message.senderId);
+    const sender = this.board.players.find(player => player.playerId === message.senderId);
     if (!sender) {
       return {
         valid: false,
@@ -82,16 +56,25 @@ export class Game {
     };
   }
 
+  public addNewPlayer(player: Player) {
+    this.setRandomPlayerPosition(player);
+    this.board.addPlayer(player);
+  }
+
   public getPlayersFromTeam(teamId: TeamId) {
-    return this.players.filter(player => player.teamId === teamId);
+    return this.board.players.filter(player => player.teamId === teamId);
   }
 
   public getConnectedPlayers() {
-    return this.players.filter(player => player.isConnected);
+    return this.board.players.filter(player => player.isConnected);
   }
 
   public start() {
     this.hasStarted = true;
+  }
+
+  public stop() {
+    this.hasStarted = false;
   }
 
   private setRandomPlayerPosition(player: Player) {
@@ -107,7 +90,7 @@ export class Game {
         x: Math.floor(Math.random() * this.board.size.x),
         y: yRange.min + Math.floor(Math.random() * (yRange.max - yRange.min))
       };
-    } while (this.board.tiles[position.x][position.y].player);
+    } while (this.board.getTileAtPosition(position).player);
 
     player.position = position;
   }

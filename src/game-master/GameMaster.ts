@@ -1,7 +1,6 @@
 import { createConnection } from 'net';
 
 import { bindObjectProperties } from '../common/bindObjectProperties';
-import { Board } from '../common/Board';
 import { Communicator } from '../common/communicator';
 import { ActionDelays } from '../interfaces/ActionDelays';
 import { BoardSize } from '../interfaces/BoardSize';
@@ -12,16 +11,17 @@ import { PlayerAcceptedMessage } from '../interfaces/messages/PlayerAcceptedMess
 import { PlayerDisconnectedMessage } from '../interfaces/messages/PlayerDisconnectedMessage';
 import { PlayerHelloMessage } from '../interfaces/messages/PlayerHelloMessage';
 import { PlayerRejectedMessage } from '../interfaces/messages/PlayerRejectedMessage';
-import { Service } from '../interfaces/Service';
-import { GoalGenerator } from './board-generation/GoalGenerator';
-import { PieceGenerator } from './board-generation/PieceGenerator';
-import { TileGenerator } from './board-generation/TileGenerator';
-import { Game } from './Game';
-import { Player } from './Player';
 import {
   RoundStartedMessage,
   RoundStartedMessagePayload
 } from '../interfaces/messages/RoundStartedMessage';
+import { Service } from '../interfaces/Service';
+import { GoalGenerator } from './board-generation/GoalGenerator';
+import { PeriodicPieceGenerator } from './board-generation/PeriodicPieceGenerator';
+import { TileGenerator } from './board-generation/TileGenerator';
+import { Game } from './Game';
+import { Board } from './models/Board';
+import { Player } from './Player';
 
 export interface GameMasterOptions {
   serverHostname: string;
@@ -41,11 +41,13 @@ export interface GameMasterOptions {
 }
 
 export class GameMaster implements Service {
-  private options: GameMasterOptions;
+  private readonly options: GameMasterOptions;
   private communicator: Communicator;
   private game: Game;
 
-  private messageHandlers: { [type: string]: Function } = {
+  private periodicPieceGenerator: PeriodicPieceGenerator;
+
+  private readonly messageHandlers: { [type: string]: Function } = {
     PLAYER_HELLO: this.handlePlayerHelloMessage,
     PLAYER_DISCONNECTED: this.handlePlayerDisconnectedMessage
   };
@@ -79,6 +81,10 @@ export class GameMaster implements Service {
   }
 
   public destroy() {
+    if (this.game.hasStarted) {
+      this.stopGame();
+    }
+
     this.communicator.destroy();
   }
 
@@ -131,13 +137,15 @@ export class GameMaster implements Service {
 
       this.communicator.sendMessage(playerAcceptedMessage);
       this.tryStartGame();
-    } catch (error) {
+    } catch (e) {
+      const error: Error = e;
+
       const playerRejectedMessage: PlayerRejectedMessage = {
         type: 'PLAYER_REJECTED',
         senderId: -1,
         recipientId: message.payload.temporaryId,
         payload: {
-          reason: 'TODO'
+          reason: error.message
         }
       };
 
@@ -170,7 +178,9 @@ export class GameMaster implements Service {
       throw new Error('Team already has a leader');
     }
 
-    // TODO: check if it's the last player and team still has no leader
+    if (!message.payload.isLeader && teamPlayers.length + 1 === this.options.teamSize) {
+      throw new Error('Team does not have a leader');
+    }
 
     const newPlayer = new Player();
     newPlayer.playerId = this.game.getNextPlayerId();
@@ -179,20 +189,20 @@ export class GameMaster implements Service {
     newPlayer.isBusy = false;
     newPlayer.isConnected = true;
 
-    this.game.addPlayer(newPlayer);
+    this.game.addNewPlayer(newPlayer);
 
     return newPlayer.playerId;
   }
 
   private handlePlayerDisconnectedMessage(message: PlayerDisconnectedMessage) {
     console.log('Received player disconnected message', message);
-    const disconnectedPlayer = this.game.players.find(
+    const disconnectedPlayer = this.game.board.players.find(
       player => player.playerId === message.payload.playerId
     );
 
     if (!this.game.hasStarted) {
       if (disconnectedPlayer) {
-        this.game.removePlayer(disconnectedPlayer);
+        this.game.board.removePlayer(disconnectedPlayer);
       }
 
       return;
@@ -214,7 +224,12 @@ export class GameMaster implements Service {
   private initGame() {
     const board = this.generateBoard();
     this.game = new Game(board);
-    this.generatePieces();
+
+    this.periodicPieceGenerator = new PeriodicPieceGenerator(this.game, {
+      checkInterval: this.options.generatePiecesInterval,
+      piecesLimit: this.options.piecesLimit,
+      shamChance: this.options.shamChance
+    });
   }
 
   private generateBoard() {
@@ -233,27 +248,8 @@ export class GameMaster implements Service {
     return new Board(boardSize, tiles);
   }
 
-  private generatePieces() {
-    const pieceGenerator = new PieceGenerator();
-    const board = this.game.board;
-    const tiles = board.tiles;
-
-    const pieces = pieceGenerator.generatePieces(
-      this.options.piecesLimit,
-      this.options.shamChance,
-      tiles,
-      board.size
-    );
-
-    pieces.forEach(piece => {
-      const { position } = piece;
-      tiles[position.x][position.y].piece = piece;
-      this.game.pieces.push(piece);
-    });
-  }
-
   private tryStartGame() {
-    const connectedPlayersCount = this.game.players.length;
+    const connectedPlayersCount = this.game.board.players.length;
     const requiredPlayersCount = this.options.teamSize * 2;
 
     if (connectedPlayersCount < requiredPlayersCount) {
@@ -261,7 +257,6 @@ export class GameMaster implements Service {
     }
 
     console.log('Game should start');
-    // TODO: set an interval for creating pieces periodically
     this.startGame();
   }
 
@@ -274,6 +269,8 @@ export class GameMaster implements Service {
     if (!team1Leader || !team2Leader) {
       throw new Error('Game cannot start without both leaders');
     }
+
+    this.periodicPieceGenerator.init();
 
     const roundStartedPayload: RoundStartedMessagePayload = {
       boardSize: this.game.board.size,
@@ -295,7 +292,7 @@ export class GameMaster implements Service {
 
     this.game.start();
 
-    this.game.players.forEach(player => {
+    this.game.board.players.forEach(player => {
       const message: RoundStartedMessage = {
         senderId: -1,
         recipientId: player.playerId,
@@ -305,5 +302,10 @@ export class GameMaster implements Service {
 
       this.communicator.sendMessage(message);
     });
+  }
+
+  private stopGame() {
+    this.periodicPieceGenerator.destroy();
+    this.game.stop();
   }
 }
