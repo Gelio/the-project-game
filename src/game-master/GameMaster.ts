@@ -74,6 +74,7 @@ export class GameMaster implements Service {
     this.state = GameMasterState.Connecting;
 
     bindObjectProperties(this.messageHandlers, this);
+    this.destroy = this.destroy.bind(this);
     this.handleMessage = this.handleMessage.bind(this);
   }
 
@@ -98,6 +99,7 @@ export class GameMaster implements Service {
     this.communicator = new Communicator(socket, this.logger);
     this.communicator.bindListeners();
 
+    this.communicator.once('destroy', this.destroy);
     this.communicator.on('message', this.handleMessage);
   }
 
@@ -346,7 +348,6 @@ export class GameMaster implements Service {
     this.uiController = new UIController(this.screen);
     this.uiController.init();
     this.updateState(this.state);
-    this.uiController.log('UI initiated');
   }
 
   private initLogger() {

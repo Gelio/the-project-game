@@ -1,5 +1,6 @@
 import * as blessed from 'blessed';
 
+import { config } from '../config';
 import { Service } from '../../interfaces/Service';
 import { GameMasterState } from '../GameMasterState';
 
@@ -24,7 +25,7 @@ export class UIController implements Service {
       },
       tags: true
     });
-    this.boardBox.setContent('{red-fg}{bold}Board{/}');
+    this.boardBox.setContent(`${config.uiLabelStyle}Board{/}`);
 
     this.infoBox = blessed.box({
       left: '50%',
@@ -35,7 +36,7 @@ export class UIController implements Service {
       },
       tags: true
     });
-    this.infoBox.setContent('{red-fg}{bold}Info{/}');
+    this.infoBox.setContent(`${config.uiLabelStyle}Info{/}`);
 
     this.logsBox = blessed.box({
       left: '50%',
@@ -47,7 +48,7 @@ export class UIController implements Service {
       },
       tags: true
     });
-    this.logsBox.setContent('{red-fg}{bold}Logs{/}');
+    this.logsBox.setContent(`${config.uiLabelStyle}Logs{/}`);
 
     this.screen.append(this.boardBox);
     this.screen.append(this.infoBox);
