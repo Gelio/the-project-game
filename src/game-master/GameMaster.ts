@@ -79,9 +79,9 @@ export class GameMaster implements Service {
   }
 
   public init() {
-    this.initGame();
     this.initUI();
     this.initLogger();
+    this.initGame();
 
     const { serverHostname, serverPort } = this.options;
 
@@ -145,7 +145,7 @@ export class GameMaster implements Service {
   }
 
   private handlePlayerHelloMessage(message: PlayerHelloMessage) {
-    this.logger.verbose('Received player hello message');
+    this.logger.verbose(`Received player ${message.payload.temporaryId} hello message`);
 
     try {
       const assignedPlayerId = this.tryAcceptPlayer(message);
@@ -163,6 +163,8 @@ export class GameMaster implements Service {
       this.tryStartGame();
     } catch (e) {
       const error: Error = e;
+
+      this.logger.verbose(`Player ${message.payload.temporaryId} rejected. Reason: ${e.message}`);
 
       const playerRejectedMessage: PlayerRejectedMessage = {
         type: 'PLAYER_REJECTED',
@@ -227,6 +229,7 @@ export class GameMaster implements Service {
     if (!this.game.hasStarted) {
       if (disconnectedPlayer) {
         this.game.board.removePlayer(disconnectedPlayer);
+        this.uiController.updateBoard(this.game.board);
       }
 
       return;
@@ -247,7 +250,8 @@ export class GameMaster implements Service {
 
   private initGame() {
     const board = this.generateBoard();
-    this.game = new Game(board);
+    this.game = new Game(board, this.logger, this.uiController);
+    this.uiController.updateBoard(this.game.board);
 
     this.periodicPieceGenerator = new PeriodicPieceGenerator(this.game, {
       checkInterval: this.options.generatePiecesInterval,
@@ -265,6 +269,7 @@ export class GameMaster implements Service {
 
     const tileGenerator = new TileGenerator();
     const tiles = tileGenerator.generateBoardTiles(boardSize);
+    this.logger.verbose(`Generated board of size ${tiles[0].length}x${tiles.length}`);
 
     const goalGenerator = new GoalGenerator();
     goalGenerator.generateGoals(this.options.pointsLimit, tiles, boardSize);
@@ -280,7 +285,11 @@ export class GameMaster implements Service {
       return;
     }
 
-    this.startGame();
+    try {
+      this.startGame();
+    } catch (error) {
+      this.logger.error(`Cannot start game - ${error.message}`);
+    }
   }
 
   private startGame() {

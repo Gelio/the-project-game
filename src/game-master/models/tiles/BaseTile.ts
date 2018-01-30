@@ -2,6 +2,8 @@ import { Player } from '../../Player';
 import { Piece } from '../Piece';
 
 export abstract class BaseTile {
+  public readonly type: string;
+
   public x: number;
   public y: number;
 

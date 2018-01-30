@@ -1,21 +1,32 @@
+import { LoggerInstance } from 'winston';
+
 import { Player } from './Player';
 
 import { createDelay } from '../common/createDelay';
 import { Point } from '../common/Point';
 import { TeamId } from '../common/TeamId';
+
 import { Message } from '../interfaces/Message';
 import { MessageWithRecipient } from '../interfaces/MessageWithRecipient';
+
 import { Board } from './models/Board';
+
 import { ProcessMessageResult } from './ProcessMessageResult';
+
+import { UIController } from './ui/UIController';
 
 export class Game {
   public hasStarted = false;
   public board: Board;
 
+  private readonly logger: LoggerInstance;
+  private readonly uiController: UIController;
   private nextPlayerId = 1;
 
-  constructor(board: Board) {
+  constructor(board: Board, logger: LoggerInstance, uiController: UIController) {
     this.board = board;
+    this.logger = logger;
+    this.uiController = uiController;
   }
 
   public getNextPlayerId() {
@@ -59,6 +70,7 @@ export class Game {
   public addNewPlayer(player: Player) {
     this.setRandomPlayerPosition(player);
     this.board.addPlayer(player);
+    this.updateBoard();
   }
 
   public getPlayersFromTeam(teamId: TeamId) {
@@ -93,5 +105,9 @@ export class Game {
     } while (this.board.getTileAtPosition(position).player);
 
     player.position = position;
+  }
+
+  private updateBoard() {
+    this.uiController.updateBoard(this.board);
   }
 }
