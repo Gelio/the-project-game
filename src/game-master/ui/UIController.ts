@@ -3,9 +3,12 @@ import * as blessed from 'blessed';
 import { Service } from '../../interfaces/Service';
 import { config } from '../config';
 import { GameMasterState } from '../GameMasterState';
+import { Board } from '../models/Board';
+import { BoardFormatter } from './BoardFormatter';
 
 export class UIController implements Service {
   private readonly screen: blessed.Widgets.Screen;
+  private readonly boardFormatter: BoardFormatter;
   private gameMasterState: GameMasterState;
 
   private boardBox: blessed.Widgets.BoxElement;
@@ -14,6 +17,7 @@ export class UIController implements Service {
 
   constructor(screen: blessed.Widgets.Screen) {
     this.screen = screen;
+    this.boardFormatter = new BoardFormatter();
   }
 
   public init() {
@@ -72,6 +76,18 @@ export class UIController implements Service {
   public log(lines: string | string[]) {
     this.logsBox.pushLine(lines);
     this.logsBox.setScrollPerc(100);
+    this.render();
+  }
+
+  public updateBoard(board: Board) {
+    this.boardBox.setContent(`${config.uiLabelStyle}Board{/}`);
+
+    for (let y = 0; y < board.tiles[0].length; y++) {
+      const line = board.tiles.map(tilesRow => this.boardFormatter.displayTile(board, tilesRow[y]));
+
+      this.boardBox.pushLine(line.join(''));
+    }
+
     this.render();
   }
 }
