@@ -1,6 +1,7 @@
 import * as blessed from 'blessed';
 
 import { Service } from '../../interfaces/Service';
+import { config } from '../config';
 
 export class UIController implements Service {
   private readonly screen: blessed.Widgets.Screen;
@@ -21,7 +22,7 @@ export class UIController implements Service {
       },
       tags: true
     });
-    this.boardBox.setContent('{red-fg}{bold}Board{/}');
+    this.boardBox.setContent(`${config.uiLabelStyle}Board{/}`);
 
     this.logsBox = blessed.box({
       width: '50%',
@@ -32,7 +33,7 @@ export class UIController implements Service {
       },
       tags: true
     });
-    this.logsBox.setContent('{red-fg}{bold}Logs{/}');
+    this.logsBox.setContent(`${config.uiLabelStyle}Logs{/}`);
 
     this.screen.append(this.boardBox);
     this.screen.append(this.logsBox);
