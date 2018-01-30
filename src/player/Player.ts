@@ -1,22 +1,31 @@
+import * as blessed from 'blessed';
 import { createConnection } from 'net';
+import { LoggerInstance } from 'winston';
 
 import { config } from './config';
 
+import { bindObjectProperties } from '../common/bindObjectProperties';
 import { Communicator } from '../common/communicator';
-import { Message } from '../interfaces/Message';
-import { Service } from '../interfaces/Service';
+import { createLogger } from '../common/logging/createLogger';
+import { UITransport } from '../common/logging/UITransport';
+import { TeamId } from '../common/TeamId';
 
+import { Message } from '../interfaces/Message';
 import { PlayerAcceptedMessage } from '../interfaces/messages/PlayerAcceptedMessage';
 import { PlayerHelloMessage } from '../interfaces/messages/PlayerHelloMessage';
 import { PlayerRejectedMessage } from '../interfaces/messages/PlayerRejectedMessage';
-import { bindObjectProperties } from '../common/bindObjectProperties';
+import { Service } from '../interfaces/Service';
+
+import { registerUncaughtExceptionHandler } from '../registerUncaughtExceptionHandler';
+
+import { UIController } from './ui/UIController';
 
 export interface PlayerOptions {
   serverHostname: string;
   serverPort: number;
   askLevel: number;
   respondLevel: number;
-  teamNumber: number;
+  teamNumber: TeamId;
   teamLeader: boolean;
   timeout: number;
 }
@@ -28,14 +37,18 @@ export class Player implements Service {
   private options: PlayerOptions;
 
   private communicator: Communicator;
+  private logger: LoggerInstance;
+  private readonly uiController: UIController;
 
   private messageHandlers = {
     PLAYER_ACCEPTED: this.handlePlayerAccepted,
     PLAYER_REJECTED: this.handlePlayerRejected
   };
 
-  constructor(options: PlayerOptions) {
+  constructor(options: PlayerOptions, screen: blessed.Widgets.Screen) {
     this.options = options;
+
+    this.uiController = new UIController(screen);
 
     bindObjectProperties(this.messageHandlers, this);
     this.handleMessage = this.handleMessage.bind(this);
@@ -44,18 +57,21 @@ export class Player implements Service {
   public init() {
     const { serverHostname, serverPort } = this.options;
 
+    this.initUI();
+    this.initLogger();
+
     const socket = createConnection(
       {
         host: serverHostname,
         port: serverPort
       },
       () => {
-        console.info(`Connected to the server at ${serverHostname}:${serverPort}`);
+        this.logger.info(`Connected to the server at ${serverHostname}:${serverPort}`);
         this.sendHandshake();
       }
     );
 
-    this.communicator = new Communicator(socket);
+    this.communicator = new Communicator(socket, this.logger);
     this.communicator.bindListeners();
 
     this.communicator.on('message', this.handleMessage);
@@ -66,7 +82,6 @@ export class Player implements Service {
   }
 
   private sendHandshake() {
-    // tslint:disable-next-line:insecure-random
     const temporaryId = Math.floor(Math.random() * config.maxTemporaryPlayerId);
 
     const message: PlayerHelloMessage = {
@@ -83,7 +98,7 @@ export class Player implements Service {
   }
 
   private handleMessage<T>(message: Message<T>) {
-    console.log('Received message', message);
+    this.logger.verbose(`Received message ${message.type}`);
 
     // @ts-ignore
     this.messageHandlers[message.type](message);
@@ -93,11 +108,31 @@ export class Player implements Service {
     this.id = message.payload.assignedPlayerId;
     this.isAccepted = true;
 
-    console.info(`Player accepted with id ${this.id}`);
+    this.logger.info(`Player accepted with id ${this.id}`);
   }
 
   private handlePlayerRejected(message: PlayerRejectedMessage) {
-    console.log(`Player rejected. Reason: ${message.payload.reason}`);
+    this.logger.error(`Player rejected. Reason: ${message.payload.reason}`);
     this.destroy();
+  }
+
+  private initUI() {
+    this.uiController.init();
+    this.uiController.render();
+  }
+
+  private initLogger() {
+    const uiTransport = new UITransport(this.uiController.log.bind(this.uiController));
+    this.logger = createLogger(uiTransport);
+    registerUncaughtExceptionHandler(this.logger);
+
+    this.logger.info('Logger initiated');
+
+    this.logger.error('Error');
+    this.logger.warn('Warn');
+    this.logger.info('Info');
+    this.logger.verbose('Verbose');
+    this.logger.debug('Debug');
+    this.logger.silly('Silly');
   }
 }
