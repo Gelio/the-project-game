@@ -1,10 +1,10 @@
+import { createBlessedScreen } from './createBlessedScreen';
 import { Player } from './player/Player';
-import { registerUncaughtExceptionHandler } from './registerUncaughtExceptionHandler';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const config = require('./player.config.json');
 
-registerUncaughtExceptionHandler();
+const screen = createBlessedScreen();
 
-const player = new Player(config);
+const player = new Player(config, screen);
 player.init();
