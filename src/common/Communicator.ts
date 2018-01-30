@@ -41,11 +41,12 @@ export class Communicator extends CustomEventEmitter {
     this.eventEmitter.emit('destroy');
     this.eventEmitter.removeAllListeners();
     this.socket.removeAllListeners();
+    this.socket.destroy();
   }
 
   public sendMessage<T>(message: Message<T>) {
     const serializedMessage = JSON.stringify(message);
-    this.logger.verbose(`Sending message of length ${serializedMessage.length}`);
+    this.logger.debug(`Sending message ${message.type} (${serializedMessage.length})`);
 
     htonl(this.messageLengthArray, 0, serializedMessage.length);
     this.socket.write(this.messageLengthBuffer);
@@ -71,6 +72,7 @@ export class Communicator extends CustomEventEmitter {
     this.expectedMessageLength = null;
 
     const message = JSON.parse(messageBuffer.toString());
+    this.logger.debug(`Received message ${message.type} (${messageBuffer.length})`);
     this.eventEmitter.emit('message', message);
   }
 

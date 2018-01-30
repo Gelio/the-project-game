@@ -41,21 +41,25 @@ export class CommunicationServer implements Service {
       this.logger.error('Server error', error.message);
       this.logger.debug(JSON.stringify(error));
     });
+
     this.server.listen(this.options.port, this.options.hostname, () => {
       this.logger.info(`Server listening on ${this.options.hostname}:${this.options.port}`);
     });
   }
 
   public destroy() {
+    this.logger.info('Closing...');
+
     this.server.close(() => {
       this.logger.info('Server closed');
     });
     this.server.removeAllListeners();
-    this.messageRouter.unregisterAll();
 
     if (this.gameMaster) {
       this.gameMaster.destroy();
     }
+
+    this.messageRouter.unregisterAll();
   }
 
   private handleNewClient(socket: Socket) {
@@ -68,7 +72,7 @@ export class CommunicationServer implements Service {
 
   private handleGameMaster(socket: Socket) {
     const communicator = new Communicator(socket, this.logger);
-    this.gameMaster = new GameMaster(communicator, this.messageRouter);
+    this.gameMaster = new GameMaster(communicator, this.messageRouter, this.logger);
 
     this.logger.info('Game Master connected');
 
@@ -78,6 +82,8 @@ export class CommunicationServer implements Service {
   }
 
   private handleGameMasterDisconnection() {
+    this.logger.info('Game Master disconnected');
+    this.messageRouter.unregisterGameMasterCommunicator();
     this.gameMaster = null;
     this.players.forEach(player => player.destroy());
     this.destroy();
@@ -89,7 +95,8 @@ export class CommunicationServer implements Service {
     }
 
     const communicator = new Communicator(socket, this.logger);
-    const player = new Player(communicator, this.messageRouter);
+    const player = new Player(communicator, this.messageRouter, this.logger);
+    this.players.push(player);
 
     this.logger.info('A new player connected');
 
@@ -102,7 +109,7 @@ export class CommunicationServer implements Service {
     const playerIndex = this.players.indexOf(player);
     this.players.splice(playerIndex, 1);
 
-    if (player.isAccepted) {
+    if (player.isAccepted && this.gameMaster) {
       const playerDisconnectedMessage: PlayerDisconnectedMessage = {
         type: 'PLAYER_DISCONNECTED',
         recipientId: -1,

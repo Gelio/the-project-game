@@ -98,8 +98,6 @@ export class Player implements Service {
   }
 
   private handleMessage<T>(message: Message<T>) {
-    this.logger.verbose(`Received message ${message.type}`);
-
     // @ts-ignore
     this.messageHandlers[message.type](message);
   }
