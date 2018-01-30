@@ -1,7 +1,12 @@
+import * as blessed from 'blessed';
 import { createConnection } from 'net';
+import { LoggerInstance } from 'winston';
 
 import { bindObjectProperties } from '../common/bindObjectProperties';
 import { Communicator } from '../common/communicator';
+import { createLogger } from '../common/logging/createLogger';
+import { UITransport } from '../common/logging/UITransport';
+
 import { ActionDelays } from '../interfaces/ActionDelays';
 import { BoardSize } from '../interfaces/BoardSize';
 import { Message } from '../interfaces/Message';
@@ -16,12 +21,19 @@ import {
   RoundStartedMessagePayload
 } from '../interfaces/messages/RoundStartedMessage';
 import { Service } from '../interfaces/Service';
+
+import { registerUncaughtExceptionHandler } from '../registerUncaughtExceptionHandler';
+
 import { GoalGenerator } from './board-generation/GoalGenerator';
 import { PeriodicPieceGenerator } from './board-generation/PeriodicPieceGenerator';
 import { TileGenerator } from './board-generation/TileGenerator';
+
 import { Game } from './Game';
+import { GameMasterState } from './GameMasterState';
 import { Board } from './models/Board';
 import { Player } from './Player';
+
+import { UIController } from './ui/UIController';
 
 export interface GameMasterOptions {
   serverHostname: string;
@@ -44,16 +56,22 @@ export class GameMaster implements Service {
   private readonly options: GameMasterOptions;
   private communicator: Communicator;
   private game: Game;
+  private screen: blessed.Widgets.Screen;
+  private state: GameMasterState;
 
+  private uiController: UIController;
   private periodicPieceGenerator: PeriodicPieceGenerator;
+  private logger: LoggerInstance;
 
   private readonly messageHandlers: { [type: string]: Function } = {
     PLAYER_HELLO: this.handlePlayerHelloMessage,
     PLAYER_DISCONNECTED: this.handlePlayerDisconnectedMessage
   };
 
-  constructor(options: GameMasterOptions) {
+  constructor(options: GameMasterOptions, screen: blessed.Widgets.Screen) {
     this.options = options;
+    this.screen = screen;
+    this.state = GameMasterState.Connecting;
 
     bindObjectProperties(this.messageHandlers, this);
     this.handleMessage = this.handleMessage.bind(this);
@@ -61,6 +79,8 @@ export class GameMaster implements Service {
 
   public init() {
     this.initGame();
+    this.initUI();
+    this.initLogger();
 
     const { serverHostname, serverPort } = this.options;
 
@@ -70,11 +90,12 @@ export class GameMaster implements Service {
         port: serverPort
       },
       () => {
-        console.info(`Connected to the server at ${serverHostname}:${serverPort}`);
+        this.logger.info(`Connected to the server at ${serverHostname}:${serverPort}`);
+        this.updateState(GameMasterState.WaitingForPlayers);
       }
     );
 
-    this.communicator = new Communicator(socket);
+    this.communicator = new Communicator(socket, this.logger);
     this.communicator.bindListeners();
 
     this.communicator.on('message', this.handleMessage);
@@ -83,6 +104,7 @@ export class GameMaster implements Service {
   public destroy() {
     if (this.game.hasStarted) {
       this.stopGame();
+      this.uiController.destroy();
     }
 
     this.communicator.destroy();
@@ -121,7 +143,7 @@ export class GameMaster implements Service {
   }
 
   private handlePlayerHelloMessage(message: PlayerHelloMessage) {
-    console.log('Received player hello message', message);
+    this.logger.verbose('Received player hello message');
 
     try {
       const assignedPlayerId = this.tryAcceptPlayer(message);
@@ -195,7 +217,7 @@ export class GameMaster implements Service {
   }
 
   private handlePlayerDisconnectedMessage(message: PlayerDisconnectedMessage) {
-    console.log('Received player disconnected message', message);
+    this.logger.verbose('Received player disconnected message');
     const disconnectedPlayer = this.game.board.players.find(
       player => player.playerId === message.payload.playerId
     );
@@ -216,7 +238,7 @@ export class GameMaster implements Service {
 
     const connectedPlayers = this.game.getConnectedPlayers();
     if (connectedPlayers.length === 0) {
-      console.log('All players disconnected, disconnecting from the server');
+      this.logger.info('All players disconnected, disconnecting from the server');
       this.destroy();
     }
   }
@@ -256,11 +278,12 @@ export class GameMaster implements Service {
       return;
     }
 
-    console.log('Game should start');
     this.startGame();
   }
 
   private startGame() {
+    this.logger.info('Game is starting...');
+
     const team1Players = this.game.getPlayersFromTeam(1);
     const team2Players = this.game.getPlayersFromTeam(2);
     const team1Leader = team1Players.find(player => player.isLeader);
@@ -291,6 +314,7 @@ export class GameMaster implements Service {
     };
 
     this.game.start();
+    this.updateState(GameMasterState.InGame);
 
     this.game.board.players.forEach(player => {
       const message: RoundStartedMessage = {
@@ -302,10 +326,44 @@ export class GameMaster implements Service {
 
       this.communicator.sendMessage(message);
     });
+
+    this.logger.info('Game started');
   }
 
   private stopGame() {
     this.periodicPieceGenerator.destroy();
     this.game.stop();
+    this.updateState(GameMasterState.Finished);
+  }
+
+  private updateState(state: GameMasterState) {
+    this.state = state;
+    this.uiController.updateGameMasterState(state);
+    this.uiController.render();
+  }
+
+  private initUI() {
+    this.uiController = new UIController(this.screen);
+    this.uiController.init();
+    this.updateState(this.state);
+    this.uiController.log('UI initiated');
+  }
+
+  private initLogger() {
+    if (!this.uiController) {
+      throw new Error('Cannot create logger without UI controller');
+    }
+
+    const uiTransport = new UITransport(this.uiController.log.bind(this.uiController));
+    this.logger = createLogger(uiTransport);
+    registerUncaughtExceptionHandler(this.logger);
+    this.logger.info('Logger initiated');
+
+    this.logger.error('Error');
+    this.logger.warn('Warn');
+    this.logger.info('Info');
+    this.logger.verbose('Verbose');
+    this.logger.debug('Debug');
+    this.logger.silly('Silly');
   }
 }
