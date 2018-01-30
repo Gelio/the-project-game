@@ -1,7 +1,7 @@
 import * as blessed from 'blessed';
 
-import { config } from '../config';
 import { Service } from '../../interfaces/Service';
+import { config } from '../config';
 import { GameMasterState } from '../GameMasterState';
 
 export class UIController implements Service {
@@ -46,7 +46,8 @@ export class UIController implements Service {
       border: {
         type: 'line'
       },
-      tags: true
+      tags: true,
+      scrollable: true
     });
     this.logsBox.setContent(`${config.uiLabelStyle}Logs{/}`);
 
@@ -70,6 +71,7 @@ export class UIController implements Service {
 
   public log(lines: string | string[]) {
     this.logsBox.pushLine(lines);
+    this.logsBox.setScrollPerc(100);
     this.render();
   }
 }
