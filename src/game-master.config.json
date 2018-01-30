@@ -4,7 +4,7 @@
   "roundLimit": 5,
   "teamSize": 5,
   "pointsLimit": 20,
-  "boardWidth": 10,
+  "boardWidth": 30,
   "taskAreaHeight": 15,
   "goalAreaHeight": 4,
   "shamChance": 0.6,
