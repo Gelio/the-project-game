@@ -31,7 +31,8 @@ export class UIController implements Service {
       border: {
         type: 'line'
       },
-      tags: true
+      tags: true,
+      scrollable: true
     });
     this.logsBox.setContent(`${config.uiLabelStyle}Logs{/}`);
 
@@ -45,6 +46,7 @@ export class UIController implements Service {
 
   public log(lines: string | string[]) {
     this.logsBox.pushLine(lines);
+    this.logsBox.setScrollPerc(100);
     this.render();
   }
 

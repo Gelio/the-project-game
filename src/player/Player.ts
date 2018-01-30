@@ -127,12 +127,5 @@ export class Player implements Service {
     registerUncaughtExceptionHandler(this.logger);
 
     this.logger.info('Logger initiated');
-
-    this.logger.error('Error');
-    this.logger.warn('Warn');
-    this.logger.info('Info');
-    this.logger.verbose('Verbose');
-    this.logger.debug('Debug');
-    this.logger.silly('Silly');
   }
 }
