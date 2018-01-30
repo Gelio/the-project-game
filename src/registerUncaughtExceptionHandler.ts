@@ -1,5 +1,8 @@
-export function registerUncaughtExceptionHandler() {
+import { LoggerInstance } from 'winston';
+
+export function registerUncaughtExceptionHandler(logger: LoggerInstance) {
   process.on('uncaughtException', error => {
-    console.error('Uncaught exception', error);
+    logger.error(error.message);
+    logger.debug(JSON.stringify(error));
   });
 }

@@ -1,21 +1,24 @@
 import { Socket } from 'net';
 import { htonl, ntohl } from 'network-byte-order';
+import { LoggerInstance } from 'winston';
 
 import { Message } from '../interfaces/Message';
 import { CustomEventEmitter } from './CustomEventEmitter';
 
 export class Communicator extends CustomEventEmitter {
-  private socket: Socket;
+  private readonly socket: Socket;
   private expectedMessageLength: number | null;
-  private messageLengthArray = new Uint8Array(Uint32Array.BYTES_PER_ELEMENT);
-  private messageLengthBuffer: Buffer;
+  private readonly messageLengthArray = new Uint8Array(Uint32Array.BYTES_PER_ELEMENT);
+  private readonly messageLengthBuffer: Buffer;
+  private readonly logger: LoggerInstance;
 
-  constructor(socket: Socket) {
+  constructor(socket: Socket, logger: LoggerInstance) {
     super();
 
     this.socket = socket;
     this.expectedMessageLength = null;
     this.messageLengthBuffer = new Buffer(this.messageLengthArray.buffer);
+    this.logger = logger;
 
     this.readMessage = this.readMessage.bind(this);
   }
@@ -27,7 +30,7 @@ export class Communicator extends CustomEventEmitter {
     });
 
     this.socket.on('close', () => {
-      console.info('Client disconnected');
+      this.logger.info('Client disconnected');
 
       this.eventEmitter.emit('close');
       this.destroy();
@@ -42,7 +45,7 @@ export class Communicator extends CustomEventEmitter {
 
   public sendMessage<T>(message: Message<T>) {
     const serializedMessage = JSON.stringify(message);
-    console.info('Sending message of length', serializedMessage.length);
+    this.logger.verbose(`Sending message of length ${serializedMessage.length}`);
 
     htonl(this.messageLengthArray, 0, serializedMessage.length);
     this.socket.write(this.messageLengthBuffer);
