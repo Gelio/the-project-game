@@ -1,4 +1,4 @@
-import { Communicator } from '../common/communicator';
+import { Communicator } from '../common/Communicator';
 import { Message } from '../interfaces/Message';
 import { MessageWithRecipient } from '../interfaces/MessageWithRecipient';
 

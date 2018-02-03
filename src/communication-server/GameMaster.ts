@@ -1,10 +1,9 @@
 import { LoggerInstance } from 'winston';
 
-import { Communicator } from '../common/communicator';
+import { Communicator } from '../common/Communicator';
 import { MessageWithRecipient } from '../interfaces/MessageWithRecipient';
 import { Service } from '../interfaces/Service';
 import { MessageRouter } from './MessageRouter';
-import { Player } from './player';
 
 export class GameMaster implements Service {
   private readonly communicator: Communicator;

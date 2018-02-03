@@ -1,6 +1,6 @@
 import { LoggerInstance } from 'winston';
 
-import { Communicator } from '../common/communicator';
+import { Communicator } from '../common/Communicator';
 
 import { Message } from '../interfaces/Message';
 import { PlayerAcceptedMessage } from '../interfaces/messages/PlayerAcceptedMessage';
