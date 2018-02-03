@@ -1,12 +1,11 @@
-import * as blessed from 'blessed';
 import { createConnection } from 'net';
 import { LoggerInstance } from 'winston';
 
 import { config } from './config';
 
 import { bindObjectProperties } from '../common/bindObjectProperties';
-import { Communicator } from '../common/communicator';
-import { createLogger } from '../common/logging/createLogger';
+import { Communicator } from '../common/Communicator';
+import { LoggerFactory } from '../common/logging/LoggerFactory';
 import { UITransport } from '../common/logging/UITransport';
 import { TeamId } from '../common/TeamId';
 
@@ -39,16 +38,18 @@ export class Player implements Service {
   private communicator: Communicator;
   private logger: LoggerInstance;
   private readonly uiController: UIController;
+  private readonly loggerFactory: LoggerFactory;
 
   private messageHandlers = {
     PLAYER_ACCEPTED: this.handlePlayerAccepted,
     PLAYER_REJECTED: this.handlePlayerRejected
   };
 
-  constructor(options: PlayerOptions, screen: blessed.Widgets.Screen) {
+  constructor(options: PlayerOptions, uiController: UIController, loggerFactory: LoggerFactory) {
     this.options = options;
 
-    this.uiController = new UIController(screen);
+    this.uiController = uiController;
+    this.loggerFactory = loggerFactory;
 
     bindObjectProperties(this.messageHandlers, this);
     this.handleMessage = this.handleMessage.bind(this);
@@ -121,7 +122,7 @@ export class Player implements Service {
 
   private initLogger() {
     const uiTransport = new UITransport(this.uiController.log.bind(this.uiController));
-    this.logger = createLogger(uiTransport);
+    this.logger = this.loggerFactory.createLogger([uiTransport]);
     registerUncaughtExceptionHandler(this.logger);
 
     this.logger.info('Logger initiated');

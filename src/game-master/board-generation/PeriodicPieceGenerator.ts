@@ -39,7 +39,7 @@ export class PeriodicPieceGenerator implements Service {
   }
 
   private tryGeneratePieces() {
-    while (this.game.pieces.length < this.options.piecesLimit) {
+    while (this.game.board.pieces.length < this.options.piecesLimit) {
       this.createPieceAtRandomPosition();
     }
   }

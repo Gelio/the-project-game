@@ -1,3 +1,4 @@
+import { LoggerFactory } from './common/logging/LoggerFactory';
 import { CommunicationServer } from './communication-server/CommunicationServer';
 import { MessageRouter } from './communication-server/MessageRouter';
 
@@ -5,12 +6,17 @@ import { MessageRouter } from './communication-server/MessageRouter';
 const config = require('./communication-server.config.json');
 
 const messageRouter = new MessageRouter();
+
+const loggerFactory = new LoggerFactory();
+const consoleLogger = loggerFactory.createConsoleLogger();
+
 const communicationServer = new CommunicationServer(
   {
     hostname: config.hostname,
     port: config.port
   },
-  messageRouter
+  messageRouter,
+  consoleLogger
 );
 
 communicationServer.init();

@@ -1,14 +1,8 @@
-import { reverseArrayCoordinates } from '../../common/reverseArrayCoordinates';
+import { reverseArrayDimensions } from '../../common/reverseArrayDimensions';
 import { BoardSize } from '../../interfaces/BoardSize';
 import { NeutralAreaTile } from '../models/tiles/NeutralAreaTile';
 import { TeamAreaTile } from '../models/tiles/TeamAreaTile';
 import { Tile } from '../models/tiles/Tile';
-
-interface TileGeneratorOptions {
-  goalAreaHeight: number;
-  boardWidth: number;
-  taskAreaHeight: number;
-}
 
 export class TileGenerator {
   public generateBoardTiles(boardSize: BoardSize) {
@@ -21,7 +15,7 @@ export class TileGenerator {
 
     const reverseCoordinateTiles = team1Tiles.concat(neutralTiles, team2Tiles);
 
-    return reverseArrayCoordinates(reverseCoordinateTiles);
+    return reverseArrayDimensions(reverseCoordinateTiles);
   }
 
   private generateTeamAreaTiles(boardSize: BoardSize, baseY: number) {

@@ -1,7 +1,7 @@
 /**
- * @return Array with reversed coordinates
+ * @return Array with reversed dimensions
  */
-export function reverseArrayCoordinates<T>(array: T[][]): T[][] {
+export function reverseArrayDimensions<T>(array: T[][]): T[][] {
   if (array.length === 0) {
     return [...array];
   }
