@@ -41,7 +41,7 @@ export class CommunicationServer implements Service {
     registerUncaughtExceptionHandler(this.logger);
 
     this.server.on('error', error => {
-      this.logger.error('Server error', error.message);
+      this.logger.error(`Server error: ${error.message}`, error);
       this.logger.debug(JSON.stringify(error));
     });
 
@@ -51,10 +51,10 @@ export class CommunicationServer implements Service {
   }
 
   public destroy() {
-    this.logger.info('Closing...');
+    this.logger.info('Closing the server...');
 
     this.server.close(() => {
-      this.logger.info('Server closed');
+      this.logger.info('Server closed and will no longer accept connections');
     });
     this.server.removeAllListeners();
 
@@ -62,7 +62,7 @@ export class CommunicationServer implements Service {
       this.gameMaster.destroy();
     }
 
-    this.messageRouter.unregisterAll();
+    this.players.forEach(player => player.destroy());
   }
 
   private handleNewClient(socket: Socket) {
@@ -78,6 +78,7 @@ export class CommunicationServer implements Service {
     this.gameMaster = new GameMaster(communicator, this.messageRouter, this.logger);
 
     this.logger.info('Game Master connected');
+    this.logger.verbose(`Game Master address: ${socket.remoteAddress}:${socket.remotePort}`);
 
     communicator.once('destroy', this.handleGameMasterDisconnection.bind(this));
 
@@ -86,9 +87,7 @@ export class CommunicationServer implements Service {
 
   private handleGameMasterDisconnection() {
     this.logger.info('Game Master disconnected');
-    this.messageRouter.unregisterGameMasterCommunicator();
     this.gameMaster = null;
-    this.players.forEach(player => player.destroy());
     this.destroy();
   }
 
@@ -102,6 +101,7 @@ export class CommunicationServer implements Service {
     this.players.push(player);
 
     this.logger.info('A new player connected');
+    this.logger.verbose(`New player's IP: ${socket.remoteAddress}:${socket.remotePort}`);
 
     communicator.once('destroy', () => this.handlePlayerDisconnection(player));
 
