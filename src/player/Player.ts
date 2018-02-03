@@ -1,4 +1,3 @@
-import * as blessed from 'blessed';
 import { createConnection } from 'net';
 import { LoggerInstance } from 'winston';
 
@@ -6,6 +5,7 @@ import { config } from './config';
 
 import { bindObjectProperties } from '../common/bindObjectProperties';
 import { Communicator } from '../common/Communicator';
+import { LoggerFactory } from '../common/logging/LoggerFactory';
 import { UITransport } from '../common/logging/UITransport';
 import { TeamId } from '../common/TeamId';
 
@@ -18,7 +18,6 @@ import { Service } from '../interfaces/Service';
 import { registerUncaughtExceptionHandler } from '../registerUncaughtExceptionHandler';
 
 import { UIController } from './ui/UIController';
-import { LoggerFactory } from '../common/logging/LoggerFactory';
 
 export interface PlayerOptions {
   serverHostname: string;

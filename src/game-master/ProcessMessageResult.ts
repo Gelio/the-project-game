@@ -6,9 +6,9 @@ export interface ValidMessageResult<T> {
   responseMessage: Promise<MessageWithRecipient<T>>;
 }
 
-export interface InvalidMessageResult<T> {
+export interface InvalidMessageResult {
   valid: false;
   reason: string;
 }
 
-export type ProcessMessageResult<T> = ValidMessageResult<T> | InvalidMessageResult<T>;
+export type ProcessMessageResult<T> = ValidMessageResult<T> | InvalidMessageResult;

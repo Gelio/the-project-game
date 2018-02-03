@@ -1,4 +1,3 @@
-import * as blessed from 'blessed';
 import { createConnection } from 'net';
 import { LoggerInstance } from 'winston';
 
