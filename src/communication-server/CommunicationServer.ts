@@ -1,16 +1,15 @@
 import { createServer, Server, Socket } from 'net';
 import { LoggerInstance } from 'winston';
 
-import { Communicator } from '../common/communicator';
+import { Communicator } from '../common/Communicator';
 import { Service } from '../interfaces/Service';
 import { GameMaster } from './GameMaster';
 import { MessageRouter } from './MessageRouter';
-import { Player } from './player';
+import { Player } from './Player';
 
 import { PlayerDisconnectedMessage } from '../interfaces/messages/PlayerDisconnectedMessage';
 
 import { registerUncaughtExceptionHandler } from '../registerUncaughtExceptionHandler';
-import { createLogger } from './logging/createLogger';
 
 export interface CommunicationServerOptions {
   hostname: string;
@@ -26,12 +25,16 @@ export class CommunicationServer implements Service {
   private readonly messageRouter: MessageRouter;
   private readonly players: Player[] = [];
 
-  constructor(options: CommunicationServerOptions, messageRouter: MessageRouter) {
+  constructor(
+    options: CommunicationServerOptions,
+    messageRouter: MessageRouter,
+    logger: LoggerInstance
+  ) {
     this.options = options;
     this.server = createServer(this.handleNewClient.bind(this));
     this.gameMaster = null;
     this.messageRouter = messageRouter;
-    this.logger = createLogger();
+    this.logger = logger;
   }
 
   public init() {

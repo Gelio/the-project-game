@@ -3,7 +3,7 @@ import { createConnection } from 'net';
 import { LoggerInstance } from 'winston';
 
 import { bindObjectProperties } from '../common/bindObjectProperties';
-import { Communicator } from '../common/communicator';
+import { Communicator } from '../common/Communicator';
 import { createLogger } from '../common/logging/createLogger';
 import { UITransport } from '../common/logging/UITransport';
 
