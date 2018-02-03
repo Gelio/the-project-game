@@ -53,6 +53,7 @@ export class Player implements Service {
 
     bindObjectProperties(this.messageHandlers, this);
     this.handleMessage = this.handleMessage.bind(this);
+    this.handleServerDisconnection = this.handleServerDisconnection.bind(this);
   }
 
   public init() {
@@ -76,10 +77,17 @@ export class Player implements Service {
     this.communicator.bindListeners();
 
     this.communicator.on('message', this.handleMessage);
+    this.communicator.on('close', this.handleServerDisconnection);
   }
 
   public destroy() {
     this.communicator.destroy();
+    this.uiController.destroy();
+  }
+
+  private handleServerDisconnection() {
+    this.destroy();
+    this.logger.info('Disconnected from the server');
   }
 
   private sendHandshake() {
