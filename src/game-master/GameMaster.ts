@@ -103,17 +103,23 @@ export class GameMaster implements Service {
     this.communicator = new Communicator(socket, this.logger);
     this.communicator.bindListeners();
 
-    this.communicator.once('destroy', this.destroy);
+    this.communicator.once('close', this.handleServerDisconnection.bind(this));
     this.communicator.on('message', this.handleMessage);
   }
 
   public destroy() {
     if (this.game.hasStarted) {
       this.stopGame();
-      this.uiController.destroy();
     }
 
     this.communicator.destroy();
+    this.uiController.destroy();
+  }
+
+  private handleServerDisconnection() {
+    this.logger.warn('Disconnected from the server. Closing...');
+
+    this.destroy();
   }
 
   private async handleMessage<T>(message: Message<T>) {
