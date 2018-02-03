@@ -41,7 +41,10 @@ export class Communicator extends CustomEventEmitter {
     this.eventEmitter.emit('destroy');
     this.eventEmitter.removeAllListeners();
     this.socket.removeAllListeners();
-    this.socket.destroy();
+
+    if (!this.socket.destroyed) {
+      this.socket.destroy();
+    }
   }
 
   public sendMessage<T>(message: Message<T>) {
