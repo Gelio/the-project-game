@@ -1,8 +1,8 @@
-import { Transport } from 'winston';
+import { NPMLoggingLevel, Transport } from 'winston';
 
 interface LogInfo {
   [label: string]: any;
-  level: string;
+  level: NPMLoggingLevel;
   timestamp: string;
   message: string;
 }
@@ -27,7 +27,7 @@ export class UITransport extends Transport {
     this.logFunction = logFunction;
   }
 
-  public log(info: LogInfo, callback: Function) {
+  public log(info: LogInfo, callback?: Function) {
     const logEntry = this.formatLogEntry(info);
     this.logFunction(logEntry);
 
