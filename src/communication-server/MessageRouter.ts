@@ -54,6 +54,14 @@ export class MessageRouter {
     (<Communicator>this.gmCommunicator).sendMessage(message);
   }
 
+  public hasRegisteredGameMasterCommunicator() {
+    return !!this.gmCommunicator;
+  }
+
+  public hasRegisteredPlayerCommunicator(id: number) {
+    return this.playerCommunicators.has(id);
+  }
+
   private ensureGameMasterCommunicatorRegistered() {
     if (!this.gmCommunicator) {
       throw new Error('Game Master communicator has not been registered');
