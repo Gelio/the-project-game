@@ -4,7 +4,7 @@ import { LoggerInstance } from 'winston';
 
 import { bindObjectProperties } from '../common/bindObjectProperties';
 import { Communicator } from '../common/Communicator';
-import { createLogger } from '../common/logging/createLogger';
+import { LoggerFactory } from '../common/logging/LoggerFactory';
 import { UITransport } from '../common/logging/UITransport';
 
 import { ActionDelays } from '../interfaces/ActionDelays';
@@ -56,10 +56,10 @@ export class GameMaster implements Service {
   private readonly options: GameMasterOptions;
   private communicator: Communicator;
   private game: Game;
-  private screen: blessed.Widgets.Screen;
   private state: GameMasterState;
 
-  private uiController: UIController;
+  private readonly uiController: UIController;
+  private readonly loggerFactory: LoggerFactory;
   private periodicPieceGenerator: PeriodicPieceGenerator;
   private logger: LoggerInstance;
 
@@ -68,9 +68,14 @@ export class GameMaster implements Service {
     PLAYER_DISCONNECTED: this.handlePlayerDisconnectedMessage
   };
 
-  constructor(options: GameMasterOptions, screen: blessed.Widgets.Screen) {
+  constructor(
+    options: GameMasterOptions,
+    uiController: UIController,
+    loggerFactory: LoggerFactory
+  ) {
     this.options = options;
-    this.screen = screen;
+    this.uiController = uiController;
+    this.loggerFactory = loggerFactory;
     this.state = GameMasterState.Connecting;
 
     bindObjectProperties(this.messageHandlers, this);
@@ -354,7 +359,6 @@ export class GameMaster implements Service {
   }
 
   private initUI() {
-    this.uiController = new UIController(this.screen);
     this.uiController.init();
     this.updateState(this.state);
   }
@@ -365,7 +369,7 @@ export class GameMaster implements Service {
     }
 
     const uiTransport = new UITransport(this.uiController.log.bind(this.uiController));
-    this.logger = createLogger(uiTransport);
+    this.logger = this.loggerFactory.createLogger([uiTransport]);
     registerUncaughtExceptionHandler(this.logger);
     this.logger.info('Logger initiated');
   }
