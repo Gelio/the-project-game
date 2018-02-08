@@ -26,7 +26,7 @@
     "communication-server": "ts-node src/start-communication-server.ts",
     "player": "ts-node src/start-player.ts",
     "test": "jest",
-    "test:watch": "jest -w",
+    "test:watch": "jest --watch",
     "lint": "npm run lint:tsc && npm run lint:tslint",
     "lint:tsc": "tsc --noEmit",
     "lint:tslint": "tslint -c tslint.json -p tsconfig.json 'src/**/*.ts'"
