@@ -13,7 +13,10 @@
     "@types/node": "^9.3.0",
     "@types/winston": "^2.3.7",
     "eslint": "^4.16.0",
+    "husky": "^0.14.3",
     "jest": "^22.1.4",
+    "lint-staged": "^6.1.0",
+    "prettier": "^1.10.2",
     "ts-jest": "^22.0.2",
     "ts-node": "^4.1.0",
     "tslint": "^5.9.1",
@@ -25,6 +28,7 @@
     "game-master": "ts-node src/start-game-master.ts",
     "communication-server": "ts-node src/start-communication-server.ts",
     "player": "ts-node src/start-player.ts",
+    "precommit": "lint-staged",
     "test": "jest",
     "test:watch": "jest --watch",
     "lint": "npm run lint:tsc && npm run lint:tslint",
@@ -39,13 +43,9 @@
       "^.+\\.tsx?$": "ts-jest"
     },
     "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "jsx",
-      "json",
-      "node"
-    ]
+    "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"]
+  },
+  "lint-staged": {
+    "*.{js,json,css,md,ts}": ["prettier --write", "git add"]
   }
 }
