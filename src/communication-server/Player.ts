@@ -11,6 +11,7 @@ import { MessageRouter } from './MessageRouter';
 
 export class Player implements Service {
   private _isAccepted = false;
+  // @ts-ignore
   private _id: number;
 
   private readonly communicator: Communicator;

@@ -19,6 +19,7 @@ export class Game {
   public hasStarted = false;
   public board: Board;
 
+  // @ts-ignore
   private readonly logger: LoggerInstance;
   private readonly uiController: UIController;
   private nextPlayerId = 1;
