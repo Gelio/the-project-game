@@ -19,6 +19,9 @@ export interface CommunicationServerOptions {
 export class CommunicationServer implements Service {
   private options: CommunicationServerOptions;
 
+  private unregisterUncaughtExceptionHandlerCallback?: Function;
+  private isRunning = false;
+
   private readonly logger: LoggerInstance;
   private readonly server: Server;
   private gameMaster: GameMaster | null;
@@ -38,31 +41,57 @@ export class CommunicationServer implements Service {
   }
 
   public init() {
-    registerUncaughtExceptionHandler(this.logger);
+    this.unregisterUncaughtExceptionHandlerCallback = registerUncaughtExceptionHandler(this.logger);
 
     this.server.on('error', error => {
       this.logger.error(`Server error: ${error.message}`, error);
       this.logger.debug(JSON.stringify(error));
     });
 
-    this.server.listen(this.options.port, this.options.hostname, () => {
-      this.logger.info(`Server listening on ${this.options.hostname}:${this.options.port}`);
+    return new Promise((resolve, reject) => {
+      this.server.listen(this.options.port, this.options.hostname, (error?: Error) => {
+        if (error) {
+          this.logger.error(`Server cannot start listening: ${error.message}`, error);
+
+          return reject(error);
+        }
+
+        this.logger.info(`Server listening on ${this.options.hostname}:${this.options.port}`);
+        this.isRunning = true;
+        resolve(true);
+      });
     });
   }
 
   public destroy() {
     this.logger.info('Closing the server...');
-
-    this.server.close(() => {
-      this.logger.info('Server closed and will no longer accept connections');
-    });
+    this.isRunning = false;
     this.server.removeAllListeners();
 
     if (this.gameMaster) {
       this.gameMaster.destroy();
+      this.gameMaster = null;
     }
 
     this.players.forEach(player => player.destroy());
+    this.players.splice(0, this.players.length);
+
+    return new Promise((resolve, reject) => {
+      this.server.close((error?: Error) => {
+        if (error) {
+          this.logger.error(`Server cannot be closed due to an error: ${error.message}`, error);
+
+          return reject(error);
+        }
+
+        if (this.unregisterUncaughtExceptionHandlerCallback) {
+          this.unregisterUncaughtExceptionHandlerCallback();
+        }
+
+        this.logger.info('Server closed and will no longer accept connections');
+        resolve(true);
+      });
+    });
   }
 
   private handleNewClient(socket: Socket) {
@@ -88,7 +117,10 @@ export class CommunicationServer implements Service {
   private handleGameMasterDisconnection() {
     this.logger.info('Game Master disconnected');
     this.gameMaster = null;
-    this.destroy();
+
+    if (this.isRunning) {
+      this.destroy();
+    }
   }
 
   private handlePlayer(socket: Socket) {

@@ -2,14 +2,12 @@ import * as blessed from 'blessed';
 
 import { Service } from '../../interfaces/Service';
 import { config } from '../config';
-import { GameMasterState } from '../GameMasterState';
 import { Board } from '../models/Board';
 import { BoardFormatter } from './BoardFormatter';
 
 export class UIController implements Service {
   private readonly screen: blessed.Widgets.Screen;
   private readonly boardFormatter: BoardFormatter;
-  private gameMasterState: GameMasterState;
 
   private boardBox: blessed.Widgets.BoxElement;
   private infoBox: blessed.Widgets.BoxElement;
@@ -63,10 +61,6 @@ export class UIController implements Service {
 
   public destroy() {
     this.screen.destroy();
-  }
-
-  public updateGameMasterState(state: GameMasterState) {
-    this.gameMasterState = state;
   }
 
   public render() {

@@ -359,7 +359,6 @@ export class GameMaster implements Service {
 
   private updateState(state: GameMasterState) {
     this.state = state;
-    this.uiController.updateGameMasterState(state);
     this.uiController.render();
   }
 

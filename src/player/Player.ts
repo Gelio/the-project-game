@@ -31,6 +31,7 @@ export interface PlayerOptions {
 
 export class Player implements Service {
   private id: number;
+  // @ts-ignore
   private isAccepted = false;
 
   private options: PlayerOptions;

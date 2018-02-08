@@ -11,6 +11,7 @@ import { MessageRouter } from './MessageRouter';
 
 export class Player implements Service {
   private _isAccepted = false;
+  // @ts-ignore
   private _id: number;
 
   private readonly communicator: Communicator;
@@ -43,7 +44,10 @@ export class Player implements Service {
   public destroy() {
     this.logger.verbose(`Destroying player ${this.id}`);
     this.communicator.destroy();
-    this.messageRouter.unregisterPlayerCommunicator(this.id);
+
+    if (this.messageRouter.hasRegisteredPlayerCommunicator(this.id)) {
+      this.messageRouter.unregisterPlayerCommunicator(this.id);
+    }
   }
 
   private handleMessage<T>(message: Message<T>) {
@@ -84,7 +88,7 @@ export class Player implements Service {
       this._id = acceptedMessage.payload.assignedPlayerId;
       this.messageRouter.registerPlayerCommunicator(this._id, this.communicator);
 
-      this.communicator.removeListener('messageSend', this.handleMessageSent);
+      this.communicator.removeListener('messageSent', this.handleMessageSent);
     } else if (message.type === 'PLAYER_REJECTED') {
       this.messageRouter.unregisterPlayerCommunicator(this._id);
       this.destroy();
