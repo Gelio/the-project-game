@@ -232,13 +232,13 @@ export class GameMaster implements Service {
 
   private handlePlayerDisconnectedMessage(message: PlayerDisconnectedMessage) {
     this.logger.verbose('Received player disconnected message');
-    const disconnectedPlayer = this.game.board.players.find(
+    const disconnectedPlayer = this.game.players.find(
       player => player.playerId === message.payload.playerId
     );
 
     if (!this.game.hasStarted) {
       if (disconnectedPlayer) {
-        this.game.board.removePlayer(disconnectedPlayer);
+        this.game.removePlayer(disconnectedPlayer);
         this.uiController.updateBoard(this.game.board);
       }
 
@@ -288,7 +288,7 @@ export class GameMaster implements Service {
   }
 
   private tryStartGame() {
-    const connectedPlayersCount = this.game.board.players.length;
+    const connectedPlayersCount = this.game.players.length;
     const requiredPlayersCount = this.options.teamSize * 2;
 
     if (connectedPlayersCount < requiredPlayersCount) {
@@ -337,7 +337,7 @@ export class GameMaster implements Service {
     this.game.start();
     this.updateState(GameMasterState.InGame);
 
-    this.game.board.players.forEach(player => {
+    this.game.players.forEach(player => {
       const message: RoundStartedMessage = {
         senderId: -1,
         recipientId: player.playerId,

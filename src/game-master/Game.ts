@@ -18,6 +18,7 @@ import { UIController } from './ui/UIController';
 export class Game {
   public hasStarted = false;
   public board: Board;
+  public readonly players: Player[] = [];
 
   // @ts-ignore
   private readonly logger: LoggerInstance;
@@ -37,7 +38,7 @@ export class Game {
   public processMessage<T, U>(message: Message<T>): ProcessMessageResult<U> {
     const delay = 500;
 
-    const sender = this.board.players.find(player => player.playerId === message.senderId);
+    const sender = this.players.find(player => player.playerId === message.senderId);
     if (!sender) {
       return {
         valid: false,
@@ -70,16 +71,16 @@ export class Game {
 
   public addNewPlayer(player: Player) {
     this.setRandomPlayerPosition(player);
-    this.board.addPlayer(player);
+    this.addPlayer(player);
     this.updateBoard();
   }
 
   public getPlayersFromTeam(teamId: TeamId) {
-    return this.board.players.filter(player => player.teamId === teamId);
+    return this.players.filter(player => player.teamId === teamId);
   }
 
   public getConnectedPlayers() {
-    return this.board.players.filter(player => player.isConnected);
+    return this.players.filter(player => player.isConnected);
   }
 
   public start() {
@@ -88,6 +89,23 @@ export class Game {
 
   public stop() {
     this.hasStarted = false;
+  }
+
+  public addPlayer(player: Player) {
+    if (this.players.indexOf(player) !== -1) {
+      throw new Error('Player already added');
+    }
+    this.board.getTileAtPosition(player.position).player = player;
+    this.players.push(player);
+  }
+
+  public removePlayer(player: Player) {
+    const playerIndex = this.players.indexOf(player);
+    if (playerIndex === -1) {
+      throw new Error('Player is not added');
+    }
+    this.board.tiles[player.position.x][player.position.y].player = null;
+    this.players.splice(playerIndex, 1);
   }
 
   private setRandomPlayerPosition(player: Player) {

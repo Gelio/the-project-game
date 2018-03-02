@@ -7,7 +7,6 @@ import { Tile } from './tiles/Tile';
 export class Board {
   public readonly size: BoardSize;
   public readonly tiles: Tile[][];
-  public readonly players: Player[] = [];
   public readonly pieces: Piece[] = [];
 
   constructor(size: BoardSize, tiles: Tile[][]) {
@@ -31,25 +30,6 @@ export class Board {
     }
 
     return tile;
-  }
-
-  public addPlayer(player: Player) {
-    if (this.players.indexOf(player) !== -1) {
-      throw new Error('Player already added');
-    }
-
-    this.getTileAtPosition(player.position).player = player;
-    this.players.push(player);
-  }
-
-  public removePlayer(player: Player) {
-    const playerIndex = this.players.indexOf(player);
-    if (playerIndex === -1) {
-      throw new Error('Player is not added');
-    }
-
-    this.tiles[player.position.x][player.position.y].player = null;
-    this.players.splice(playerIndex, 1);
   }
 
   public movePlayer(player: Player, newPosition: Point) {
