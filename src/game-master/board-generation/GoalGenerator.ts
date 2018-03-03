@@ -1,26 +1,25 @@
+import { arrayShuffle } from '../../common/arrayShuffle';
+
 import { Point } from '../../common/Point';
 import { BoardSize } from '../../interfaces/BoardSize';
 import { TeamAreaTile } from '../models/tiles/TeamAreaTile';
 import { Tile } from '../models/tiles/Tile';
-
 export class GoalGenerator {
   /**
    * Mutates `tiles` parameter
    */
   public generateGoals(count: number, tiles: Tile[][], boardSize: BoardSize) {
+    const allPositions: Point[] = [];
+    for (let y = 0; y < boardSize.goalArea; ++y) {
+      for (let x = 0; x < boardSize.x; ++x) {
+        allPositions.push(new Point(x, y));
+      }
+    }
+    arrayShuffle(allPositions);
+
     const positions: Point[] = [];
     for (let i = 0; i < count; i++) {
-      let position: Point;
-      do {
-        position = {
-          x: Math.floor(Math.random() * boardSize.x),
-          y: Math.floor(Math.random() * boardSize.goalArea)
-        };
-      } while (
-        positions.findIndex(point => point.x === position.x && point.y === position.y) !== -1
-      );
-
-      positions.push(position);
+      positions.push(allPositions[i]);
     }
 
     const boardWidth = boardSize.x;

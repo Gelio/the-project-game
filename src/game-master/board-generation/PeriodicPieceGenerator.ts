@@ -1,8 +1,8 @@
+import { arrayShuffle } from '../../common/arrayShuffle';
 import { Point } from '../../common/Point';
 import { Service } from '../../interfaces/Service';
 import { Game } from '../Game';
 import { Piece } from '../models/Piece';
-import { Tile } from '../models/tiles/Tile';
 
 export interface PeriodicPieceGeneratorOptions {
   shamChance: number;
@@ -49,22 +49,25 @@ export class PeriodicPieceGenerator implements Service {
     const maxY = this.game.board.size.goalArea + this.game.board.size.taskArea;
     const yRange = maxY - minY + 1;
 
-    const boardWidth = this.game.board.size.x;
-
-    let position: Point;
-    let tile: Tile;
-    do {
-      const x = Math.floor(Math.random() * boardWidth);
-      const y = Math.floor(minY + Math.random() * yRange);
-      position = new Point(x, y);
-      tile = this.game.board.getTileAtPosition(new Point(x, y));
-    } while (tile.piece && !tile.piece.isPickedUp);
+    const allPositions: Point[] = [];
+    for (let y = 0; y < yRange; ++y) {
+      for (let x = 0; x < this.game.board.size.x; ++x) {
+        allPositions.push(new Point(x, y));
+      }
+    }
 
     const piece = new Piece();
-    piece.position = position;
     piece.isSham = Math.random() < this.options.shamChance;
     piece.isPickedUp = false;
 
+    arrayShuffle(allPositions);
+    for (const position of allPositions) {
+      const tile = this.game.board.getTileAtPosition(position);
+      if (!tile.piece || !tile.piece.isPickedUp) {
+        piece.position = position;
+        break;
+      }
+    }
     this.game.board.addPiece(piece);
   }
 }

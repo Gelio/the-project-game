@@ -1,3 +1,5 @@
+import { arrayShuffle } from '../../common/arrayShuffle';
+
 import { Point } from '../../common/Point';
 import { BoardSize } from '../../interfaces/BoardSize';
 import { Player } from '../Player';
@@ -13,10 +15,13 @@ export class Board {
   public readonly pointsLimit: number;
 
   private tiles: Tile[][];
+  private firstTeamPositions: Point[];
+  private secondTeamPositions: Point[];
 
   constructor(size: BoardSize, pointsLimit: number) {
     this.size = size;
     this.pointsLimit = pointsLimit;
+    this.generatePossibleTeamPositions();
   }
 
   public reset() {
@@ -125,20 +130,30 @@ export class Board {
   }
 
   public setRandomPlayerPosition(player: Player) {
-    const yRange = { min: 0, max: this.size.goalArea };
+    let possiblePositions = this.firstTeamPositions;
     if (player.teamId === 2) {
-      yRange.min = this.size.goalArea + this.size.taskArea;
-      yRange.max = yRange.min + this.size.goalArea;
+      possiblePositions = this.secondTeamPositions;
     }
 
-    let position: Point;
-    do {
-      position = {
-        x: Math.floor(Math.random() * this.size.x),
-        y: yRange.min + Math.floor(Math.random() * (yRange.max - yRange.min))
-      };
-    } while (this.getTileAtPosition(position).player);
+    for (const position of possiblePositions) {
+      if (!this.getTileAtPosition(position).player) {
+        player.position = position;
+        break;
+      }
+    }
+  }
 
-    player.position = position;
+  private generatePossibleTeamPositions() {
+    const gapBetweenTeamTiles = this.size.taskArea + this.size.goalArea;
+    this.firstTeamPositions = [];
+    this.secondTeamPositions = [];
+    for (let y = 0; y < this.size.goalArea; ++y) {
+      for (let x = 0; x < this.size.x; ++x) {
+        this.firstTeamPositions.push(new Point(x, y));
+        this.secondTeamPositions.push(new Point(x, y + gapBetweenTeamTiles));
+      }
+    }
+    arrayShuffle(this.firstTeamPositions);
+    arrayShuffle(this.secondTeamPositions);
   }
 }
