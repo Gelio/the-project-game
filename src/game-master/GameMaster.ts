@@ -31,6 +31,7 @@ import { Game } from './Game';
 import { GameMasterState } from './GameMasterState';
 import { Board } from './models/Board';
 import { Player } from './Player';
+import { PlayersContainer } from './PlayersContainer';
 
 import { UIController } from './ui/UIController';
 
@@ -55,6 +56,7 @@ export class GameMaster implements Service {
   private readonly options: GameMasterOptions;
   private communicator: Communicator;
   private game: Game;
+  private playersContainer: PlayersContainer;
   private state: GameMasterState;
 
   private readonly uiController: UIController;
@@ -232,7 +234,7 @@ export class GameMaster implements Service {
 
   private handlePlayerDisconnectedMessage(message: PlayerDisconnectedMessage) {
     this.logger.verbose('Received player disconnected message');
-    const disconnectedPlayer = this.game.players.find(
+    const disconnectedPlayer = this.playersContainer.players.find(
       player => player.playerId === message.payload.playerId
     );
 
@@ -259,8 +261,9 @@ export class GameMaster implements Service {
   }
 
   private initGame() {
+    this.playersContainer = new PlayersContainer();
     const board = this.generateBoard();
-    this.game = new Game(board, this.logger, this.uiController);
+    this.game = new Game(board, this.logger, this.uiController, this.playersContainer);
     this.uiController.updateBoard(this.game.board);
 
     this.periodicPieceGenerator = new PeriodicPieceGenerator(this.game, {
@@ -288,7 +291,7 @@ export class GameMaster implements Service {
   }
 
   private tryStartGame() {
-    const connectedPlayersCount = this.game.players.length;
+    const connectedPlayersCount = this.playersContainer.players.length;
     const requiredPlayersCount = this.options.teamSize * 2;
 
     if (connectedPlayersCount < requiredPlayersCount) {
@@ -337,7 +340,7 @@ export class GameMaster implements Service {
     this.game.start();
     this.updateState(GameMasterState.InGame);
 
-    this.game.players.forEach(player => {
+    this.playersContainer.players.forEach(player => {
       const message: RoundStartedMessage = {
         senderId: -1,
         recipientId: player.playerId,

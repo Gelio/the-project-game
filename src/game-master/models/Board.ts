@@ -32,6 +32,14 @@ export class Board {
     return tile;
   }
 
+  public addPlayer(player: Player) {
+    this.getTileAtPosition(player.position).player = player;
+  }
+
+  public removePlayer(point: Point) {
+    this.tiles[point.x][point.y].player = null;
+  }
+
   public movePlayer(player: Player, newPosition: Point) {
     const previousTile = this.getTileAtPosition(player.position);
     const newTile = this.getTileAtPosition(newPosition);

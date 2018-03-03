@@ -1,6 +1,7 @@
 import { LoggerInstance } from 'winston';
 
 import { Player } from './Player';
+import { PlayersContainer } from './PlayersContainer';
 
 import { createDelay } from '../common/createDelay';
 import { Point } from '../common/Point';
@@ -18,17 +19,23 @@ import { UIController } from './ui/UIController';
 export class Game {
   public hasStarted = false;
   public board: Board;
-  public readonly players: Player[] = [];
 
   // @ts-ignore
   private readonly logger: LoggerInstance;
   private readonly uiController: UIController;
+  private readonly playersContainer: PlayersContainer;
   private nextPlayerId = 1;
 
-  constructor(board: Board, logger: LoggerInstance, uiController: UIController) {
+  constructor(
+    board: Board,
+    logger: LoggerInstance,
+    uiController: UIController,
+    playersContainer: PlayersContainer
+  ) {
     this.board = board;
     this.logger = logger;
     this.uiController = uiController;
+    this.playersContainer = playersContainer;
   }
 
   public getNextPlayerId() {
@@ -38,7 +45,9 @@ export class Game {
   public processMessage<T, U>(message: Message<T>): ProcessMessageResult<U> {
     const delay = 500;
 
-    const sender = this.players.find(player => player.playerId === message.senderId);
+    const sender = this.playersContainer.players.find(
+      player => player.playerId === message.senderId
+    );
     if (!sender) {
       return {
         valid: false,
@@ -76,11 +85,11 @@ export class Game {
   }
 
   public getPlayersFromTeam(teamId: TeamId) {
-    return this.players.filter(player => player.teamId === teamId);
+    return this.playersContainer.players.filter(player => player.teamId === teamId);
   }
 
   public getConnectedPlayers() {
-    return this.players.filter(player => player.isConnected);
+    return this.playersContainer.players.filter(player => player.isConnected);
   }
 
   public start() {
@@ -91,21 +100,14 @@ export class Game {
     this.hasStarted = false;
   }
 
-  public addPlayer(player: Player) {
-    if (this.players.indexOf(player) !== -1) {
-      throw new Error('Player already added');
-    }
-    this.board.getTileAtPosition(player.position).player = player;
-    this.players.push(player);
+  public removePlayer(disconnectedPlayer: Player) {
+    this.board.removePlayer(disconnectedPlayer.position);
+    this.playersContainer.removePlayer(disconnectedPlayer);
   }
 
-  public removePlayer(player: Player) {
-    const playerIndex = this.players.indexOf(player);
-    if (playerIndex === -1) {
-      throw new Error('Player is not added');
-    }
-    this.board.tiles[player.position.x][player.position.y].player = null;
-    this.players.splice(playerIndex, 1);
+  private addPlayer(player: Player) {
+    this.board.addPlayer(player);
+    this.playersContainer.addPlayer(player);
   }
 
   private setRandomPlayerPosition(player: Player) {
