@@ -4,7 +4,6 @@ import { Player } from './Player';
 import { PlayersContainer } from './PlayersContainer';
 
 import { createDelay } from '../common/createDelay';
-import { Point } from '../common/Point';
 import { TeamId } from '../common/TeamId';
 
 import { Message } from '../interfaces/Message';
@@ -79,7 +78,6 @@ export class Game {
   }
 
   public addNewPlayer(player: Player) {
-    this.setRandomPlayerPosition(player);
     this.addPlayer(player);
     this.updateBoard();
   }
@@ -100,32 +98,23 @@ export class Game {
     this.hasStarted = false;
   }
 
+  public reset() {
+    this.board.reset();
+    this.setPlayersPositions();
+  }
+
   public removePlayer(disconnectedPlayer: Player) {
     this.board.removePlayer(disconnectedPlayer.position);
     this.playersContainer.removePlayer(disconnectedPlayer);
   }
 
+  public setPlayersPositions() {
+    this.playersContainer.players.forEach(x => this.board.setRandomPlayerPosition(x));
+  }
+
   private addPlayer(player: Player) {
     this.board.addPlayer(player);
     this.playersContainer.addPlayer(player);
-  }
-
-  private setRandomPlayerPosition(player: Player) {
-    const yRange = { min: 0, max: this.board.size.goalArea };
-    if (player.teamId === 2) {
-      yRange.min = this.board.size.goalArea + this.board.size.taskArea;
-      yRange.max = yRange.min + this.board.size.goalArea;
-    }
-
-    let position: Point;
-    do {
-      position = {
-        x: Math.floor(Math.random() * this.board.size.x),
-        y: yRange.min + Math.floor(Math.random() * (yRange.max - yRange.min))
-      };
-    } while (this.board.getTileAtPosition(position).player);
-
-    player.position = position;
   }
 
   private updateBoard() {

@@ -57,7 +57,7 @@ export class PeriodicPieceGenerator implements Service {
       const x = Math.floor(Math.random() * boardWidth);
       const y = Math.floor(minY + Math.random() * yRange);
       position = new Point(x, y);
-      tile = this.game.board.tiles[x][y];
+      tile = this.game.board.getTileAtPosition(new Point(x, y));
     } while (tile.piece && !tile.piece.isPickedUp);
 
     const piece = new Piece();

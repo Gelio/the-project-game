@@ -4,18 +4,23 @@ import { Player } from '../Player';
 import { Piece } from './Piece';
 import { Tile } from './tiles/Tile';
 
+import { GoalGenerator } from '../board-generation/GoalGenerator';
+import { TileGenerator } from '../board-generation/TileGenerator';
+
 export class Board {
   public readonly size: BoardSize;
-  public readonly tiles: Tile[][];
   public readonly pieces: Piece[] = [];
+  public readonly pointsLimit: number;
 
-  constructor(size: BoardSize, tiles: Tile[][]) {
+  private tiles: Tile[][];
+
+  constructor(size: BoardSize, pointsLimit: number) {
     this.size = size;
-    this.tiles = tiles;
+    this.pointsLimit = pointsLimit;
   }
 
   public reset() {
-    // TODO: implement this
+    this.generateBoard();
   }
 
   public getTileAtPosition(position: Point) {
@@ -32,7 +37,12 @@ export class Board {
     return tile;
   }
 
+  public getTilesCopy() {
+    return [...this.tiles];
+  }
+
   public addPlayer(player: Player) {
+    this.setRandomPlayerPosition(player);
     this.getTileAtPosition(player.position).player = player;
   }
 
@@ -104,5 +114,31 @@ export class Board {
     previousTile.piece = null;
     newTile.piece = piece;
     piece.position = newPosition;
+  }
+
+  public generateBoard() {
+    const tileGenerator = new TileGenerator();
+    const tiles = tileGenerator.generateBoardTiles(this.size);
+    const goalGenerator = new GoalGenerator();
+    goalGenerator.generateGoals(this.pointsLimit, tiles, this.size);
+    this.tiles = tiles;
+  }
+
+  public setRandomPlayerPosition(player: Player) {
+    const yRange = { min: 0, max: this.size.goalArea };
+    if (player.teamId === 2) {
+      yRange.min = this.size.goalArea + this.size.taskArea;
+      yRange.max = yRange.min + this.size.goalArea;
+    }
+
+    let position: Point;
+    do {
+      position = {
+        x: Math.floor(Math.random() * this.size.x),
+        y: yRange.min + Math.floor(Math.random() * (yRange.max - yRange.min))
+      };
+    } while (this.getTileAtPosition(position).player);
+
+    player.position = position;
   }
 }
