@@ -19,7 +19,6 @@ describe('[GM] Board', () => {
     beforeEach(() => {
       pointsLimit = 15;
       board = new Board(boardSize, pointsLimit);
-      board.generateBoard();
       piece = new Piece();
       piecePosition = new Point(1, boardSize.goalArea + 1);
       piece.isPickedUp = false;
@@ -84,7 +83,6 @@ describe('[GM] Board', () => {
     let player: Player;
     beforeAll(() => {
       board = new Board(boardSize, pointsLimit);
-      board.generateBoard();
     });
 
     beforeEach(() => {
