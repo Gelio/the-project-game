@@ -261,7 +261,6 @@ export class GameMaster implements Service {
   private initGame() {
     this.playersContainer = new PlayersContainer();
     const board = this.createBoard();
-    board.generateBoard();
     this.game = new Game(board, this.logger, this.uiController, this.playersContainer);
     this.uiController.updateBoard(this.game.board);
 
@@ -299,7 +298,6 @@ export class GameMaster implements Service {
       throw new Error('Game cannot start without both leaders');
     }
 
-    this.game.board.generateBoard();
     this.game.setPlayersPositions();
     this.periodicPieceGenerator.init();
     const roundStartedPayload: RoundStartedMessagePayload = {

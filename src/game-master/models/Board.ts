@@ -22,6 +22,7 @@ export class Board {
     this.size = size;
     this.pointsLimit = pointsLimit;
     this.generatePossibleTeamPositions();
+    this.generateBoard();
   }
 
   public reset() {
@@ -121,14 +122,6 @@ export class Board {
     piece.position = newPosition;
   }
 
-  public generateBoard() {
-    const tileGenerator = new TileGenerator();
-    const tiles = tileGenerator.generateBoardTiles(this.size);
-    const goalGenerator = new GoalGenerator();
-    goalGenerator.generateGoals(this.pointsLimit, tiles, this.size);
-    this.tiles = tiles;
-  }
-
   public setRandomPlayerPosition(player: Player) {
     let possiblePositions = this.firstTeamPositions;
     if (player.teamId === 2) {
@@ -141,6 +134,14 @@ export class Board {
         break;
       }
     }
+  }
+
+  private generateBoard() {
+    const tileGenerator = new TileGenerator();
+    const tiles = tileGenerator.generateBoardTiles(this.size);
+    const goalGenerator = new GoalGenerator();
+    goalGenerator.generateGoals(this.pointsLimit, tiles, this.size);
+    this.tiles = tiles;
   }
 
   private generatePossibleTeamPositions() {
