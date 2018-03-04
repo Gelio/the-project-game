@@ -32,12 +32,30 @@ export class Board {
     return tile;
   }
 
+  public setRandomPlayerPosition(player: Player) {
+    const yRange = { min: 0, max: this.size.goalArea };
+    if (player.teamId === 2) {
+      yRange.min = this.size.goalArea + this.size.taskArea;
+      yRange.max = yRange.min + this.size.goalArea;
+    }
+
+    let position: Point;
+    do {
+      position = {
+        x: Math.floor(Math.random() * this.size.x),
+        y: yRange.min + Math.floor(Math.random() * (yRange.max - yRange.min))
+      };
+    } while (this.getTileAtPosition(position).player);
+
+    player.position = position;
+  }
+
   public addPlayer(player: Player) {
     this.getTileAtPosition(player.position).player = player;
   }
 
-  public removePlayer(point: Point) {
-    this.tiles[point.x][point.y].player = null;
+  public removePlayer(player: Player) {
+    this.tiles[player.position.x][player.position.y].player = null;
   }
 
   public movePlayer(player: Player, newPosition: Point) {

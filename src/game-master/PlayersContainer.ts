@@ -1,4 +1,5 @@
 import { Player } from './Player';
+import { TeamId } from '../common/TeamId';
 
 export class PlayersContainer {
   public readonly players: Player[] = [];
@@ -16,5 +17,17 @@ export class PlayersContainer {
       throw new Error('Player is not added');
     }
     this.players.splice(playerIndex, 1);
+  }
+
+  public getPlayersFromTeam(teamId: TeamId) {
+    return this.players.filter(player => player.teamId === teamId);
+  }
+
+  public getConnectedPlayers() {
+    return this.players.filter(player => player.isConnected);
+  }
+
+  public getPlayerById(playerId: number) {
+    return this.players.find(player => player.playerId === playerId);
   }
 }

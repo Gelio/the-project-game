@@ -192,7 +192,7 @@ export class GameMaster implements Service {
   }
 
   private tryAcceptPlayer(message: PlayerHelloMessage) {
-    const teamPlayers = this.game.getPlayersFromTeam(message.payload.teamId);
+    const teamPlayers = this.game.playersContainer.getPlayersFromTeam(message.payload.teamId);
 
     if (this.game.hasStarted) {
       const disconnectedPlayer = teamPlayers.find(
@@ -227,16 +227,14 @@ export class GameMaster implements Service {
     newPlayer.isBusy = false;
     newPlayer.isConnected = true;
 
-    this.game.addNewPlayer(newPlayer);
+    this.game.addPlayer(newPlayer);
 
     return newPlayer.playerId;
   }
 
   private handlePlayerDisconnectedMessage(message: PlayerDisconnectedMessage) {
     this.logger.verbose('Received player disconnected message');
-    const disconnectedPlayer = this.playersContainer.players.find(
-      player => player.playerId === message.payload.playerId
-    );
+    const disconnectedPlayer = this.playersContainer.getPlayerById(message.payload.playerId);
 
     if (!this.game.hasStarted) {
       if (disconnectedPlayer) {
@@ -253,7 +251,7 @@ export class GameMaster implements Service {
 
     disconnectedPlayer.isConnected = false;
 
-    const connectedPlayers = this.game.getConnectedPlayers();
+    const connectedPlayers = this.game.playersContainer.getConnectedPlayers();
     if (connectedPlayers.length === 0) {
       this.logger.info('All players disconnected, disconnecting from the server');
       this.destroy();
@@ -308,8 +306,8 @@ export class GameMaster implements Service {
   private startGame() {
     this.logger.info('Game is starting...');
 
-    const team1Players = this.game.getPlayersFromTeam(1);
-    const team2Players = this.game.getPlayersFromTeam(2);
+    const team1Players = this.game.playersContainer.getPlayersFromTeam(1);
+    const team2Players = this.game.playersContainer.getPlayersFromTeam(2);
     const team1Leader = team1Players.find(player => player.isLeader);
     const team2Leader = team2Players.find(player => player.isLeader);
 
