@@ -44,8 +44,11 @@ export class Board {
   }
 
   public addPlayer(player: Player) {
+    if (player.position) {
+      throw new Error('Player is already added on board');
+    }
+
     this.setRandomPlayerPosition(player);
-    this.getTileAtPosition(player.position).player = player;
   }
 
   public removePlayer(player: Player) {
@@ -66,6 +69,7 @@ export class Board {
 
     previousTile.player = null;
     newTile.player = player;
+    player.position = newPosition;
   }
 
   public addPiece(piece: Piece) {
@@ -123,13 +127,17 @@ export class Board {
     if (player.teamId === 2) {
       possiblePositions = this.secondTeamPositions;
     }
-
+    if (player.position) {
+      this.getTileAtPosition(player.position).player = null;
+    }
     for (const position of possiblePositions) {
       if (!this.getTileAtPosition(position).player) {
         player.position = position;
         break;
       }
     }
+
+    this.getTileAtPosition(player.position).player = player;
   }
 
   private generateBoard() {
