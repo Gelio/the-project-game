@@ -7,7 +7,6 @@ import { Tile } from './tiles/Tile';
 export class Board {
   public readonly size: BoardSize;
   public readonly tiles: Tile[][];
-  public readonly players: Player[] = [];
   public readonly pieces: Piece[] = [];
 
   constructor(size: BoardSize, tiles: Tile[][]) {
@@ -33,23 +32,30 @@ export class Board {
     return tile;
   }
 
-  public addPlayer(player: Player) {
-    if (this.players.indexOf(player) !== -1) {
-      throw new Error('Player already added');
+  public setRandomPlayerPosition(player: Player) {
+    const yRange = { min: 0, max: this.size.goalArea };
+    if (player.teamId === 2) {
+      yRange.min = this.size.goalArea + this.size.taskArea;
+      yRange.max = yRange.min + this.size.goalArea;
     }
 
+    let position: Point;
+    do {
+      position = {
+        x: Math.floor(Math.random() * this.size.x),
+        y: yRange.min + Math.floor(Math.random() * (yRange.max - yRange.min))
+      };
+    } while (this.getTileAtPosition(position).player);
+
+    player.position = position;
+  }
+
+  public addPlayer(player: Player) {
     this.getTileAtPosition(player.position).player = player;
-    this.players.push(player);
   }
 
   public removePlayer(player: Player) {
-    const playerIndex = this.players.indexOf(player);
-    if (playerIndex === -1) {
-      throw new Error('Player is not added');
-    }
-
     this.tiles[player.position.x][player.position.y].player = null;
-    this.players.splice(playerIndex, 1);
   }
 
   public movePlayer(player: Player, newPosition: Point) {
