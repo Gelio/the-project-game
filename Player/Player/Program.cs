@@ -7,7 +7,7 @@ namespace Player
   {
     static void Main(string[] args)
     {
-      var playerCommunicator = new PlayerCommunicator("10.1.2.199", 4200);
+      var playerCommunicator = new PlayerCommunicator("localhost", 4200);
 
       var message = @"{
   ""type"": ""PLAYER_HELLO"",

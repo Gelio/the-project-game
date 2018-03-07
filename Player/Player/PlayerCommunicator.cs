@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using System.Net;
 
 namespace Player
 {
@@ -18,16 +19,6 @@ namespace Player
       Console.WriteLine(tcpClient.Connected);
     }
 
-    //public void SendRequest()
-    //{
-    //  throw new NotImplementedException();
-    //}
-
-    //public void SendResponse()
-    //{
-    //  throw new NotImplementedException();
-    //}
-
     public void Send(string message)
     {
       var stream = tcpClient.GetStream();
@@ -38,25 +29,29 @@ namespace Player
         senderId = -2,
         payload = new
         {
-          teamId = 1,
           isLeader = true,
-          temporaryId = 848573
+	        teamId = 1,
+          temporaryId = 8485732109876543
         }
       };
 
       var j = JsonConvert.SerializeObject(lol);
       var buffer = System.Text.Encoding.ASCII.GetBytes(j);
 
-      Console.WriteLine(j);
-      for (int i = 0; i < 5; i++)
+      // Send message length
+      var len =  BitConverter.GetBytes(IPAddress.HostToNetworkOrder(buffer.Length));
+      stream.Write(len, 0, len.Length);
+
+      // Send message
+      stream.Write(buffer, 0, buffer.Length);
+
+
+      var readBuffer = new byte[200];
+      while(true)
       {
-        stream.Write(buffer, 0, buffer.Length);
-
+        stream.Read(readBuffer, 0, readBuffer.Length);
+        Console.WriteLine(System.Text.Encoding.ASCII.GetString(readBuffer));
       }
-      //await stream.WriteAsync(buffer, 0, buffer.Length);
-
-      stream.Read(buffer, 0, buffer.Length);
-
     }
   }
 }
