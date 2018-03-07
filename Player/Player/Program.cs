@@ -1,12 +1,26 @@
-﻿using System;
+using System;
+using System.Runtime.Serialization.Json;
 
 namespace Player
 {
-    class Program
+  class Program
+  {
+    static void Main(string[] args)
     {
-        static void Main(string[] args)
-        {
-            Console.WriteLine("Hello World!");
-        }
+      var playerCommunicator = new PlayerCommunicator("10.1.2.199", 4200);
+
+      var message = @"{
+  ""type"": ""PLAYER_HELLO"",
+  ""senderId"": -2,
+  ""payload"": {
+    ""teamId"": 1,
+    ""isLeader"": true,
+    ""temporaryId"": 12431253
+  }
+}
+";
+
+      playerCommunicator.Send(message);
     }
+  }
 }
