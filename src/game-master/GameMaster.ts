@@ -27,7 +27,6 @@ import { PeriodicPieceGenerator } from './board-generation/PeriodicPieceGenerato
 
 import { Game } from './Game';
 import { GameMasterState } from './GameMasterState';
-import { Board } from './models/Board';
 import { Player } from './Player';
 import { PlayersContainer } from './PlayersContainer';
 
@@ -258,8 +257,18 @@ export class GameMaster implements Service {
 
   private initGame() {
     this.playersContainer = new PlayersContainer();
-    const board = this.createBoard();
-    this.game = new Game(board, this.logger, this.uiController, this.playersContainer);
+    const boardSize: BoardSize = {
+      x: this.options.boardWidth,
+      goalArea: this.options.goalAreaHeight,
+      taskArea: this.options.taskAreaHeight
+    };
+    this.game = new Game(
+      boardSize,
+      this.options.pointsLimit,
+      this.logger,
+      this.uiController,
+      this.playersContainer
+    );
     this.uiController.updateBoard(this.game.board);
 
     this.periodicPieceGenerator = new PeriodicPieceGenerator(this.game, {
@@ -357,15 +366,5 @@ export class GameMaster implements Service {
     this.logger = this.loggerFactory.createLogger([uiTransport]);
     registerUncaughtExceptionHandler(this.logger);
     this.logger.info('Logger initiated');
-  }
-
-  private createBoard() {
-    const boardSize: BoardSize = {
-      x: this.options.boardWidth,
-      goalArea: this.options.goalAreaHeight,
-      taskArea: this.options.taskAreaHeight
-    };
-
-    return new Board(boardSize, this.options.pointsLimit);
   }
 }

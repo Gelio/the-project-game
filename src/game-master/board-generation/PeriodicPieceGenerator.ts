@@ -1,4 +1,5 @@
 import { arrayShuffle } from '../../common/arrayShuffle';
+
 import { Point } from '../../common/Point';
 import { Service } from '../../interfaces/Service';
 import { Game } from '../Game';
