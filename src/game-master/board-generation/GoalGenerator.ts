@@ -17,7 +17,7 @@ export class GoalGenerator {
     }
     arrayShuffle(allPositions);
 
-    const positions = allPositions.slice(count);
+    const positions = allPositions.slice(0, count);
 
     const boardWidth = boardSize.x;
     const boardHeight = boardSize.taskArea + boardSize.goalArea * 2;
