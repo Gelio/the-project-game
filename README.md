@@ -20,7 +20,7 @@ is used to leverage [Typescript](https://www.typescriptlang.org/)'s type system 
 
 First, install all necessary dependencies:
 
-``` bash
+```bash
 npm install
 ```
 
@@ -31,7 +31,7 @@ should be available.
 
 Next, run:
 
-``` bash
+```bash
 npm run communication-server
 ```
 
@@ -44,7 +44,7 @@ and port of the Communication Server are correct.
 
 Next, run:
 
-``` bash
+```bash
 npm run game-master
 ```
 
@@ -57,7 +57,7 @@ sure to edit it accordingly after starting each Player.
 
 Run
 
-``` bash
+```bash
 npm run player
 ```
 
@@ -67,18 +67,24 @@ to start a single Player. The terminal you ran the command in should now display
 
 The following command runs the tests:
 
-``` bash
+```bash
 npm run test
 ```
 
 During development it is convenient to use the _watch_ mode:
 
-``` bash
+```bash
 npm run test:watch
 ```
 
 It only runs test suites that correspond to changed files and is generally much faster
 than running the whole test suite every time.
+
+To generate test coverage run:
+
+```bash
+npm run test:coverage
+```
 
 This project uses [jest](https://facebook.github.io/jest/) as a testing framework.
 
@@ -86,7 +92,7 @@ This project uses [jest](https://facebook.github.io/jest/) as a testing framewor
 
 The following command runs the linter:
 
-``` bash
+```bash
 npm run lint
 ```
 
@@ -95,7 +101,7 @@ and [tslint](https://palantir.github.io/tslint/) for linting and error-checking.
 
 You may want to use one of the following commands:
 
-``` bash
+```bash
 npm run lint:tsc
 npm run lint:tslint
 ```

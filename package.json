@@ -31,6 +31,7 @@
     "precommit": "lint-staged",
     "test": "jest",
     "test:watch": "jest --watch",
+    "test:coverage": "jest --collectCoverage",
     "lint": "npm run lint:tsc && npm run lint:tslint",
     "lint:tsc": "tsc --noEmit",
     "lint:tslint": "tslint -c tslint.json -p tsconfig.json 'src/**/*.ts'"
@@ -43,7 +44,13 @@
       "^.+\\.tsx?$": "ts-jest"
     },
     "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
-    "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"]
+    "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"],
+    "collectCoverageFrom": [
+      "**/*.{js,jsx,ts,tsx}",
+      "!**/*.d.ts",
+      "!**/node_modules/**",
+      "!**/vendor/**"
+    ]
   },
   "lint-staged": {
     "*.{js,json,css,md,ts}": ["prettier --write", "git add"]
