@@ -14,9 +14,9 @@ export class Board {
   public readonly pieces: Piece[] = [];
   public readonly pointsLimit: number;
 
-  private tiles: Tile[][];
-  private firstTeamPositions: Point[];
-  private secondTeamPositions: Point[];
+  private tiles: Tile[][] = [];
+  private firstTeamPositions: Point[] = [];
+  private secondTeamPositions: Point[] = [];
 
   constructor(size: BoardSize, pointsLimit: number) {
     this.size = size;
@@ -52,8 +52,8 @@ export class Board {
     this.getTileAtPosition(player.position).player = player;
   }
 
-  public removePlayer(point: Point) {
-    this.tiles[point.x][point.y].player = null;
+  public removePlayer(player: Player) {
+    this.tiles[player.position.x][player.position.y].player = null;
   }
 
   public movePlayer(player: Player, newPosition: Point) {

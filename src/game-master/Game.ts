@@ -4,7 +4,6 @@ import { Player } from './Player';
 import { PlayersContainer } from './PlayersContainer';
 
 import { createDelay } from '../common/createDelay';
-import { TeamId } from '../common/TeamId';
 
 import { Message } from '../interfaces/Message';
 import { MessageWithRecipient } from '../interfaces/MessageWithRecipient';
@@ -18,11 +17,11 @@ import { UIController } from './ui/UIController';
 export class Game {
   public hasStarted = false;
   public board: Board;
+  public playersContainer: PlayersContainer;
 
   // @ts-ignore
   private readonly logger: LoggerInstance;
   private readonly uiController: UIController;
-  private readonly playersContainer: PlayersContainer;
   private nextPlayerId = 1;
 
   constructor(
@@ -44,9 +43,7 @@ export class Game {
   public processMessage<T, U>(message: Message<T>): ProcessMessageResult<U> {
     const delay = 500;
 
-    const sender = this.playersContainer.players.find(
-      player => player.playerId === message.senderId
-    );
+    const sender = this.playersContainer.getPlayerById(message.senderId);
     if (!sender) {
       return {
         valid: false,
@@ -77,19 +74,6 @@ export class Game {
     };
   }
 
-  public addNewPlayer(player: Player) {
-    this.addPlayer(player);
-    this.updateBoard();
-  }
-
-  public getPlayersFromTeam(teamId: TeamId) {
-    return this.playersContainer.players.filter(player => player.teamId === teamId);
-  }
-
-  public getConnectedPlayers() {
-    return this.playersContainer.players.filter(player => player.isConnected);
-  }
-
   public start() {
     this.hasStarted = true;
   }
@@ -104,7 +88,7 @@ export class Game {
   }
 
   public removePlayer(disconnectedPlayer: Player) {
-    this.board.removePlayer(disconnectedPlayer.position);
+    this.board.removePlayer(disconnectedPlayer);
     this.playersContainer.removePlayer(disconnectedPlayer);
   }
 
@@ -112,9 +96,11 @@ export class Game {
     this.playersContainer.players.forEach(x => this.board.setRandomPlayerPosition(x));
   }
 
-  private addPlayer(player: Player) {
-    this.board.addPlayer(player);
+  public addPlayer(player: Player) {
+    if (player.position === undefined) this.board.setRandomPlayerPosition(player);
     this.playersContainer.addPlayer(player);
+    this.board.addPlayer(player);
+    this.updateBoard();
   }
 
   private updateBoard() {
