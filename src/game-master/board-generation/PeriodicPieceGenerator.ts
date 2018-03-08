@@ -70,11 +70,13 @@ export class PeriodicPieceGenerator implements Service {
       const tile = this.game.board.getTileAtPosition(position);
       return !tile.piece || !tile.piece.isPickedUp;
     });
-    if (position != null) {
-      piece.position = position;
-      this.game.board.addPiece(piece);
-    } else {
-      this.logger.warn('No place for next piece!');
+
+    if (!position) {
+      this.logger.warn('No place for next piece to be generated');
+      return;
     }
+
+    piece.position = position;
+    this.game.board.addPiece(piece);
   }
 }
