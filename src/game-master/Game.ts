@@ -13,6 +13,7 @@ import { Board } from './models/Board';
 import { ProcessMessageResult } from './ProcessMessageResult';
 
 import { UIController } from './ui/UIController';
+import { BoardSize } from '../interfaces/BoardSize';
 
 export class Game {
   public hasStarted = false;
@@ -24,13 +25,15 @@ export class Game {
   private readonly uiController: UIController;
   private nextPlayerId = 1;
 
+  //TODO: Consider implementing board factory
   constructor(
-    board: Board,
+    boardSize: BoardSize,
+    pointsLimit: number,
     logger: LoggerInstance,
     uiController: UIController,
     playersContainer: PlayersContainer
   ) {
-    this.board = board;
+    this.board = new Board(boardSize, pointsLimit);
     this.logger = logger;
     this.uiController = uiController;
     this.playersContainer = playersContainer;
@@ -82,9 +85,18 @@ export class Game {
     this.hasStarted = false;
   }
 
+  public reset() {
+    this.board.reset();
+    this.setPlayersPositions();
+  }
+
   public removePlayer(disconnectedPlayer: Player) {
     this.board.removePlayer(disconnectedPlayer);
     this.playersContainer.removePlayer(disconnectedPlayer);
+  }
+
+  public setPlayersPositions() {
+    this.playersContainer.players.forEach(x => this.board.setRandomPlayerPosition(x));
   }
 
   public addPlayer(player: Player) {

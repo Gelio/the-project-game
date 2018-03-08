@@ -23,13 +23,10 @@ import { Service } from '../interfaces/Service';
 
 import { registerUncaughtExceptionHandler } from '../registerUncaughtExceptionHandler';
 
-import { GoalGenerator } from './board-generation/GoalGenerator';
 import { PeriodicPieceGenerator } from './board-generation/PeriodicPieceGenerator';
-import { TileGenerator } from './board-generation/TileGenerator';
 
 import { Game } from './Game';
 import { GameMasterState } from './GameMasterState';
-import { Board } from './models/Board';
 import { Player } from './Player';
 import { PlayersContainer } from './PlayersContainer';
 
@@ -260,32 +257,29 @@ export class GameMaster implements Service {
 
   private initGame() {
     this.playersContainer = new PlayersContainer();
-    const board = this.generateBoard();
-    this.game = new Game(board, this.logger, this.uiController, this.playersContainer);
-    this.uiController.updateBoard(this.game.board);
-
-    this.periodicPieceGenerator = new PeriodicPieceGenerator(this.game, {
-      checkInterval: this.options.generatePiecesInterval,
-      piecesLimit: this.options.piecesLimit,
-      shamChance: this.options.shamChance
-    });
-  }
-
-  private generateBoard() {
     const boardSize: BoardSize = {
       x: this.options.boardWidth,
       goalArea: this.options.goalAreaHeight,
       taskArea: this.options.taskAreaHeight
     };
+    this.game = new Game(
+      boardSize,
+      this.options.pointsLimit,
+      this.logger,
+      this.uiController,
+      this.playersContainer
+    );
+    this.uiController.updateBoard(this.game.board);
 
-    const tileGenerator = new TileGenerator();
-    const tiles = tileGenerator.generateBoardTiles(boardSize);
-    this.logger.verbose(`Generated board of size ${tiles[0].length}x${tiles.length}`);
-
-    const goalGenerator = new GoalGenerator();
-    goalGenerator.generateGoals(this.options.pointsLimit, tiles, boardSize);
-
-    return new Board(boardSize, tiles);
+    this.periodicPieceGenerator = new PeriodicPieceGenerator(
+      this.game,
+      {
+        checkInterval: this.options.generatePiecesInterval,
+        piecesLimit: this.options.piecesLimit,
+        shamChance: this.options.shamChance
+      },
+      this.logger
+    );
   }
 
   private tryStartGame() {
@@ -315,8 +309,8 @@ export class GameMaster implements Service {
       throw new Error('Game cannot start without both leaders');
     }
 
+    this.game.setPlayersPositions();
     this.periodicPieceGenerator.init();
-
     const roundStartedPayload: RoundStartedMessagePayload = {
       boardSize: this.game.board.size,
       currentRound: 0,
@@ -334,7 +328,6 @@ export class GameMaster implements Service {
         }
       }
     };
-
     this.game.start();
     this.updateState(GameMasterState.InGame);
 
