@@ -271,11 +271,15 @@ export class GameMaster implements Service {
     );
     this.uiController.updateBoard(this.game.board);
 
-    this.periodicPieceGenerator = new PeriodicPieceGenerator(this.game, {
-      checkInterval: this.options.generatePiecesInterval,
-      piecesLimit: this.options.piecesLimit,
-      shamChance: this.options.shamChance
-    });
+    this.periodicPieceGenerator = new PeriodicPieceGenerator(
+      this.game,
+      {
+        checkInterval: this.options.generatePiecesInterval,
+        piecesLimit: this.options.piecesLimit,
+        shamChance: this.options.shamChance
+      },
+      this.logger
+    );
   }
 
   private tryStartGame() {

@@ -14,7 +14,7 @@ export class Board {
   public readonly pieces: Piece[] = [];
   public readonly pointsLimit: number;
 
-  private tiles: Tile[][] = [];
+  public tiles: Tile[][] = [];
   private firstTeamPositions: Point[] = [];
   private secondTeamPositions: Point[] = [];
 
@@ -41,10 +41,6 @@ export class Board {
     }
 
     return tile;
-  }
-
-  public getTilesCopy() {
-    return [...this.tiles];
   }
 
   public addPlayer(player: Player) {

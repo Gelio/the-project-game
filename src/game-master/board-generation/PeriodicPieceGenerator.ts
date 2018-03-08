@@ -1,5 +1,7 @@
 import { arrayShuffle } from '../../common/arrayShuffle';
 
+import { LoggerInstance } from 'winston';
+
 import { Point } from '../../common/Point';
 import { Service } from '../../interfaces/Service';
 import { Game } from '../Game';
@@ -14,12 +16,14 @@ export interface PeriodicPieceGeneratorOptions {
 export class PeriodicPieceGenerator implements Service {
   private readonly game: Game;
   private readonly options: PeriodicPieceGeneratorOptions;
+  private readonly logger: LoggerInstance;
 
   private intervalId: NodeJS.Timer | undefined;
 
-  constructor(game: Game, options: PeriodicPieceGeneratorOptions) {
+  constructor(game: Game, options: PeriodicPieceGeneratorOptions, logger: LoggerInstance) {
     this.game = game;
     this.options = options;
+    this.logger = logger;
   }
 
   public init() {
@@ -62,13 +66,15 @@ export class PeriodicPieceGenerator implements Service {
     piece.isPickedUp = false;
 
     arrayShuffle(allPositions);
-    for (const position of allPositions) {
+    const position = allPositions.find(position => {
       const tile = this.game.board.getTileAtPosition(position);
-      if (!tile.piece || !tile.piece.isPickedUp) {
-        piece.position = position;
-        break;
-      }
+      return !tile.piece || !tile.piece.isPickedUp;
+    });
+    if (position != null) {
+      piece.position = position;
+      this.game.board.addPiece(piece);
+    } else {
+      this.logger.warn('No place for next piece!');
     }
-    this.game.board.addPiece(piece);
   }
 }

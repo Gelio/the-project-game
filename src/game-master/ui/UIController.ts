@@ -75,7 +75,7 @@ export class UIController implements Service {
 
   public updateBoard(board: Board) {
     this.boardBox.setContent(`${config.uiLabelStyle}Board{/}`);
-    const tilesCopy = board.getTilesCopy();
+    const tilesCopy = board.tiles;
     for (let y = 0; y < tilesCopy[0].length; y++) {
       const line = tilesCopy.map(tilesRow => this.boardFormatter.displayTile(board, tilesRow[y]));
       this.boardBox.pushLine(line.join(''));
