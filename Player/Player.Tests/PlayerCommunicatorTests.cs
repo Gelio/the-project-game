@@ -6,14 +6,14 @@ using System.Net;
 
 namespace Player.Tests
 {
-  [TestFixture]
-  class PlayerCommunicatorTests
-  {
-    [Test]
-    public void AlwaysPasses()
+    [TestFixture]
+    class PlayerCommunicatorTests
     {
-      Assert.That(true);
-    }
+        [Test]
+        public void AlwaysPasses()
+        {
+            Assert.That(true);
+        }
 
-  }
+    }
 }

@@ -3,13 +3,13 @@ using System.Runtime.Serialization.Json;
 
 namespace Player
 {
-  class Program
-  {
-    static void Main(string[] args)
+    class Program
     {
-      var playerCommunicator = new PlayerCommunicator("localhost", 4200);
+        static void Main(string[] args)
+        {
+            var playerCommunicator = new Communicator("localhost", 4200);
 
-      var message = @"{
+            var message = @"{
   ""type"": ""PLAYER_HELLO"",
   ""senderId"": -2,
   ""payload"": {
@@ -17,10 +17,14 @@ namespace Player
     ""isLeader"": true,
     ""temporaryId"": 12431253
   }
-}
-";
+}";
 
-      playerCommunicator.Send(message);
+            playerCommunicator.Send(message);
+            while (true)
+            {
+                var recv = playerCommunicator.Receive();
+                Console.WriteLine($"Received message: {recv}");
+            }
+        }
     }
-  }
 }
