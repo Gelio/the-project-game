@@ -1,5 +1,5 @@
-import { Player } from './Player';
 import { TeamId } from '../common/TeamId';
+import { Player } from './Player';
 
 export class PlayersContainer {
   public readonly players: Player[] = [];
