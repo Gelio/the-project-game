@@ -8,15 +8,16 @@ using System.Threading.Tasks;
 namespace Player.Tests
 {
     [TestFixture]
-    class PlayerCommunicatorTests
+    class CommunicatorTests
     {
+        private int _port;
         private TcpListener _server;
         private Task<TcpClient> _acceptTask;
-        private int _port = 12031;
 
         [SetUp]
         public void Setup()
         {
+            _port = new Random().Next(49152, 65535);
             _server = new TcpListener(IPAddress.Loopback, _port);
             _server.Start();
             _acceptTask = _server.AcceptTcpClientAsync();
@@ -26,7 +27,6 @@ namespace Player.Tests
         public void TearDown()
         {
             _server.Stop();
-
         }
 
         [Test]
@@ -38,7 +38,6 @@ namespace Player.Tests
 
             // Then
             Assert.That(communicatorSeenFromServer.Connected);
-
         }
 
         [Test]
@@ -46,24 +45,23 @@ namespace Player.Tests
         {
             // Give
             var message = "testMessage";
-
             var communicator = new Communicator("localhost", _port);
+            var communicatorSeenFromServer = await _acceptTask;
+            var stream = communicatorSeenFromServer.GetStream();
 
-            var communicatoSeenFromServer = await _acceptTask;
+            // When
             communicator.Send(message);
 
-            var byteStream = communicatoSeenFromServer.GetStream();
-
-            byte[] byteArray = new byte[4];
-            byteStream.Read(byteArray, 0, 4);
-
-            var messageLen = IPAddress.NetworkToHostOrder(BitConverter.ToInt32(byteArray, 0));
+            byte[] fourBytes = new byte[4];
+            stream.Read(fourBytes, 0, 4);
+            var messageLen = IPAddress.NetworkToHostOrder(BitConverter.ToInt32(fourBytes, 0));
 
             byte[] buffer = new byte[messageLen];
-            byteStream.Read(buffer, 0, messageLen);
+            stream.Read(buffer, 0, messageLen);
+            var result = System.Text.Encoding.UTF8.GetString(buffer);
 
-            Assert.That(message == System.Text.Encoding.UTF8.GetString(buffer));
-
+            // Then
+            Assert.That(String.Equals(message, result));
         }
     }
 }
