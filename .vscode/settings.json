@@ -8,6 +8,17 @@
     "**/.DS_Store": true,
     "**/node_modules": true
   },
-  "todohighlight.keywords": ["REFACTOR:", "NOTE:"],
+  "todohighlight.keywords": [
+    {
+      "text": "REFACTOR:",
+      "backgroundColor": "blue",
+      "color": "#e2e2e2"
+    },
+    {
+      "text": "NOTE:",
+      "backgroundColor": "green",
+      "color": "#ffcccc"
+    }
+  ],
   "editor.formatOnSave": true
 }
