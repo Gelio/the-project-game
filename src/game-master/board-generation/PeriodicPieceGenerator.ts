@@ -66,17 +66,19 @@ export class PeriodicPieceGenerator implements Service {
     piece.isPickedUp = false;
 
     arrayShuffle(allPositions);
-    const position = allPositions.find(position => {
+    const newPiecePosition = allPositions.find(position => {
       const tile = this.game.board.getTileAtPosition(position);
+
       return !tile.piece || !tile.piece.isPickedUp;
     });
 
-    if (!position) {
+    if (!newPiecePosition) {
       this.logger.warn('No place for next piece to be generated');
+
       return;
     }
 
-    piece.position = position;
+    piece.position = newPiecePosition;
     this.game.board.addPiece(piece);
   }
 }

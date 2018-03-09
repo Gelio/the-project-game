@@ -5,6 +5,7 @@ import { PlayersContainer } from './PlayersContainer';
 
 import { createDelay } from '../common/createDelay';
 
+import { BoardSize } from '../interfaces/BoardSize';
 import { Message } from '../interfaces/Message';
 import { MessageWithRecipient } from '../interfaces/MessageWithRecipient';
 
@@ -13,7 +14,6 @@ import { Board } from './models/Board';
 import { ProcessMessageResult } from './ProcessMessageResult';
 
 import { UIController } from './ui/UIController';
-import { BoardSize } from '../interfaces/BoardSize';
 
 export class Game {
   public hasStarted = false;
@@ -100,7 +100,9 @@ export class Game {
   }
 
   public addPlayer(player: Player) {
-    if (player.position === undefined) this.board.setRandomPlayerPosition(player);
+    if (player.position === undefined) {
+      this.board.setRandomPlayerPosition(player);
+    }
     this.playersContainer.addPlayer(player);
     this.board.addPlayer(player);
     this.updateBoard();
