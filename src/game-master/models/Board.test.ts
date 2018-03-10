@@ -12,13 +12,16 @@ describe('[GM] Board', () => {
   };
   let board: Board;
   let pointsLimit: number;
+  beforeAll(() => {
+    board = new Board(boardSize, pointsLimit);
+  });
 
   describe('piece', () => {
     let piece: Piece;
     let piecePosition: Point;
     beforeEach(() => {
       pointsLimit = 15;
-      board = new Board(boardSize, pointsLimit);
+      board.reset();
       piece = new Piece();
       piecePosition = new Point(1, boardSize.goalArea + 1);
       piece.isPickedUp = false;
@@ -47,6 +50,11 @@ describe('[GM] Board', () => {
       board.removePiece(piece);
       board.addPiece(piece);
       expect(board.getTileAtPosition(piecePosition).piece).toBe(piece);
+    });
+    it('remove picked up piece', () => {
+      piece.isPickedUp = false;
+      board.removePiece(piece);
+      expect(board.getTileAtPosition(piece.position).piece).toBe(null);
     });
     it('move piece to different position', () => {
       const newPiecePosition = new Point(piecePosition.x + 1, piecePosition.y);
@@ -81,10 +89,6 @@ describe('[GM] Board', () => {
 
   describe('player', () => {
     let player: Player;
-    beforeAll(() => {
-      board = new Board(boardSize, pointsLimit);
-    });
-
     beforeEach(() => {
       board.reset();
       player = new Player();
@@ -105,14 +109,14 @@ describe('[GM] Board', () => {
     it('should be moved to new position', () => {
       board.addPlayer(player);
       const playerPosition = player.position;
-      const newPosition = new Point(playerPosition.x + 1, player.position.y);
+      const newPosition = new Point(1, 2);
       board.movePlayer(player, newPosition);
       expect(player.position).toBe(newPosition);
     });
     it('should throw error when player position does not match board', () => {
       board.addPlayer(player);
       const playerPosition = player.position;
-      const newPosition = new Point(playerPosition.x + 1, player.position.y);
+      const newPosition = new Point(2, 4);
       player.position = newPosition;
       expect(board.movePlayer.bind(board, player, newPosition)).toThrowError(
         'Old player position corrupted'
@@ -125,6 +129,21 @@ describe('[GM] Board', () => {
       expect(board.movePlayer.bind(board, player, playerTwo.position)).toThrowError(
         'Two players cannot stand on the same tile'
       );
+    });
+  });
+
+  describe('tiles', () => {
+    beforeEach(() => {
+      board.reset();
+    });
+
+    it('should throw exception about invalid X coordinate', () => {
+      const point: Point = new Point(30, 1);
+      expect(board.getTileAtPosition.bind(board, point)).toThrowError('Invalid X coordinate');
+    });
+    it('should throw exception about invalid Y coordinate', () => {
+      const point: Point = new Point(29, 40);
+      expect(board.getTileAtPosition.bind(board, point)).toThrowError('Invalid Y coordinate');
     });
   });
 });
