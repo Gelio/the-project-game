@@ -1,24 +1,39 @@
 import { BoardSize } from '../../interfaces/BoardSize';
+
+import { NeutralAreaTile } from '../models/tiles/NeutralAreaTile';
 import { TeamAreaTile } from '../models/tiles/TeamAreaTile';
+import { Tile } from '../models/tiles/Tile';
+
 import { GoalGenerator } from './GoalGenerator';
-import { TileGenerator } from './TileGenerator';
 
 describe('[GM] GoalGenerator', () => {
-  let tileGenerator: TileGenerator;
+  let tiles: Tile[][] = [];
   let goalGenerator: GoalGenerator;
   const boardSize: BoardSize = {
     x: 30,
     goalArea: 5,
     taskArea: 30
   };
-  beforeAll(() => {
-    tileGenerator = new TileGenerator();
+
+  beforeEach(() => {
+    tiles = [];
+    for (let i = 0; i < boardSize.x; ++i) {
+      tiles[i] = [];
+      for (let j = 0; j < boardSize.goalArea; ++j) {
+        tiles[i].push(new TeamAreaTile(i, j));
+      }
+      for (let j = 0; j < boardSize.taskArea; ++j) {
+        tiles[i].push(new NeutralAreaTile(i, j + boardSize.goalArea));
+      }
+      for (let j = 0; j < boardSize.goalArea; ++j) {
+        tiles[i].push(new TeamAreaTile(i, j + boardSize.goalArea + boardSize.taskArea));
+      }
+    }
     goalGenerator = new GoalGenerator();
   });
 
-  it('check if there are correct numbers of goals in area of each team', () => {
+  it('should generate an equal number of goals for each team', () => {
     const pointsLimit = 10;
-    const tiles = tileGenerator.generateBoardTiles(boardSize);
     goalGenerator.generateGoals(pointsLimit, tiles, boardSize);
     const gapBetweenTeamTiles = boardSize.taskArea + boardSize.goalArea;
     let firstTeamGoalsCount = 0;
