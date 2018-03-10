@@ -4,16 +4,17 @@
 
 Extreme Programming
 
-## Podział i opis ról
+## Role i realizacja metodyki
 
-Wszystkie osoby z projektu są programistami i testerami.
+Wszystkie osoby z projektu są jednocześnie programistami i testerami.
 
-Grzegorz Rozdzialik jest odpowiedzialny za sprawdzanie czy prace posuwają
-się do przodu i ustalanie zadań.
+Dodatkowo, Grzegorz Rozdzialik jest osobą odpowiedzialną za nadzorowanie pracy zespołu
+oraz ustalanie kolejnych zadań.
 
-Główną metodą współpracy jest programowanie w parach (pair programming). Jedna
-z osób z pary pisze wtedy kod, a druga ją nadzoruje. W tym przypadku wymagana
-jest duża ilość komunikacji, aby obie osoby miały wkład w dane zadanie.
+Główną metodą współpracy jest programowanie w parach (pair programming).
+W sytuacjach wyjątkowych stosowana jest praca indywidualna połączona z dogłębną weryfikacją kodu.
+
+Podczas pracy nad każdym z zadań stawiany jest duży nacisk na komunikację między członkami zespołu.
 
 ## Podejście do testów
 
@@ -31,18 +32,17 @@ Repozytorium zostało utworzone na GitHubie.
 
 Adres repozytorium: [https://github.com/Gelio/the-project-game](https://github.com/Gelio/the-project-game)
 
-Jako serwer Continuous Integration został wybrany własny serwer typu VPS,
-na którym działa Jenkins.
+Continuous Integration jest zapewnione poprzez instancję Jenkinsa zainstalowaną na VPS-ie.
 
 Adres serwera CI: [http://188.166.165.179:8080](http://188.166.165.179:8080)
 
 ## Technologie
 
-### Player (gracz)
+### Player (Gracz)
 
 Moduł Gracza zostanie wykonany w C# (.NET Core 2.0).
 
-Za rozwój tego modułu odpowiedzialni są:
+Osoby odpowiedzialne za moduł:
 
 * Andrzej Wódkiewicz
 * Gustaw Żyngiel
@@ -51,7 +51,7 @@ Za rozwój tego modułu odpowiedzialni są:
 
 Moduł Serwera Komunikacyjnego zostanie wykonany w Typescript (Node.js).
 
-Za rozwój tego modułu odpowiedzialni są:
+Osoby odpowiedzialne za moduł:
 
 * Anastasia Khlebous
 * Przemysław Proszewski
@@ -61,7 +61,7 @@ Za rozwój tego modułu odpowiedzialni są:
 
 Moduł Mistrza Gry zostanie wykonany w Typescript (Node.js).
 
-Za rozwój tego modułu odpowiedzialni są:
+Osoby odpowiedzialne za moduł:
 
 * Anastasia Khlebous
 * Przemysław Proszewski
