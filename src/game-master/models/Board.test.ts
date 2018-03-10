@@ -46,15 +46,20 @@ describe('[GM] Board', () => {
       board.removePiece(piece);
       expect(board.getTileAtPosition(piecePosition).piece).toBeNull();
     });
+    it('remove on removed piece should throw error', () => {
+      board.removePiece(piece);
+      expect(board.getTileAtPosition(piece.position).piece).toBeNull();
+      expect(board.removePiece.bind(board, piece)).toThrowError('Piece was not on board');
+    });
     it('remove and add piece on same position', () => {
       board.removePiece(piece);
       board.addPiece(piece);
       expect(board.getTileAtPosition(piecePosition).piece).toBe(piece);
     });
     it('remove picked up piece', () => {
-      piece.isPickedUp = false;
+      piece.isPickedUp = true;
       board.removePiece(piece);
-      expect(board.getTileAtPosition(piece.position).piece).toBe(null);
+      expect(board.getTileAtPosition(piece.position).piece).toBe(piece);
     });
     it('move piece to different position', () => {
       const newPiecePosition = new Point(piecePosition.x + 1, piecePosition.y);
@@ -98,7 +103,8 @@ describe('[GM] Board', () => {
     });
     it('should be placed on board', () => {
       board.addPlayer(player);
-      expect(board.getTileAtPosition(player.position).player).toBe(player);
+      expect(player.position).toBeTruthy();
+      expect(board.getTileAtPosition(<Point>player.position).player).toBe(player);
     });
     it('should not be placed on board twice', () => {
       board.addPlayer(player);
@@ -108,18 +114,22 @@ describe('[GM] Board', () => {
     });
     it('should be moved to new position', () => {
       board.addPlayer(player);
-      const playerPosition = player.position;
       const newPosition = new Point(1, 2);
       board.movePlayer(player, newPosition);
       expect(player.position).toBe(newPosition);
     });
     it('should throw error when player position does not match board', () => {
       board.addPlayer(player);
-      const playerPosition = player.position;
       const newPosition = new Point(2, 4);
       player.position = newPosition;
       expect(board.movePlayer.bind(board, player, newPosition)).toThrowError(
         'Old player position corrupted'
+      );
+    });
+    it('should throw error when player was not added to board', () => {
+      const newPosition = new Point(2, 4);
+      expect(board.movePlayer.bind(board, player, newPosition)).toThrowError(
+        'Player position is null'
       );
     });
     it('should throw error when player tries to step on tile with player', () => {
@@ -129,6 +139,17 @@ describe('[GM] Board', () => {
       expect(board.movePlayer.bind(board, player, playerTwo.position)).toThrowError(
         'Two players cannot stand on the same tile'
       );
+    });
+    it('should be removed from board', () => {
+      board.addPlayer(player);
+      board.removePlayer(player);
+      expect(player.position).toBeNull();
+    });
+    it('should receive new position', () => {
+      board.addPlayer(player);
+      player.teamId = 2;
+      board.setRandomPlayerPosition(player);
+      expect(player.position).toBeTruthy();
     });
   });
 
@@ -144,6 +165,10 @@ describe('[GM] Board', () => {
     it('should throw exception about invalid Y coordinate', () => {
       const point: Point = new Point(29, 40);
       expect(board.getTileAtPosition.bind(board, point)).toThrowError('Invalid Y coordinate');
+    });
+    it('should return tile', () => {
+      const point: Point = new Point(0, 0);
+      expect(board.getTileAtPosition.bind(board, point)).toBeTruthy();
     });
   });
 });
