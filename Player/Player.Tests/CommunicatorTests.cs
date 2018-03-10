@@ -41,7 +41,7 @@ namespace Player.Tests
         }
 
         [Test]
-        public async Task SendMessageSuccess()
+        public async Task SendsMessageToServer()
         {
             // Give
             var message = "testMessage";
@@ -63,5 +63,27 @@ namespace Player.Tests
             // Then
             Assert.That(String.Equals(message, result));
         }
+
+        [Test]
+        public async Task ReceivesMessageFromServer()
+        {
+            // Give
+            var message = "testMessage";
+            var buffer = System.Text.Encoding.UTF8.GetBytes(message);
+            var messageLen = BitConverter.GetBytes(IPAddress.HostToNetworkOrder((Int32)buffer.Length));
+
+            var communicator = new Communicator("localhost", _port);
+            var communicatorSeenFromServer = await _acceptTask;
+            var stream = communicatorSeenFromServer.GetStream();
+            stream.Write(messageLen, 0, 4);
+            stream.Write(buffer, 0, buffer.Length);
+
+            // When
+            var result = communicator.Receive();
+
+            // Then
+            Assert.That(String.Equals(message, result));
+        }
+
     }
 }
