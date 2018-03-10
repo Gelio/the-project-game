@@ -1,6 +1,8 @@
 import { BoardSize } from '../../interfaces/BoardSize';
+
 import { NeutralAreaTile } from '../models/tiles/NeutralAreaTile';
 import { TeamAreaTile } from '../models/tiles/TeamAreaTile';
+
 import { TileGenerator } from './TileGenerator';
 
 describe('[GM] TileGenerator', () => {
@@ -14,34 +16,21 @@ describe('[GM] TileGenerator', () => {
     tileGenerator = new TileGenerator();
   });
 
-  it('check if there are correct numbers of each tile type', () => {
+  it('should generate correct board', () => {
     const tiles = tileGenerator.generateBoardTiles(boardSize);
 
     const gapBetweenTeamTiles = boardSize.taskArea + boardSize.goalArea;
-    let teamAreaTiles = 0;
-    let taskAreaTiles = 0;
 
     for (let x = 0; x < boardSize.x; ++x) {
       for (let y = 0; y < boardSize.goalArea; ++y) {
-        {
-          const firstTeamTile = tiles[x][y];
-          const secondTeamTile = tiles[x][y + gapBetweenTeamTiles];
-          if (<TeamAreaTile>firstTeamTile && <TeamAreaTile>secondTeamTile) {
-            teamAreaTiles++;
-          } else {
-            throw new Error('Wrong tile type in team area!');
-          }
-        }
+        const firstTeamTile = tiles[x][y];
+        const secondTeamTile = tiles[x][y + gapBetweenTeamTiles];
+        expect(firstTeamTile).toBeInstanceOf(TeamAreaTile);
+        expect(secondTeamTile).toBeInstanceOf(TeamAreaTile);
       }
       for (let y = 0; y < boardSize.taskArea; ++y) {
-        if (<NeutralAreaTile>tiles[x][y + boardSize.goalArea]) {
-          taskAreaTiles++;
-        } else {
-          throw new Error('Wrong tile type in task area');
-        }
+        expect(tiles[x][y + boardSize.goalArea]).toBeInstanceOf(NeutralAreaTile);
       }
     }
-    expect(teamAreaTiles).toBe(boardSize.x * boardSize.goalArea);
-    expect(taskAreaTiles).toBe(boardSize.x * boardSize.taskArea);
   });
 });
