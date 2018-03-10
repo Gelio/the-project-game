@@ -51,7 +51,8 @@
       "!**/*.d.ts",
       "!**/node_modules/**",
       "!**/vendor/**"
-    ]
+    ],
+    "mapCoverage": true
   },
   "lint-staged": {
     "*.{js,json,css,md,ts}": ["prettier --write", "git add"]
