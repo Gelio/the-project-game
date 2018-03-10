@@ -16,7 +16,7 @@ describe('[GM] TileGenerator', () => {
     tileGenerator = new TileGenerator();
   });
 
-  it('should generate correct board', () => {
+  it('should generate board with correct tile types', () => {
     const tiles = tileGenerator.generateBoardTiles(boardSize);
 
     const gapBetweenTeamTiles = boardSize.taskArea + boardSize.goalArea;
@@ -25,6 +25,7 @@ describe('[GM] TileGenerator', () => {
       for (let y = 0; y < boardSize.goalArea; ++y) {
         const firstTeamTile = tiles[x][y];
         const secondTeamTile = tiles[x][y + gapBetweenTeamTiles];
+
         expect(firstTeamTile).toBeInstanceOf(TeamAreaTile);
         expect(secondTeamTile).toBeInstanceOf(TeamAreaTile);
       }

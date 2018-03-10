@@ -41,15 +41,13 @@ describe('[GM] GoalGenerator', () => {
 
     for (let x = 0; x < boardSize.x; ++x) {
       for (let y = 0; y < boardSize.goalArea; ++y) {
-        {
-          const firstTeamTile = <TeamAreaTile>tiles[x][y];
-          const secondTeamTile = <TeamAreaTile>tiles[x][y + gapBetweenTeamTiles];
-          if (firstTeamTile.hasGoal) {
-            firstTeamGoalsCount++;
-          }
-          if (secondTeamTile.hasGoal) {
-            secondTeamGoasCount++;
-          }
+        const firstTeamTile = <TeamAreaTile>tiles[x][y];
+        const secondTeamTile = <TeamAreaTile>tiles[x][y + gapBetweenTeamTiles];
+        if (firstTeamTile.hasGoal) {
+          firstTeamGoalsCount++;
+        }
+        if (secondTeamTile.hasGoal) {
+          secondTeamGoasCount++;
         }
       }
     }

@@ -52,10 +52,12 @@ export class Board {
   }
 
   public removePlayer(player: Player) {
-    if (player.position) {
-      this.tiles[player.position.x][player.position.y].player = null;
-      player.position = null;
+    if (!player.position) {
+      return;
     }
+
+    this.tiles[player.position.x][player.position.y].player = null;
+    player.position = null;
   }
 
   public movePlayer(player: Player, newPosition: Point) {
@@ -137,12 +139,14 @@ export class Board {
     if (player.position) {
       this.getTileAtPosition(player.position).player = null;
     }
+
     for (const position of possiblePositions) {
       if (!this.getTileAtPosition(position).player) {
         player.position = position;
         break;
       }
     }
+
     if (!player.position) {
       throw new Error('No free position for player');
     }
