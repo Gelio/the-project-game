@@ -52,10 +52,17 @@ export class Board {
   }
 
   public removePlayer(player: Player) {
-    this.tiles[player.position.x][player.position.y].player = null;
+    if (player.position) {
+      this.tiles[player.position.x][player.position.y].player = null;
+      player.position = null;
+    }
   }
 
   public movePlayer(player: Player, newPosition: Point) {
+    if (!player.position) {
+      throw new Error('Player position is null');
+    }
+
     const previousTile = this.getTileAtPosition(player.position);
     const newTile = this.getTileAtPosition(newPosition);
 
@@ -89,7 +96,7 @@ export class Board {
   public removePiece(piece: Piece) {
     const index = this.pieces.indexOf(piece);
     if (index === -1) {
-      throw new Error('Piece has not been added to the game previously');
+      throw new Error('Piece was not on board');
     }
 
     this.pieces.splice(index, 1);
@@ -135,6 +142,9 @@ export class Board {
         player.position = position;
         break;
       }
+    }
+    if (!player.position) {
+      throw new Error('No free position for player');
     }
 
     this.getTileAtPosition(player.position).player = player;

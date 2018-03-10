@@ -9,6 +9,6 @@ export class Player {
   public isBusy = false;
 
   public playerId: number;
-  public position: Point;
+  public position: Point | null;
   public heldPiece: Piece | null;
 }
