@@ -12,6 +12,12 @@ namespace Player
         public bool IsLeader;
         public string GameName;
 
+        public int AskLevel;
+        public int RespondLevel;
+        public int Timeout;
+        public string ServerHostName => _communicator.ServerHostName;
+        public int ServerPort => _communicator.ServerPort;
+
         private ICommunicator _communicator;
 
         public Player(ICommunicator communicator)
@@ -53,7 +59,5 @@ namespace Player
 
             Id = deserializedObject.payload.assignedPlayerId;
         }
-
-   
     }
 }

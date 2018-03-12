@@ -11,6 +11,8 @@ namespace Player
     public class Communicator : ICommunicator
     {
         private TcpClient _tcpClient;
+        public string ServerHostName => ((IPEndPoint)_tcpClient.Client.RemoteEndPoint).Address.ToString();
+        public int ServerPort => ((IPEndPoint)_tcpClient.Client.RemoteEndPoint).Port;
 
         public Communicator(string hostname, int port)
         {

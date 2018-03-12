@@ -19,6 +19,21 @@ namespace Player.Tests
             _communicator = new Mock<ICommunicator>();            
         }
 
+        //[Test]
+        //public void ReadConfigFile()
+        //{
+        //    // Give
+
+        //    var player = new Player(_communicator.Object);
+
+        //    // When
+        //    player.ReadConfigFile();
+
+
+
+
+        //}
+
         [Test]
         public void InitializePlayer()
         {

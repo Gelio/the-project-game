@@ -6,6 +6,8 @@ namespace Player
 {
     public interface ICommunicator
     {
+        string ServerHostName { get; }
+        int ServerPort { get; }
         void Send(string message);
         string Receive();
     }
