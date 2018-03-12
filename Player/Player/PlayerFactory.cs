@@ -1,6 +1,8 @@
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace Player
@@ -17,13 +19,26 @@ namespace Player
 
         public Player GetPlayer()
         {
-            throw new NotImplementedException("lol3");
+            var config = ReadConfigFile();
+
+            var communicator = new Communicator(config.ServerHostname, config.ServerPort);
+
+            var player = new Player(communicator, config);
+
+            return player;
         }
 
 
-        public JObject ReadConfigFile()
+        public PlayerConfig ReadConfigFile()
         {
-            throw new NotImplementedException("lol2");
+            PlayerConfig configFileObject;
+            using (StreamReader file = File.OpenText(_configFilePath))
+            {
+                JsonSerializer serializer = new JsonSerializer();
+                configFileObject = (PlayerConfig)serializer.Deserialize(file, typeof(PlayerConfig));
+            };
+
+            return configFileObject;
         }
 
     }

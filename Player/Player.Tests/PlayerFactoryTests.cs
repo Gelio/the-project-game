@@ -14,7 +14,7 @@ namespace Player.Tests
     class PlayerFactoryTests
     {
         [Test]
-        public void InitializeComponentsTest()
+        public void InitializeComponents()
         {
             // Give
             var fileName = "player.config.json";
@@ -23,25 +23,24 @@ namespace Player.Tests
 
             var playerFactory = new PlayerFactory(filePath);
 
-            // read JSON directly from a file
-            JObject expectedConfigObject;
+            PlayerConfig expectedConfigObject;
             using (StreamReader file = File.OpenText(filePath))
-            using (JsonTextReader reader = new JsonTextReader(file))
             {
-                expectedConfigObject = (JObject)JToken.ReadFrom(reader);
+                JsonSerializer serializer = new JsonSerializer();
+                expectedConfigObject = (PlayerConfig)serializer.Deserialize(file, typeof(PlayerConfig));
             };
 
             // When
             var player = playerFactory.GetPlayer();
 
             // Then
-            Assert.AreEqual(expectedConfigObject.Property("askLevel"), player.AskLevel);
-            Assert.AreEqual(expectedConfigObject.Property("respondLevel"), player.RespondLevel);
-            Assert.AreEqual(expectedConfigObject.Property("timeout"), player.Timeout);
-            Assert.AreEqual(expectedConfigObject.Property("gameName"), player.GameName);
+            Assert.AreEqual(expectedConfigObject.AskLevel, player.AskLevel);
+            Assert.AreEqual(expectedConfigObject.RespondLevel, player.RespondLevel);
+            Assert.AreEqual(expectedConfigObject.Timeout, player.Timeout);
+            Assert.AreEqual(expectedConfigObject.GameName, player.GameName);
 
-            Assert.AreEqual(expectedConfigObject.Property("serverHostname"), player.ServerHostName);
-            Assert.AreEqual(expectedConfigObject.Property("serverPort"), player.ServerPort);
+            Assert.AreEqual(expectedConfigObject.ServerHostname, player.ServerHostName);
+            Assert.AreEqual(expectedConfigObject.ServerPort, player.ServerPort);
         }
 
     }

@@ -20,13 +20,20 @@ namespace Player
 
         private ICommunicator _communicator;
 
-        public Player(ICommunicator communicator)
+        public Player(ICommunicator communicator, IPlayerConfig config)
         {
             _communicator = communicator;
+
+            AskLevel = config.AskLevel;
+            RespondLevel = config.RespondLevel;
+            Timeout = config.Timeout;
+            GameName = config.GameName;
         }
 
-        public void Initialize()
+        public void ConnectToServer()
         {
+            _communicator.Connect();
+
             var playerHelloObject = new
             {
                 type = "PLAYER_HELLO",

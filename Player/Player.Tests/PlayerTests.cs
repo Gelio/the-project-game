@@ -12,30 +12,15 @@ namespace Player.Tests
     class PlayerTests
     {
         Mock<ICommunicator> _communicator;
-        
+
         [SetUp]
         public void Setup()
-        {            
-            _communicator = new Mock<ICommunicator>();            
+        {
+            _communicator = new Mock<ICommunicator>();
         }
 
-        //[Test]
-        //public void ReadConfigFile()
-        //{
-        //    // Give
-
-        //    var player = new Player(_communicator.Object);
-
-        //    // When
-        //    player.ReadConfigFile();
-
-
-
-
-        //}
-
         [Test]
-        public void InitializePlayer()
+        public void ConnectsToServer()
         {
             // Give
             string expectedMessage = @"
@@ -47,15 +32,20 @@ namespace Player.Tests
                 ""assignedPlayerId"": 5
     }}";
             _communicator.Setup(x => x.Receive()).Returns(expectedMessage);
-            var player = new Player(_communicator.Object);
+
+            var playerConfigMock = new Mock<IPlayerConfig>();
+            playerConfigMock.Setup(x => x.AskLevel).Returns(0);
+            playerConfigMock.Setup(x => x.RespondLevel).Returns(0);
+            playerConfigMock.Setup(x => x.Timeout).Returns(0);
+            playerConfigMock.Setup(x => x.GameName).Returns("");
+
+            var player = new Player(_communicator.Object, playerConfigMock.Object);
 
             // When
-            player.Initialize();
-
+            player.ConnectToServer();
 
             // Then
             Assert.AreEqual(5, player.Id);
-           
         }
     }
 }

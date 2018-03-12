@@ -8,7 +8,8 @@ namespace Player
     {
         string ServerHostName { get; }
         int ServerPort { get; }
+        void Connect();
         void Send(string message);
-        string Receive();
+        string Receive();        
     }
 }
