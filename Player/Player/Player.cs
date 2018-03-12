@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace Player
 {
@@ -20,7 +21,39 @@ namespace Player
 
         public void Initialize()
         {
-            throw new NotImplementedException("lol");
+            var playerHelloObject = new
+            {
+                type = "PLAYER_HELLO",
+                senderId = -2,
+                payload = new
+                {
+                    game = GameName,
+                    teamId = TeamId,
+                    isLeader = IsLeader,
+                    temporaryId = new Random().Next(1, 10000)
+                }
+            };
+            var playerHelloMessage = JsonConvert.SerializeObject(playerHelloObject);
+
+            _communicator.Send(playerHelloMessage);
+
+            var receivedMessage = _communicator.Receive();
+
+            var definition = new
+            {
+                type = "",
+                senderId = 0,
+                receipientId = 0,
+                payload = new
+                {
+                    assignedPlayerId = 0
+                }
+            };
+            var deserializedObject = JsonConvert.DeserializeAnonymousType(receivedMessage, definition);
+
+            Id = deserializedObject.payload.assignedPlayerId;
         }
+
+   
     }
 }
