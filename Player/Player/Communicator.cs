@@ -8,7 +8,7 @@ using System.Net;
 
 namespace Player
 {
-    public class Communicator
+    public class Communicator : ICommunicator
     {
         private TcpClient _tcpClient;
 
