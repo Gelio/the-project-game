@@ -162,7 +162,6 @@ export class CommunicationServer implements Service {
 
     communicator.once('destroy', this.handleGameMasterDisconnection.bind(this, gameMaster));
 
-    this.messageRouter.registerGameMasterCommunicator(game.gameDefinition.name, communicator);
     this.logger.info(`Registered game ${game.gameDefinition.name}`);
     gameMaster.init();
 
@@ -229,10 +228,6 @@ export class CommunicationServer implements Service {
 
     // Stop listening for the client's initial message
     communicator.removeAllListeners('message');
-    this.messageRouter.registerPlayerCommunicator(
-      playerAcceptedMessage.payload.assignedPlayerId,
-      communicator
-    );
 
     const playerInfo: PlayerInfo = {
       gameName,
