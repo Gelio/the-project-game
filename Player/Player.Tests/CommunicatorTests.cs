@@ -34,6 +34,7 @@ namespace Player.Tests
         {
             // When
             var communicator = new Communicator("localhost", _port);
+            communicator.Connect();
             var communicatorSeenFromServer = await _acceptTask;
 
             // Then
@@ -46,6 +47,7 @@ namespace Player.Tests
             // Give
             var message = "testMessage";
             var communicator = new Communicator("localhost", _port);
+            communicator.Connect();
             var communicatorSeenFromServer = await _acceptTask;
             var stream = communicatorSeenFromServer.GetStream();
 
@@ -73,6 +75,7 @@ namespace Player.Tests
             var messageLen = BitConverter.GetBytes(IPAddress.HostToNetworkOrder((Int32)buffer.Length));
 
             var communicator = new Communicator("localhost", _port);
+            communicator.Connect();
             var communicatorSeenFromServer = await _acceptTask;
             var stream = communicatorSeenFromServer.GetStream();
             stream.Write(messageLen, 0, 4);

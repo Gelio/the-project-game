@@ -8,14 +8,24 @@ using System.Net;
 
 namespace Player
 {
-    public class Communicator
+    public class Communicator : ICommunicator
     {
         private TcpClient _tcpClient;
+        private string _serverHostName;
+        private int _serverPort;
+
+        public string ServerHostName => _serverHostName;
+        public int ServerPort => _serverPort;
 
         public Communicator(string hostname, int port)
         {
-            _tcpClient = new TcpClient(hostname, port);
-            Console.WriteLine($"Player successfuly connected with communication server @ {_tcpClient.Client.RemoteEndPoint}");
+            _serverHostName = hostname;
+            _serverPort = port;
+        }
+
+        public void Connect()
+        {
+            _tcpClient = new TcpClient(_serverHostName, _serverPort);
         }
 
         public void Send(string message)
