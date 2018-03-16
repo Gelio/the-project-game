@@ -7,11 +7,11 @@ using System.Text;
 
 namespace Player
 {
-    public class PlayerFactory
+    public class PlayerService
     {
         private string _configFilePath;
 
-        public PlayerFactory(string configFilePath)
+        public PlayerService(string configFilePath)
         {
             _configFilePath = configFilePath;
         }
@@ -39,6 +39,18 @@ namespace Player
             };
 
             return configFileObject;
+        }
+
+        public IList<Game> GetGamesList()
+        {
+            throw new NotImplementedException();
+
+            /*
+             * {
+                   "type": "LIST_GAMES_REQUEST",
+                   "senderId": -2
+                }
+            */
         }
 
     }
