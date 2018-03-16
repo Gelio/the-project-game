@@ -34,13 +34,12 @@ export class Player implements Service {
   }
 
   public init() {
-    this.communicator.bindListeners();
+    this.messageRouter.registerPlayerCommunicator(this.id, this.communicator);
     this.communicator.on('message', this.handleMessage);
   }
 
   public destroy() {
     this.logger.verbose(`Destroying player ${this.id}`);
-    this.communicator.destroy();
 
     if (this.messageRouter.hasRegisteredPlayerCommunicator(this.id)) {
       this.messageRouter.unregisterPlayerCommunicator(this.id);
