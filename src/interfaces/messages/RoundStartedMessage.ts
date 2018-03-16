@@ -1,16 +1,5 @@
 import { MessageWithRecipient } from '../MessageWithRecipient';
-
-export interface TeamInfo {
-  /**
-   * Player IDs
-   */
-  players: number[];
-
-  /**
-   * Team Leader's ID
-   */
-  leaderId: number;
-}
+import { TeamInfo } from '../TeamInfo';
 
 export interface RoundStartedMessagePayload {
   currentRound: number;
