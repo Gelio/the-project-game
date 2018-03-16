@@ -64,7 +64,7 @@ describe('[CS] CommunicationServer', () => {
     const loggerFactory = new LoggerFactory();
     loggerFactory.logLevel = 'error';
 
-    logger = loggerFactory.createConsoleLogger();
+    logger = loggerFactory.createEmptyLogger();
 
     communicationServer = new CommunicationServer(options, messageRouter, logger);
   });
@@ -113,6 +113,25 @@ describe('[CS] CommunicationServer', () => {
       sockets.forEach(socket => expect(socket).toBeInstanceOf(Socket));
 
       sockets.forEach(socket => socket.destroy());
+    });
+
+    it("should log incorrect initial client's messages", async () => {
+      const socket = await connectSocketToServer();
+      const communicator = new Communicator(socket, logger);
+      communicator.bindListeners();
+
+      jest.spyOn(logger, 'error');
+      const message: Message<any> = {
+        type: 'UNKNOWN',
+        payload: {},
+        senderId: -1
+      };
+
+      communicator.sendMessage(message);
+      await createDelay(100);
+      expect(logger.error).toHaveBeenCalled();
+
+      communicator.destroy();
     });
 
     it("should register GM's game", async () => {
