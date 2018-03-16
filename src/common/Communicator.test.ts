@@ -1,4 +1,3 @@
-import { EventEmitter } from 'events';
 import * as Stream from 'stream';
 
 import { Message } from '../interfaces/Message';
