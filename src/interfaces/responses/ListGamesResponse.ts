@@ -1,6 +1,6 @@
 import { MessageWithRecipient } from '../MessageWithRecipient';
 
-import { GameDefinition } from '../../common/GameDefinition';
+import { GameDefinition } from '../../interfaces/GameDefinition';
 
 export interface ListGamesResponsePayload {
   games: GameDefinition[];
