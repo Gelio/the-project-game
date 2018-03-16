@@ -69,6 +69,10 @@ describe('[CS] CommunicationServer', () => {
     communicationServer = new CommunicationServer(options, messageRouter, logger);
   });
 
+  afterEach(() => {
+    messageRouter.unregisterAll();
+  });
+
   it('should initialize and destroy correctly', async () => {
     expect(await communicationServer.init()).toBe(true);
     expect(await communicationServer.destroy()).toBe(true);
@@ -154,6 +158,7 @@ describe('[CS] CommunicationServer', () => {
       expect((<RegisterGameResponse>response).payload.registered).toEqual(true);
 
       gmCommunicator.destroy();
+      gmSocket.destroy();
     });
 
     it('should not register two games with the same name', async () => {
@@ -176,7 +181,7 @@ describe('[CS] CommunicationServer', () => {
       gmCommunicators.forEach(comm => comm.destroy());
     });
 
-    it('should return empty games list', () => {});
+    it.skip('should return empty games list', () => {});
 
     describe('and game registration', () => {
       it('should pass messages between Player and GM', async () => {
@@ -224,15 +229,15 @@ describe('[CS] CommunicationServer', () => {
         gmCommunicator.destroy();
       });
 
-      it('should not register player when he is rejected', () => {});
+      it.skip('should not register player when he is rejected', () => {});
 
-      it("should notify GM about Player's disconnection", () => {});
+      it.skip("should notify GM about Player's disconnection", () => {});
 
-      it('should list registered game when requested', () => {});
+      it.skip('should list registered game when requested', () => {});
 
-      it('should return empty games list after GM disconnects', () => {});
+      it.skip('should return empty games list after GM disconnects', () => {});
 
-      it('should disconnect a player after his GM disconnects', () => {});
+      it.skip('should disconnect a player after his GM disconnects', () => {});
     });
   });
 });
