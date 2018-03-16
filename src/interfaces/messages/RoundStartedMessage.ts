@@ -14,6 +14,10 @@ export interface TeamInfo {
 
 export interface RoundStartedMessagePayload {
   currentRound: number;
+  teamInfo: {
+    '1': TeamInfo;
+    '2': TeamInfo;
+  };
 }
 
 export interface RoundStartedMessage extends MessageWithRecipient<RoundStartedMessagePayload> {
