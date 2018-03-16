@@ -41,17 +41,6 @@ namespace Player
             return configFileObject;
         }
 
-        public IList<Game> GetGamesList()
-        {
-            throw new NotImplementedException();
-
-            /*
-             * {
-                   "type": "LIST_GAMES_REQUEST",
-                   "senderId": -2
-                }
-            */
-        }
 
     }
 }
