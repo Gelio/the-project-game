@@ -251,7 +251,7 @@ export class CommunicationServer implements Service {
     player.init();
   }
 
-  private handleListGamesRequest(communicator: Communicator) {
+  private handleListGamesRequest(_communicator: Communicator) {
     // TODO: get game definitions and send it to communicator
   }
 
