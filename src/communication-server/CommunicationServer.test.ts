@@ -115,7 +115,6 @@ describe('[CS] CommunicationServer', () => {
       sockets.forEach(socket => socket.destroy());
     });
 
-    // tslint:disable-next-line:mocha-no-side-effect-code
     it("should register GM's game", async () => {
       const gmSocket = await connectSocketToServer();
       const gmCommunicator = new Communicator(gmSocket, logger);
@@ -138,7 +137,6 @@ describe('[CS] CommunicationServer', () => {
       gmCommunicator.destroy();
     });
 
-    // tslint:disable-next-line:mocha-no-side-effect-code
     it('should not register two games with the same name', async () => {
       const gmSockets = await Promise.all([connectSocketToServer(), connectSocketToServer()]);
       const gmCommunicators = gmSockets.map(socket => new Communicator(socket, logger));
@@ -159,74 +157,50 @@ describe('[CS] CommunicationServer', () => {
       gmCommunicators.forEach(comm => comm.destroy());
     });
 
-    it.skip('should pass messages from Player to GM', async done => {
-      const gmSocket = await connectSocketToServer();
-      const gmCommunicator = new Communicator(gmSocket, logger);
-      gmCommunicator.bindListeners();
+    describe('and game registration', () => {
+      it('should pass messages between Player and GM', async () => {
+        const gmSocket = await connectSocketToServer();
+        const gmCommunicator = new Communicator(gmSocket, logger);
+        gmCommunicator.bindListeners();
 
-      const playerSocket = await connectSocketToServer();
-      const playerCommunicator = new Communicator(playerSocket, logger);
-      playerCommunicator.bindListeners();
+        const registerGameResponsePromise = gmCommunicator.waitForAnyMessage();
+        const registerGameRequest = getRegisterGameRequest();
+        gmCommunicator.sendMessage(registerGameRequest);
+        await registerGameResponsePromise;
 
-      const playerHelloMessage: PlayerHelloMessage = {
-        type: 'PLAYER_HELLO',
-        senderId: -2,
-        payload: {
-          teamId: 1,
-          isLeader: false,
-          temporaryId: 123,
-          game: 'abc'
-        }
-      };
+        const playerSocket = await connectSocketToServer();
+        const playerCommunicator = new Communicator(playerSocket, logger);
+        playerCommunicator.bindListeners();
 
-      playerCommunicator.sendMessage(playerHelloMessage);
-      gmCommunicator.once('message', (message: Message<any>) => {
-        expect(message).toEqual(playerHelloMessage);
-        done();
-      });
-    });
+        // Exchange messages
+        const playerHelloMessage: PlayerHelloMessage = {
+          type: 'PLAYER_HELLO',
+          senderId: -2,
+          payload: {
+            teamId: 1,
+            isLeader: false,
+            temporaryId: 123,
+            game: registerGameRequest.payload.name
+          }
+        };
+        playerCommunicator.sendMessage(playerHelloMessage);
 
-    it.skip('should pass messages from GM to Player', async done => {
-      const gmSocket = await connectSocketToServer();
-      const gmCommunicator = new Communicator(gmSocket, logger);
-      gmCommunicator.bindListeners();
+        const receivedPlayerHelloMessage = await gmCommunicator.waitForAnyMessage();
+        expect(receivedPlayerHelloMessage).toEqual(playerHelloMessage);
 
-      const playerSocket = await connectSocketToServer();
-      const playerCommunicator = new Communicator(playerSocket, logger);
-      playerCommunicator.bindListeners();
+        const playerAcceptedMessage: PlayerAcceptedMessage = {
+          payload: { assignedPlayerId: 2 },
+          type: 'PLAYER_ACCEPTED',
+          senderId: -1,
+          recipientId: playerHelloMessage.payload.temporaryId
+        };
+        gmCommunicator.sendMessage(playerAcceptedMessage);
 
-      const playerHelloMessage: PlayerHelloMessage = {
-        type: 'PLAYER_HELLO',
-        senderId: -2,
-        payload: {
-          teamId: 1,
-          isLeader: false,
-          temporaryId: 123,
-          game: 'abc'
-        }
-      };
+        const receivedPlayerAcceptedMessage = await playerCommunicator.waitForAnyMessage();
+        expect(receivedPlayerAcceptedMessage).toEqual(playerAcceptedMessage);
 
-      playerCommunicator.sendMessage(playerHelloMessage);
-      await new Promise(resolve => {
-        gmCommunicator.once('message', (message: Message<any>) => {
-          expect(message).toEqual(playerHelloMessage);
-          resolve();
-        });
-      });
-
-      const playerAcceptedMessage: PlayerAcceptedMessage = {
-        type: 'PLAYER_ACCEPTED',
-        senderId: -1,
-        recipientId: 123,
-        payload: {
-          assignedPlayerId: 5
-        }
-      };
-      gmCommunicator.sendMessage(playerAcceptedMessage);
-
-      playerCommunicator.once('message', (message: Message<any>) => {
-        expect(message).toEqual(playerAcceptedMessage);
-        done();
+        playerCommunicator.destroy();
+        gmCommunicator.destroy();
       });
     });
   });
