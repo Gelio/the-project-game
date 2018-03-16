@@ -176,6 +176,8 @@ describe('[CS] CommunicationServer', () => {
       gmCommunicators.forEach(comm => comm.destroy());
     });
 
+    it('should return empty games list', () => {});
+
     describe('and game registration', () => {
       it('should pass messages between Player and GM', async () => {
         const gmSocket = await connectSocketToServer();
@@ -221,6 +223,16 @@ describe('[CS] CommunicationServer', () => {
         playerCommunicator.destroy();
         gmCommunicator.destroy();
       });
+
+      it('should not register player when he is rejected', () => {});
+
+      it("should notify GM about Player's disconnection", () => {});
+
+      it('should list registered game when requested', () => {});
+
+      it('should return empty games list after GM disconnects', () => {});
+
+      it('should disconnect a player after his GM disconnects', () => {});
     });
   });
 });
