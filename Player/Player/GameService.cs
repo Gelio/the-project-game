@@ -1,3 +1,5 @@
+using Newtonsoft.Json;
+using Player.Messages;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -13,17 +15,23 @@ namespace Player
             _comm = comm;
         }
 
-
         public IList<Game> GetGamesList()
         {
-            throw new NotImplementedException();
+            var message = new Message
+            {
+                Type = Common.Consts.ListGamesResponse,
+                SenderId = Common.Consts.UnknownPlayerId
+            };
 
-            /*
-             * {
-                   "type": "LIST_GAMES_REQUEST",
-                   "senderId": -2
-                }
-            */
+            var msg_string = JsonConvert.SerializeObject(message);
+
+            _comm.Send(msg_string);
+            var result = _comm.Receive();
+
+            var json = JsonConvert.DeserializeObject<Message<ListGamesPayload>>(result);
+            var gamesList = json.Payload.Games;
+
+            return gamesList;
         }
     }
 }

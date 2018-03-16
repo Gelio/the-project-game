@@ -33,4 +33,6 @@ namespace Player
         public int CommunicationAccept;
         public int TryPiece;
     }
+
+    
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using NUnit.Framework;
 using Moq;
+using Newtonsoft.Json;
 
 namespace Player.Tests
 {
@@ -155,7 +156,7 @@ namespace Player.Tests
                     {
                         Move = 4000,
                         Pick = 1000,
-                        Discover = 500,
+                        Discover = 2500,
                         Destroy = 1000,
                         Test = 3000,
                         CommunicationRequest = 4000,
@@ -199,8 +200,7 @@ namespace Player.Tests
             var result = service.GetGamesList();
 
             // Then
-            Assert.That(result == expectedGameList);
-
+            Assert.AreEqual(JsonConvert.SerializeObject(expectedGameList), JsonConvert.SerializeObject(result));
         }
 
         [Test]
