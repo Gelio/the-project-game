@@ -181,6 +181,7 @@ describe('[CS] CommunicationServer', () => {
       gmCommunicators.forEach(comm => comm.destroy());
     });
 
+    // tslint:disable-next-line:mocha-no-side-effect-code no-empty
     it.skip('should return empty games list', () => {});
 
     describe('and game registration', () => {
@@ -229,14 +230,19 @@ describe('[CS] CommunicationServer', () => {
         gmCommunicator.destroy();
       });
 
+      // tslint:disable-next-line:mocha-no-side-effect-code no-empty
       it.skip('should not register player when he is rejected', () => {});
 
+      // tslint:disable-next-line:mocha-no-side-effect-code no-empty
       it.skip("should notify GM about Player's disconnection", () => {});
 
+      // tslint:disable-next-line:mocha-no-side-effect-code no-empty
       it.skip('should list registered game when requested', () => {});
 
+      // tslint:disable-next-line:mocha-no-side-effect-code no-empty
       it.skip('should return empty games list after GM disconnects', () => {});
 
+      // tslint:disable-next-line:mocha-no-side-effect-code no-empty
       it.skip('should disconnect a player after his GM disconnects', () => {});
     });
   });
