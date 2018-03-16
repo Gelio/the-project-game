@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events';
+import * as Stream from 'stream';
 
 import { Message } from '../interfaces/Message';
 import { Communicator } from './Communicator';
@@ -26,6 +27,19 @@ function createTestMessage(): Message<any> {
     senderId: 5,
     type: 'TEST_MESSAGE'
   };
+}
+
+function writeMessageToStream(stream: Stream.Writable, message: Message<any>) {
+  const stringifiedMessage = JSON.stringify(message);
+
+  const messageLengthBuffer = new Buffer(4);
+  // Network order is Big Endian
+  messageLengthBuffer.writeUInt32BE(stringifiedMessage.length, 0);
+
+  const messageBuffer = new Buffer(stringifiedMessage);
+
+  stream.write(messageLengthBuffer);
+  stream.write(messageBuffer);
 }
 
 function makeReadableEventEmitter(eventEmitter: EventEmitter, message: Message<any>) {
@@ -100,6 +114,118 @@ describe('Communicator', () => {
       communicator.sendMessage(message);
 
       expect(eventEmitted).toBe(true);
+    });
+  });
+
+  describe('waitForAnyMessage', () => {
+    let socket: Stream.PassThrough;
+    let communicator: Communicator;
+
+    beforeEach(() => {
+      socket = new Stream.PassThrough();
+      communicator = createCommunicator(socket);
+    });
+
+    it('should resolve with a message', () => {
+      const message = createTestMessage();
+      const promise = communicator.waitForAnyMessage();
+
+      communicator.bindListeners();
+      writeMessageToStream(socket, message);
+
+      expect(promise).resolves.toEqual(message);
+    });
+
+    it('should reject with an error when socket errors', () => {
+      const promise = communicator.waitForAnyMessage();
+
+      communicator.bindListeners();
+      socket.emit('error', 'a');
+
+      expect(promise).rejects.toEqual('a');
+    });
+
+    it('should reject when socket is destroyed', () => {
+      const promise = communicator.waitForAnyMessage();
+
+      communicator.bindListeners();
+      socket.emit('destroy', 'a');
+
+      expect(promise).rejects.toEqual('a');
+    });
+  });
+
+  describe('waitForSpecificMessage', () => {
+    let socket: Stream.PassThrough;
+    let communicator: Communicator;
+
+    beforeEach(() => {
+      socket = new Stream.PassThrough();
+      communicator = createCommunicator(socket);
+    });
+
+    it('should resolve with a message when it matches the filter function', () => {
+      const message = createTestMessage();
+      const message2 = createTestMessage();
+      message2.type = 'TEST2';
+
+      const promise = communicator.waitForSpecificMessage(msg => msg.type === 'TEST2');
+
+      communicator.bindListeners();
+      writeMessageToStream(socket, message);
+      writeMessageToStream(socket, message2);
+
+      expect(promise).resolves.toEqual(message2);
+    });
+
+    it('should call the filter function for each message until a match', async () => {
+      const message = createTestMessage();
+      const message2 = createTestMessage();
+      message2.type = 'TEST2';
+
+      const filterFunction = jest.fn(msg => msg.type === 'TEST2');
+      const promise = communicator.waitForSpecificMessage(filterFunction);
+
+      communicator.bindListeners();
+      writeMessageToStream(socket, message);
+      writeMessageToStream(socket, message2);
+
+      expect(await promise).toEqual(message2);
+      expect(filterFunction).toHaveBeenCalledTimes(2);
+    });
+
+    it('should not call the filter function after a match', async () => {
+      const message = createTestMessage();
+      const message2 = createTestMessage();
+      message2.type = 'TEST2';
+
+      const filterFunction = jest.fn(msg => msg.type === message.type);
+      const promise = communicator.waitForSpecificMessage(filterFunction);
+
+      communicator.bindListeners();
+      writeMessageToStream(socket, message);
+      writeMessageToStream(socket, message2);
+
+      expect(await promise).toEqual(message);
+      expect(filterFunction).toHaveBeenCalledTimes(1);
+    });
+
+    it('should reject with an error when socket errors', () => {
+      const promise = communicator.waitForSpecificMessage(() => true);
+
+      communicator.bindListeners();
+      socket.emit('error', 'a');
+
+      expect(promise).rejects.toEqual('a');
+    });
+
+    it('should reject when socket is destroyed', () => {
+      const promise = communicator.waitForSpecificMessage(() => true);
+
+      communicator.bindListeners();
+      socket.emit('destroy', 'a');
+
+      expect(promise).rejects.toEqual('a');
     });
   });
 

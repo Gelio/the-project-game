@@ -5,6 +5,8 @@ import { LoggerInstance } from 'winston';
 import { Message } from '../interfaces/Message';
 import { CustomEventEmitter } from './CustomEventEmitter';
 
+export type FilterFunction = (message: Message<any>) => boolean;
+
 export class Communicator extends CustomEventEmitter {
   private readonly socket: Socket;
   private expectedMessageLength: number | null;
@@ -56,6 +58,42 @@ export class Communicator extends CustomEventEmitter {
     this.socket.write(serializedMessage, 'utf8');
 
     this.eventEmitter.emit('messageSent', message);
+  }
+
+  public waitForAnyMessage() {
+    return this.waitForSpecificMessage(() => true);
+  }
+
+  public waitForSpecificMessage(filterFunction: FilterFunction) {
+    return new Promise((resolve, reject) => {
+      const eventEmitter = this.eventEmitter;
+
+      function onMessage(message: Message<any>) {
+        if (!filterFunction(message)) {
+          return;
+        }
+
+        resolve(message);
+        unregisterListeners();
+      }
+
+      function onError(error: any) {
+        reject(error);
+        unregisterListeners();
+      }
+
+      function unregisterListeners() {
+        eventEmitter.removeListener('message', onMessage);
+        eventEmitter.removeListener('error', onError);
+        eventEmitter.removeListener('close', onError);
+        eventEmitter.removeListener('destroy', onError);
+      }
+
+      eventEmitter.on('message', onMessage);
+      eventEmitter.once('error', onError);
+      eventEmitter.once('close', onError);
+      eventEmitter.once('destroy', onError);
+    });
   }
 
   private readMessage() {
