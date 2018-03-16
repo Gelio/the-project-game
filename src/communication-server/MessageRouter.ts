@@ -3,20 +3,20 @@ import { Message } from '../interfaces/Message';
 import { MessageWithRecipient } from '../interfaces/MessageWithRecipient';
 
 export class MessageRouter {
-  private gmCommunicator: Communicator | null = null;
+  private gmCommunicators: Map<string, Communicator> = new Map();
   private playerCommunicators: Map<number, Communicator> = new Map();
 
-  public registerGameMasterCommunicator(communicator: Communicator) {
-    if (this.gmCommunicator) {
+  public registerGameMasterCommunicator(gameName: string, communicator: Communicator) {
+    if (this.gmCommunicators.has(gameName)) {
       throw new Error('Game Master communicator already registered');
     }
 
-    this.gmCommunicator = communicator;
+    this.gmCommunicators.set(gameName, communicator);
   }
 
-  public unregisterGameMasterCommunicator() {
-    this.ensureGameMasterCommunicatorRegistered();
-    this.gmCommunicator = null;
+  public unregisterGameMasterCommunicator(gameName: string) {
+    this.ensureGameMasterCommunicatorRegistered(gameName);
+    this.gmCommunicators.delete(gameName);
   }
 
   public registerPlayerCommunicator(id: number, communicator: Communicator) {
@@ -33,9 +33,8 @@ export class MessageRouter {
   }
 
   public unregisterAll() {
-    if (this.gmCommunicator) {
-      this.unregisterGameMasterCommunicator();
-    }
+    const gameNames = Array.from(this.gmCommunicators.keys());
+    gameNames.forEach(gameName => this.unregisterGameMasterCommunicator(gameName));
 
     const playerIds = Array.from(this.playerCommunicators.keys());
     playerIds.forEach(id => this.unregisterPlayerCommunicator(id));
@@ -48,22 +47,23 @@ export class MessageRouter {
     communicator.sendMessage(message);
   }
 
-  public sendMessageToGameMaster<T>(message: Message<T>) {
-    this.ensureGameMasterCommunicatorRegistered();
+  public sendMessageToGameMaster<T>(gameName: string, message: Message<T>) {
+    this.ensureGameMasterCommunicatorRegistered(gameName);
 
-    (<Communicator>this.gmCommunicator).sendMessage(message);
+    const gmCommunicator = <Communicator>this.gmCommunicators.get(gameName);
+    gmCommunicator.sendMessage(message);
   }
 
-  public hasRegisteredGameMasterCommunicator() {
-    return !!this.gmCommunicator;
+  public hasRegisteredGameMasterCommunicator(gameName: string) {
+    return this.gmCommunicators.has(gameName);
   }
 
   public hasRegisteredPlayerCommunicator(id: number) {
     return this.playerCommunicators.has(id);
   }
 
-  private ensureGameMasterCommunicatorRegistered() {
-    if (!this.gmCommunicator) {
+  private ensureGameMasterCommunicatorRegistered(gameName: string) {
+    if (!this.gmCommunicators.has(gameName)) {
       throw new Error('Game Master communicator has not been registered');
     }
   }

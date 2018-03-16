@@ -19,21 +19,28 @@ describe('[CS] MessageRouter', () => {
   });
 
   describe('communicating with Game Master', () => {
-    it('should throw an error when registering GM twice', () => {
-      messageRouter.registerGameMasterCommunicator(<any>{});
+    it('should throw an error when registering GM for the same game name twice', () => {
+      const gameName = 'abc';
+      messageRouter.registerGameMasterCommunicator(gameName, <any>{});
 
-      expect(() => messageRouter.registerGameMasterCommunicator(<any>{})).toThrow();
+      expect(() => messageRouter.registerGameMasterCommunicator(gameName, <any>{})).toThrow();
     });
 
     it('should call sendMessage when routing messages', () => {
       const communicator = createMockCommunicator();
-      messageRouter.registerGameMasterCommunicator(communicator);
+      messageRouter.registerGameMasterCommunicator('abc', communicator);
       const message = <any>{};
 
-      messageRouter.sendMessageToGameMaster(message);
+      messageRouter.sendMessageToGameMaster('abc', message);
 
       expect(communicator.sendMessage).toHaveBeenCalledTimes(1);
       expect(communicator.sendMessage).toHaveBeenCalledWith(message);
+    });
+
+    it('should throw an error when sending a message to a non-registered GM', () => {
+      const message = <any>{};
+
+      expect(() => messageRouter.sendMessageToGameMaster('abc', message)).toThrow();
     });
   });
 
@@ -84,6 +91,19 @@ describe('[CS] MessageRouter', () => {
       communicators.slice(1).forEach(communicator => {
         expect(communicator.sendMessage).not.toHaveBeenCalled();
       });
+    });
+  });
+
+  describe('hasRegisteredGameMasterCommunicator', () => {
+    it('should return true when a GM is registered', () => {
+      const communicator = createMockCommunicator();
+      messageRouter.registerGameMasterCommunicator('abc', communicator);
+
+      expect(messageRouter.hasRegisteredGameMasterCommunicator('abc')).toBe(true);
+    });
+
+    it('should return false when a GM is not registered', () => {
+      expect(messageRouter.hasRegisteredGameMasterCommunicator('abc')).toBe(false);
     });
   });
 });
