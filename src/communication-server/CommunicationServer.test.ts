@@ -124,7 +124,7 @@ describe('[CS] CommunicationServer', () => {
       const communicator = new Communicator(socket, logger);
       communicator.bindListeners();
 
-      jest.spyOn(logger, 'error');
+      logger.error = jest.fn();
       const message: Message<any> = {
         type: 'UNKNOWN',
         payload: {},
