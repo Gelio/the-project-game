@@ -312,12 +312,7 @@ export class GameMaster implements Service {
     this.game.setPlayersPositions();
     this.periodicPieceGenerator.init();
     const roundStartedPayload: RoundStartedMessagePayload = {
-      boardSize: this.game.board.size,
-      currentRound: 0,
-      delays: this.options.actionDelays,
-      goalLimit: this.options.pointsLimit,
-      maxRounds: this.options.roundLimit,
-      teams: {
+      teamInfo: {
         1: {
           players: team1Players.map(player => player.playerId),
           leaderId: team1Leader.playerId
@@ -326,7 +321,8 @@ export class GameMaster implements Service {
           players: team2Players.map(player => player.playerId),
           leaderId: team2Leader.playerId
         }
-      }
+      },
+      currentRound: 0
     };
     this.game.start();
     this.updateState(GameMasterState.InGame);
