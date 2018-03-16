@@ -42,24 +42,6 @@ function writeMessageToStream(stream: Stream.Writable, message: Message<any>) {
   stream.write(messageBuffer);
 }
 
-function makeReadableEventEmitter(eventEmitter: EventEmitter, message: Message<any>) {
-  const stringifiedMessage = JSON.stringify(message);
-
-  const messageLengthBuffer = new Buffer(4);
-  // Network order is Big Endian
-  messageLengthBuffer.writeUInt32BE(stringifiedMessage.length, 0);
-
-  const messageBuffer = new Buffer(stringifiedMessage);
-
-  (<any>eventEmitter).read = (bytesToRead: number) => {
-    if (bytesToRead === 4) {
-      return messageLengthBuffer;
-    }
-
-    return messageBuffer;
-  };
-}
-
 describe('Communicator', () => {
   describe('sendMessage', () => {
     let socket: MockSocket;
@@ -68,6 +50,10 @@ describe('Communicator', () => {
     beforeEach(() => {
       socket = new MockSocket();
       communicator = createCommunicator(socket);
+    });
+
+    afterEach(() => {
+      communicator.removeAllListeners();
     });
 
     it('should send data in 2 chunks', () => {
@@ -124,6 +110,11 @@ describe('Communicator', () => {
     beforeEach(() => {
       socket = new Stream.PassThrough();
       communicator = createCommunicator(socket);
+    });
+
+    afterEach(() => {
+      socket.removeAllListeners();
+      communicator.removeAllListeners();
     });
 
     it('should resolve with a message', () => {
@@ -230,20 +221,19 @@ describe('Communicator', () => {
   });
 
   describe('(events)', () => {
-    let eventEmitter: EventEmitter;
+    let socket: Stream.PassThrough;
 
     beforeEach(() => {
-      eventEmitter = new EventEmitter();
+      socket = new Stream.PassThrough();
     });
 
     afterEach(() => {
-      eventEmitter.removeAllListeners();
+      socket.removeAllListeners();
     });
 
     describe('close event', () => {
       it('should be emitted when socket closes', () => {
-        (<any>eventEmitter).destroy = jest.fn();
-        const communicator = createCommunicator(eventEmitter);
+        const communicator = createCommunicator(socket);
         communicator.bindListeners();
 
         let closed = false;
@@ -251,14 +241,14 @@ describe('Communicator', () => {
           closed = true;
         });
 
-        eventEmitter.emit('close');
+        socket.emit('close');
         expect(closed).toBe(true);
       });
     });
 
     describe('error event', () => {
       it('should be emitted on socket errors', () => {
-        const communicator = createCommunicator(eventEmitter);
+        const communicator = createCommunicator(socket);
         communicator.bindListeners();
 
         let emitted = false;
@@ -266,12 +256,12 @@ describe('Communicator', () => {
           emitted = true;
         });
 
-        eventEmitter.emit('error');
+        socket.emit('error');
         expect(emitted).toBe(true);
       });
 
       it('should pass error event argument', () => {
-        const communicator = createCommunicator(eventEmitter);
+        const communicator = createCommunicator(socket);
         communicator.bindListeners();
 
         let receivedError: Error;
@@ -280,7 +270,7 @@ describe('Communicator', () => {
         });
 
         const emittedError = new Error('foo');
-        eventEmitter.emit('error', emittedError);
+        socket.emit('error', emittedError);
         // @ts-ignore
         expect(receivedError).toBe(emittedError);
       });
@@ -289,16 +279,15 @@ describe('Communicator', () => {
     describe('message event', () => {
       it('should be emitted when message is received', () => {
         const message = createTestMessage();
-        makeReadableEventEmitter(eventEmitter, message);
 
-        const communicator = createCommunicator(eventEmitter);
+        const communicator = createCommunicator(socket);
         communicator.bindListeners();
 
         communicator.once('message', (receivedMessage: Message<any>) => {
           expect(receivedMessage).toEqual(message);
         });
 
-        eventEmitter.emit('readable');
+        writeMessageToStream(socket, message);
 
         expect.assertions(1);
       });
