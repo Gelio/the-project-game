@@ -39,9 +39,14 @@ export class GameMaster implements Service {
 
   public destroy() {
     this.logger.verbose('Destroying GM connection');
-    this.messageRouter.unregisterGameMasterCommunicator(this.game.gameDefinition.name);
+
+    const gameName = this.game.gameDefinition.name;
+    if (this.messageRouter.hasRegisteredGameMasterCommunicator(gameName)) {
+      this.messageRouter.unregisterGameMasterCommunicator(gameName);
+    }
+
+    this.communicator.removeListener('message', this.handleMessage);
     this.game.destroy();
-    this.communicator.destroy();
   }
 
   public sendMessage(message: Message<any>) {
@@ -49,6 +54,9 @@ export class GameMaster implements Service {
   }
 
   private handleMessage<T>(message: MessageWithRecipient<T>) {
+    // TODO: check if it is the game finishing message. If so, destroy the game master
+    // (after making sure all the players got the message). Probably a new message has to be
+    // introduced (passed between CS and GM)
     this.messageRouter.sendMessageToPlayer(message);
   }
 }
