@@ -1,7 +1,5 @@
 import { Game } from './Game';
 
-import { GameDefinition } from '../interfaces/GameDefinition';
-
 describe('[CS] Game', () => {
   describe('destroy', () => {
     it('should call destroy on each player from team1', () => {
@@ -23,6 +21,8 @@ describe('[CS] Game', () => {
       game.team2Players.push(<any>{
         destroy: fn4
       });
+
+      game.destroy();
 
       expect(fn1).toHaveBeenCalledTimes(1);
       expect(fn2).toHaveBeenCalledTimes(1);
