@@ -95,6 +95,7 @@ export class CommunicationServer implements Service {
 
   private handleNewClient(socket: Socket) {
     const communicator = new Communicator(socket, this.logger);
+    communicator.bindListeners();
 
     this.communicators.push(communicator);
     communicator.on('destroy', this.handleClientDisconnection.bind(this, communicator));
@@ -138,7 +139,7 @@ export class CommunicationServer implements Service {
 
   private handleGameMaster(communicator: Communicator, registerGameRequest: RegisterGameRequest) {
     if (this.gameMasters.has(registerGameRequest.payload.name)) {
-      const response: RegisterGameResponse = {
+      const failedResponse: RegisterGameResponse = {
         type: 'REGISTER_GAME_RESPONSE',
         senderId: -3,
         recipientId: -1,
@@ -147,7 +148,7 @@ export class CommunicationServer implements Service {
         }
       };
 
-      communicator.sendMessage(response);
+      communicator.sendMessage(failedResponse);
 
       return;
     }
@@ -161,8 +162,20 @@ export class CommunicationServer implements Service {
 
     communicator.once('destroy', this.handleGameMasterDisconnection.bind(this, gameMaster));
 
+    this.messageRouter.registerGameMasterCommunicator(game.gameDefinition.name, communicator);
     this.logger.info(`Registered game ${game.gameDefinition.name}`);
     gameMaster.init();
+
+    const successResponse: RegisterGameResponse = {
+      type: 'REGISTER_GAME_RESPONSE',
+      senderId: -3,
+      recipientId: -1,
+      payload: {
+        registered: true
+      }
+    };
+
+    communicator.sendMessage(successResponse);
   }
 
   private handleGameMasterDisconnection(gameMaster: GameMaster) {
