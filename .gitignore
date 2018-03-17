@@ -390,5 +390,4 @@ ASALocalRun/
 *.binlog
 
 ### VisualStudioCode ###
-**/.vscode/
 **/.history
