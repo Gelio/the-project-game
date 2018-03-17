@@ -100,7 +100,8 @@ export class Player implements Service {
       payload: {
         isLeader: this.options.teamLeader,
         teamId: this.options.teamNumber,
-        temporaryId
+        temporaryId,
+        game: 'a'
       }
     };
 

@@ -3,7 +3,11 @@ import { htonl, ntohl } from 'network-byte-order';
 import { LoggerInstance } from 'winston';
 
 import { Message } from '../interfaces/Message';
+import { MessageWithRecipient } from '../interfaces/MessageWithRecipient';
+
 import { CustomEventEmitter } from './CustomEventEmitter';
+
+export type FilterFunction<T> = (message: T) => boolean;
 
 export class Communicator extends CustomEventEmitter {
   private readonly socket: Socket;
@@ -56,6 +60,48 @@ export class Communicator extends CustomEventEmitter {
     this.socket.write(serializedMessage, 'utf8');
 
     this.eventEmitter.emit('messageSent', message);
+  }
+
+  public waitForAnyMessage(): Promise<Message<any>> {
+    return this.waitForSpecificMessage(() => true);
+  }
+
+  public waitForSpecificMessage(
+    filterFunction: FilterFunction<Message<any>>
+  ): Promise<Message<any>>;
+  public waitForSpecificMessage(
+    filterFunction: FilterFunction<MessageWithRecipient<any>>
+  ): Promise<MessageWithRecipient<any>>;
+  public waitForSpecificMessage(filterFunction: FilterFunction<any>): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const eventEmitter = this.eventEmitter;
+
+      function onMessage(message: Message<any>) {
+        if (!filterFunction(message)) {
+          return;
+        }
+
+        resolve(message);
+        unregisterListeners();
+      }
+
+      function onError(error: any) {
+        reject(error);
+        unregisterListeners();
+      }
+
+      function unregisterListeners() {
+        eventEmitter.removeListener('message', onMessage);
+        eventEmitter.removeListener('error', onError);
+        eventEmitter.removeListener('close', onError);
+        eventEmitter.removeListener('destroy', onError);
+      }
+
+      eventEmitter.on('message', onMessage);
+      eventEmitter.once('error', onError);
+      eventEmitter.once('close', onError);
+      eventEmitter.once('destroy', onError);
+    });
   }
 
   private readMessage() {
