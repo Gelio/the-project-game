@@ -1,4 +1,6 @@
+using Newtonsoft.Json;
 using System;
+using System.IO;
 using System.Runtime.Serialization.Json;
 
 namespace Player
@@ -7,9 +9,16 @@ namespace Player
     {
         static void Main(string[] args)
         {
-            if(args.Length == 0)
+            var communicator = new Communicator("10.1.2.106", 4200);
+
+            if (args.Length == 0)
             {
-                var communicator = new Communicator("10.1.2.106", 4200);
+                Console.WriteLine("usage: ./player game_name config_file_path");
+                return;
+            }
+
+            if (args[0] == "-l")
+            {
                 communicator.Connect();
                 var gameService = new GameService(communicator);
                 var gamesList = gameService.GetGamesList();
@@ -18,11 +27,25 @@ namespace Player
                 {
                     Console.WriteLine(game);
                 }
+                return;
             }
-            else
-            {
 
-            }
+            string configFilePath = args[1];
+            var configObject = ReadConfigFile(configFilePath);
+            configObject.GameName = args[0];
+            Console.Write(JsonConvert.SerializeObject(configObject));
+        }
+
+        public static PlayerConfig ReadConfigFile(string _configFilePath)
+        {
+            PlayerConfig configFileObject;
+            using (StreamReader file = File.OpenText(_configFilePath))
+            {
+                JsonSerializer serializer = new JsonSerializer();
+                configFileObject = (PlayerConfig)serializer.Deserialize(file, typeof(PlayerConfig));
+            };
+
+            return configFileObject;
         }
     }
 }

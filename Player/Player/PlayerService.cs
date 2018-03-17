@@ -17,29 +17,19 @@ namespace Player
         }
 
 
-        public Player GetPlayer()
-        {
-            var config = ReadConfigFile();
+        //public Player GetPlayer()
+        //{
+        //    var config = ReadConfigFile();
 
-            var communicator = new Communicator(config.ServerHostname, config.ServerPort);
+        //    var communicator = new Communicator(config.ServerHostname, config.ServerPort);
 
-            var player = new Player(communicator, config);
+        //    var player = new Player(communicator, config);
 
-            return player;
-        }
+        //    return player;
+        //}
 
 
-        public PlayerConfig ReadConfigFile()
-        {
-            PlayerConfig configFileObject;
-            using (StreamReader file = File.OpenText(_configFilePath))
-            {
-                JsonSerializer serializer = new JsonSerializer();
-                configFileObject = (PlayerConfig)serializer.Deserialize(file, typeof(PlayerConfig));
-            };
-
-            return configFileObject;
-        }
+        
 
 
     }
