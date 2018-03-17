@@ -2,19 +2,27 @@ import { createServer, Server, Socket } from 'net';
 import { LoggerInstance } from 'winston';
 
 import { Communicator } from '../common/Communicator';
-import { Service } from '../interfaces/Service';
 import { Game } from './Game';
 import { GameMaster } from './GameMaster';
 import { MessageRouter } from './MessageRouter';
 import { Player } from './Player';
 
+import { GameDefinition } from '../interfaces/GameDefinition';
 import { Message } from '../interfaces/Message';
+import { Service } from '../interfaces/Service';
+
 import { PlayerAcceptedMessage } from '../interfaces/messages/PlayerAcceptedMessage';
 import { PlayerDisconnectedMessage } from '../interfaces/messages/PlayerDisconnectedMessage';
 import { PlayerHelloMessage } from '../interfaces/messages/PlayerHelloMessage';
 import { PlayerRejectedMessage } from '../interfaces/messages/PlayerRejectedMessage';
 import { MessageWithRecipient } from '../interfaces/MessageWithRecipient';
+
 import { RegisterGameRequest } from '../interfaces/requests/RegisterGameRequest';
+
+import {
+  ListGamesResponse,
+  ListGamesResponsePayload
+} from '../interfaces/responses/ListGamesResponse';
 import { RegisterGameResponse } from '../interfaces/responses/RegisterGameResponse';
 
 import { registerUncaughtExceptionHandler } from '../registerUncaughtExceptionHandler';
@@ -279,7 +287,21 @@ export class CommunicationServer implements Service {
   }
 
   private handleListGamesRequest(_communicator: Communicator) {
-    // TODO: get game definitions and send it to communicator
+    const games: GameDefinition[] = [];
+
+    this.gameMasters.forEach(value => games.push(value.game.gameDefinition));
+
+    const listGamesResponsePaylod: ListGamesResponsePayload = {
+      games: games
+    };
+
+    const listGamesResponse: ListGamesResponse = {
+      type: 'LIST_GAMES_RESPONSE',
+      senderId: -3,
+      recipientId: -2,
+      payload: listGamesResponsePaylod
+    };
+    _communicator.sendMessage(listGamesResponse);
   }
 
   private handlePlayerDisconnection(player: Player) {
