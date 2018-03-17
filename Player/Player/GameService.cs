@@ -28,7 +28,7 @@ namespace Player
             _comm.Send(msg_string);
             var result = _comm.Receive();
 
-            var json = JsonConvert.DeserializeObject<Message<ListGamesPayload>>(result);
+            var json = JsonConvert.DeserializeObject<Message<ListGamesResponsePayload>>(result);
             var gamesList = json.Payload.Games;
 
             return gamesList;

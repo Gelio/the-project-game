@@ -10,6 +10,7 @@ namespace Player.Common
         public static int UnknownPlayerId = -2;
         public static int CommunicationServerId = -3;
 
+        public static string PlayerHelloRequest = "PLAYER_HELLO";
         public static string ListGamesResponse = "LIST_GAME_RESPONSE";
         public static string ListGamesRequest = "LIST_GAME_REQUEST";
     }

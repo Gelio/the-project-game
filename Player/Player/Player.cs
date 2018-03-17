@@ -1,7 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+
 using Newtonsoft.Json;
+
+using Player.Messages;
+using Player.Common;
 
 namespace Player
 {
@@ -20,7 +24,7 @@ namespace Player
 
         private ICommunicator _communicator;
 
-        public Player(ICommunicator communicator, IPlayerConfig config)
+        public Player(ICommunicator communicator, PlayerConfig config)
         {
             _communicator = communicator;
 
@@ -32,39 +36,30 @@ namespace Player
 
         public void ConnectToServer()
         {
-            _communicator.Connect();
-
-            var playerHelloObject = new
+            if (!_communicator.IsConnected)
             {
-                type = "PLAYER_HELLO",
-                senderId = -2,
-                payload = new
+                _communicator.Connect();
+            }
+
+            var helloMessage = new Message<PlayerHelloPayload>
+            {
+                Type = Consts.PlayerHelloRequest,
+                SenderId = Consts.GameMasterId,
+                Payload = new PlayerHelloPayload
                 {
-                    game = GameName,
-                    teamId = TeamId,
-                    isLeader = IsLeader,
-                    temporaryId = new Random().Next(1, 10000)
+                    Game = GameName,
+                    TeamId = TeamId,
+                    IsLeader = IsLeader,
+                    TemporaryId = new Random().Next(1, 10000)
                 }
             };
-            var playerHelloMessage = JsonConvert.SerializeObject(playerHelloObject);
+            var helloMessageSerialized = JsonConvert.SerializeObject(helloMessage);
+            _communicator.Send(helloMessageSerialized);
 
-            _communicator.Send(playerHelloMessage);
 
-            var receivedMessage = _communicator.Receive();
-
-            var definition = new
-            {
-                type = "",
-                senderId = 0,
-                receipientId = 0,
-                payload = new
-                {
-                    assignedPlayerId = 0
-                }
-            };
-            var deserializedObject = JsonConvert.DeserializeAnonymousType(receivedMessage, definition);
-
-            Id = deserializedObject.payload.assignedPlayerId;
+            var receivedMessageSerialized = _communicator.Receive();
+            var receivedMessage = JsonConvert.DeserializeObject<Message<PlayerHelloResponsePayload>>(receivedMessageSerialized);
+            Id = receivedMessage.Payload.AssignedPlayerId;
         }
     }
 }

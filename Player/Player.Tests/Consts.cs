@@ -4,13 +4,13 @@ using System.Text;
 
 namespace Player.Tests
 {
-    public static class Consts
+    public class Consts
     {
         public static string PLAYER_ACCEPTED = @"
 {
 ""type"": ""PLAYER_ACCEPTED"",
 ""senderId"": -1,
-""recipientId"": 45645641568,
+""recipientId"": 13587145,
 ""payload"": {
             ""assignedPlayerId"": 5
 }}";

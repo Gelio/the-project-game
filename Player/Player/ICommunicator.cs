@@ -10,6 +10,7 @@ namespace Player
         int ServerPort { get; }
         void Connect();
         void Send(string message);
+        bool IsConnected { get; }
         string Receive();        
     }
 }

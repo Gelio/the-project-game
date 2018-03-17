@@ -26,13 +26,15 @@ namespace Player.Tests
             string expectedMessage = Consts.PLAYER_ACCEPTED;
             _communicator.Setup(x => x.Receive()).Returns(expectedMessage);
 
-            var playerConfigMock = new Mock<IPlayerConfig>();
-            playerConfigMock.Setup(x => x.AskLevel).Returns(0);
-            playerConfigMock.Setup(x => x.RespondLevel).Returns(0);
-            playerConfigMock.Setup(x => x.Timeout).Returns(0);
-            playerConfigMock.Setup(x => x.GameName).Returns("");
+            var playerConfig = new PlayerConfig
+            {
+                AskLevel = 10,
+                RespondLevel = 10,
+                Timeout = 11,
+                GameName = "asdfasdf"
+            };
 
-            var player = new Player(_communicator.Object, playerConfigMock.Object);
+            var player = new Player(_communicator.Object, playerConfig);
 
             // When
             player.ConnectToServer();

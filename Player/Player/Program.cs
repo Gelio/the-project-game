@@ -15,7 +15,7 @@ namespace Player
             {
                 Console.WriteLine("usage: ./player game_name config_file_path");
                 return;
-            }
+            }   
 
             if (args[0] == "-l")
             {
@@ -33,6 +33,9 @@ namespace Player
             string configFilePath = args[1];
             var configObject = ReadConfigFile(configFilePath);
             configObject.GameName = args[0];
+
+            var player = new Player(communicator, configObject);
+            player.ConnectToServer();
             Console.Write(JsonConvert.SerializeObject(configObject));
         }
 

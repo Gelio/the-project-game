@@ -1,6 +1,6 @@
 namespace Player
 {
-    public class PlayerConfig : IPlayerConfig
+    public class PlayerConfig
     {
         public int AskLevel { get; set; }
         public int RespondLevel { get; set; }
