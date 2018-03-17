@@ -8,7 +8,10 @@ import { UITransport } from '../common/logging/UITransport';
 
 import { ActionDelays } from '../interfaces/ActionDelays';
 import { BoardSize } from '../interfaces/BoardSize';
+import { GameDefinition, TeamSizes } from '../interfaces/GameDefinition';
 import { Message } from '../interfaces/Message';
+import { Service } from '../interfaces/Service';
+
 import { ActionInvalidMessage } from '../interfaces/messages/ActionInvalidMessage';
 import { ActionValidMessage } from '../interfaces/messages/ActionValidMessage';
 import {
@@ -19,7 +22,8 @@ import { PlayerAcceptedMessage } from '../interfaces/messages/PlayerAcceptedMess
 import { PlayerDisconnectedMessage } from '../interfaces/messages/PlayerDisconnectedMessage';
 import { PlayerHelloMessage } from '../interfaces/messages/PlayerHelloMessage';
 import { PlayerRejectedMessage } from '../interfaces/messages/PlayerRejectedMessage';
-import { Service } from '../interfaces/Service';
+import { RegisterGameRequest } from '../interfaces/requests/RegisterGameRequest';
+import { RegisterGameResponse } from '../interfaces/responses/RegisterGameResponse';
 
 import { registerUncaughtExceptionHandler } from '../registerUncaughtExceptionHandler';
 
@@ -35,12 +39,12 @@ import { UIController } from './ui/UIController';
 export interface GameMasterOptions {
   serverHostname: string;
   serverPort: number;
-  roundLimit: number;
-  teamSize: number;
+  gameName: string;
+  gameDescription: string;
+  gamesLimit: number;
+  teamSizes: TeamSizes;
   pointsLimit: number;
-  boardWidth: number;
-  taskAreaHeight: number;
-  goalAreaHeight: number;
+  boardSize: BoardSize;
   shamChance: number;
   generatePiecesInterval: number;
   piecesLimit: number;
@@ -63,7 +67,8 @@ export class GameMaster implements Service {
 
   private readonly messageHandlers: { [type: string]: Function } = {
     PLAYER_HELLO: this.handlePlayerHelloMessage,
-    PLAYER_DISCONNECTED: this.handlePlayerDisconnectedMessage
+    PLAYER_DISCONNECTED: this.handlePlayerDisconnectedMessage,
+    REGISTER_GAME_RESPONSE: this.handleRegisterGameResponse
   };
 
   constructor(
@@ -95,7 +100,6 @@ export class GameMaster implements Service {
       },
       () => {
         this.logger.info(`Connected to the server at ${serverHostname}:${serverPort}`);
-        this.updateState(GameMasterState.WaitingForPlayers);
       }
     );
 
@@ -104,6 +108,8 @@ export class GameMaster implements Service {
 
     this.communicator.once('close', this.handleServerDisconnection.bind(this));
     this.communicator.on('message', this.handleMessage);
+
+    this.registerGame();
   }
 
   public destroy() {
@@ -188,7 +194,40 @@ export class GameMaster implements Service {
     }
   }
 
+  private registerGame() {
+    const game: GameDefinition = {
+      name: this.options.gameName,
+      description: this.options.gameDescription,
+      teamSizes: this.options.teamSizes,
+      boardSize: this.options.boardSize,
+      goalLimit: this.options.pointsLimit,
+      delays: this.options.actionDelays
+    };
+    const registerGameMessage: RegisterGameRequest = {
+      type: 'REGISTER_GAME_REQUEST',
+      senderId: -1,
+      payload: game
+    };
+
+    return this.communicator.sendMessage(registerGameMessage);
+  }
+
+  private handleRegisterGameResponse(message: RegisterGameResponse) {
+    if (message.payload.registered === true) {
+      this.logger.verbose('Received game registered response');
+      this.updateState(GameMasterState.WaitingForPlayers);
+
+      return;
+    }
+
+    throw new Error('Failed to register new game!');
+  }
+
   private tryAcceptPlayer(message: PlayerHelloMessage) {
+    if (this.state === GameMasterState.Connecting) {
+      throw new Error('Game Master is not connected to CS');
+    }
+
     const teamPlayers = this.game.playersContainer.getPlayersFromTeam(message.payload.teamId);
 
     if (this.game.hasStarted) {
@@ -205,7 +244,7 @@ export class GameMaster implements Service {
       return disconnectedPlayer.playerId;
     }
 
-    if (teamPlayers.length >= this.options.teamSize) {
+    if (teamPlayers.length >= this.options.teamSizes[message.payload.teamId]) {
       throw new Error('Team is full');
     }
 
@@ -213,7 +252,10 @@ export class GameMaster implements Service {
       throw new Error('Team already has a leader');
     }
 
-    if (!message.payload.isLeader && teamPlayers.length + 1 === this.options.teamSize) {
+    if (
+      !message.payload.isLeader &&
+      teamPlayers.length + 1 === this.options.teamSizes[message.payload.teamId]
+    ) {
       throw new Error('Team does not have a leader');
     }
 
@@ -252,18 +294,15 @@ export class GameMaster implements Service {
     if (connectedPlayers.length === 0) {
       this.logger.info('All players disconnected, disconnecting from the server');
       this.destroy();
+      //TODO check if GM should try to start new game
     }
   }
 
   private initGame() {
     this.playersContainer = new PlayersContainer();
-    const boardSize: BoardSize = {
-      x: this.options.boardWidth,
-      goalArea: this.options.goalAreaHeight,
-      taskArea: this.options.taskAreaHeight
-    };
+
     this.game = new Game(
-      boardSize,
+      this.options.boardSize,
       this.options.pointsLimit,
       this.logger,
       this.uiController,
@@ -284,7 +323,7 @@ export class GameMaster implements Service {
 
   private tryStartGame() {
     const connectedPlayersCount = this.playersContainer.players.length;
-    const requiredPlayersCount = this.options.teamSize * 2;
+    const requiredPlayersCount = this.options.teamSizes['1'] + this.options.teamSizes['2'];
 
     if (connectedPlayersCount < requiredPlayersCount) {
       return;
