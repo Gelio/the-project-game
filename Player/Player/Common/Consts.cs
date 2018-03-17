@@ -15,5 +15,6 @@ namespace Player.Common
         public static string PlayerRejected = "PLAYER_REJECTED";
         public static string ListGamesResponse = "LIST_GAME_RESPONSE";
         public static string ListGamesRequest = "LIST_GAME_REQUEST";
+        public static string GameStarted = "GAME_STARTED";
     }
 }
