@@ -93,7 +93,7 @@ namespace Player.Tests
         public void GetsGameListWhenEmpty()
         {
             // Give
-            var mockMsg = @"{""type"": ""LIST_GAMES_RESPONSE"", ""senderId"": -3, ""payload"": {""games"": []}}";
+            var mockMsg = Consts.EMPTY_LIST_GAMES_RESPONSE;
             var mockCommunicator = new Mock<ICommunicator>();
             mockCommunicator.Setup(x => x.Receive()).Returns(mockMsg);
             var service = new GameService(mockCommunicator.Object);
