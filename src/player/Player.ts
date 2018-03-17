@@ -15,6 +15,10 @@ import { PlayerHelloMessage } from '../interfaces/messages/PlayerHelloMessage';
 import { PlayerRejectedMessage } from '../interfaces/messages/PlayerRejectedMessage';
 import { Service } from '../interfaces/Service';
 
+import { ListGamesResponse } from '../interfaces/responses/ListGamesResponse';
+
+import { ListGamesRequest } from '../interfaces/requests/ListGamesRequest';
+
 import { registerUncaughtExceptionHandler } from '../registerUncaughtExceptionHandler';
 
 import { UIController } from './ui/UIController';
@@ -43,7 +47,8 @@ export class Player implements Service {
 
   private messageHandlers = {
     PLAYER_ACCEPTED: this.handlePlayerAccepted,
-    PLAYER_REJECTED: this.handlePlayerRejected
+    PLAYER_REJECTED: this.handlePlayerRejected,
+    LIST_GAMES_RESPONSE: this.handleListGamesResponse
   };
 
   constructor(options: PlayerOptions, uiController: UIController, loggerFactory: LoggerFactory) {
@@ -70,6 +75,7 @@ export class Player implements Service {
       },
       () => {
         this.logger.info(`Connected to the server at ${serverHostname}:${serverPort}`);
+        this.sendListGames();
         this.sendHandshake();
       }
     );
@@ -108,9 +114,35 @@ export class Player implements Service {
     this.communicator.sendMessage(message);
   }
 
+  private sendListGames() {
+    const message: ListGamesRequest = {
+      type: 'LIST_GAMES_REQUEST',
+      senderId: -2,
+      payload: undefined
+    };
+
+    this.communicator.sendMessage(message);
+  }
+
   private handleMessage<T>(message: Message<T>) {
     // @ts-ignore
     this.messageHandlers[message.type](message);
+  }
+
+  private handleListGamesResponse(message: ListGamesResponse) {
+    const games = message.payload.games;
+    for (const game of games) {
+      this.logger.info(`\n Game \"${game.name}\" : \"${game.description}\"`);
+      this.logger.info(
+        `\n boardSize: x:${game.boardSize.x} taskArea:${game.boardSize.taskArea} goalArea: ${
+          game.boardSize.goalArea
+        }`
+      );
+      this.logger.info(
+        `\n Goal limit:${game.goalLimit} teamSizes: 1:${game.teamSizes[1]} 2:${game.teamSizes[2]}`
+      );
+      this.logger.info(`\n ${JSON.stringify(game.delays)}`);
+    }
   }
 
   private handlePlayerAccepted(message: PlayerAcceptedMessage) {
