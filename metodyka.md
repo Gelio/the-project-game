@@ -36,6 +36,12 @@ Continuous Integration jest zapewnione poprzez instancję Jenkinsa zainstalowan�
 
 Adres serwera CI: [http://188.166.165.179:8080](http://188.166.165.179:8080)
 
+Dane do logowania:
+
+Login: `io2-readonly`
+
+Hasło: `the project game`
+
 ## Technologie
 
 ### Player (Gracz)
