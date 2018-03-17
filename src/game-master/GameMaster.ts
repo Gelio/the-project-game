@@ -11,14 +11,14 @@ import { BoardSize } from '../interfaces/BoardSize';
 import { Message } from '../interfaces/Message';
 import { ActionInvalidMessage } from '../interfaces/messages/ActionInvalidMessage';
 import { ActionValidMessage } from '../interfaces/messages/ActionValidMessage';
+import {
+  GameStartedMessage,
+  GameStartedMessagePayload
+} from '../interfaces/messages/GameStartedMessage';
 import { PlayerAcceptedMessage } from '../interfaces/messages/PlayerAcceptedMessage';
 import { PlayerDisconnectedMessage } from '../interfaces/messages/PlayerDisconnectedMessage';
 import { PlayerHelloMessage } from '../interfaces/messages/PlayerHelloMessage';
 import { PlayerRejectedMessage } from '../interfaces/messages/PlayerRejectedMessage';
-import {
-  RoundStartedMessage,
-  RoundStartedMessagePayload
-} from '../interfaces/messages/RoundStartedMessage';
 import { Service } from '../interfaces/Service';
 
 import { registerUncaughtExceptionHandler } from '../registerUncaughtExceptionHandler';
@@ -311,7 +311,7 @@ export class GameMaster implements Service {
 
     this.game.setPlayersPositions();
     this.periodicPieceGenerator.init();
-    const roundStartedPayload: RoundStartedMessagePayload = {
+    const roundStartedPayload: GameStartedMessagePayload = {
       teamInfo: {
         1: {
           players: team1Players.map(player => player.playerId),
@@ -321,17 +321,16 @@ export class GameMaster implements Service {
           players: team2Players.map(player => player.playerId),
           leaderId: team2Leader.playerId
         }
-      },
-      currentRound: 0
+      }
     };
     this.game.start();
     this.updateState(GameMasterState.InGame);
 
     this.playersContainer.players.forEach(player => {
-      const message: RoundStartedMessage = {
+      const message: GameStartedMessage = {
         senderId: -1,
         recipientId: player.playerId,
-        type: 'ROUND_STARTED',
+        type: 'GAME_STARTED',
         payload: roundStartedPayload
       };
 
