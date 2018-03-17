@@ -4,7 +4,7 @@ using System.Text;
 using NUnit;
 using NUnit.Framework;
 using Moq;
-
+using Player.Common;
 
 namespace Player.Tests
 {
@@ -42,5 +42,25 @@ namespace Player.Tests
             // Then
             Assert.AreEqual(5, player.Id);
         }
+
+        [Test]
+        public void ConnectsToServerPlayerRejectedException()
+        {
+            // Give
+            string expectedMessage = Consts.PLAYER_REJECTED;
+            _communicator.Setup(x => x.Receive()).Returns(expectedMessage);
+            var playerConfig = new PlayerConfig
+            {
+                AskLevel = 10,
+                RespondLevel = 10,
+                Timeout = 11,
+                GameName = "asdfasdf"
+            };
+
+            var player = new Player(_communicator.Object, playerConfig);
+
+            Assert.Throws<PlayerRejectedException>(() => player.ConnectToServer());
+        }
+
     }
 }

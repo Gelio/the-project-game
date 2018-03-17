@@ -14,6 +14,7 @@ namespace Player.Tests
 ""payload"": {
             ""assignedPlayerId"": 5
 }}";
+        public static string PLAYER_REJECTED = @"{ ""type"": ""PLAYER_REJECTED"", ""senderId"": -1, ""recipientId"": 4541568, ""payload"": { ""reason"": ""opcjonalny tekstowy opis powodu niepowodzenia"" } }";
         public static string LIST_GAMES_RESPONSE = @"{
 ""type"": ""LIST_GAMES_RESPONSE"",
 ""senderId"": -3,
