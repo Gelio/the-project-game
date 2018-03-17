@@ -44,15 +44,27 @@ export class Board {
   }
 
   public addPlayer(player: Player) {
+    if (player.position) {
+      throw new Error('Player is already added on board');
+    }
+
     this.setRandomPlayerPosition(player);
-    this.getTileAtPosition(player.position).player = player;
   }
 
   public removePlayer(player: Player) {
+    if (!player.position) {
+      return;
+    }
+
     this.tiles[player.position.x][player.position.y].player = null;
+    player.position = null;
   }
 
   public movePlayer(player: Player, newPosition: Point) {
+    if (!player.position) {
+      throw new Error('Player position is null');
+    }
+
     const previousTile = this.getTileAtPosition(player.position);
     const newTile = this.getTileAtPosition(newPosition);
 
@@ -66,6 +78,7 @@ export class Board {
 
     previousTile.player = null;
     newTile.player = player;
+    player.position = newPosition;
   }
 
   public addPiece(piece: Piece) {
@@ -85,7 +98,7 @@ export class Board {
   public removePiece(piece: Piece) {
     const index = this.pieces.indexOf(piece);
     if (index === -1) {
-      throw new Error('Piece has not been added to the game previously');
+      throw new Error('Piece was not on board');
     }
 
     this.pieces.splice(index, 1);
@@ -123,6 +136,9 @@ export class Board {
     if (player.teamId === 2) {
       possiblePositions = this.secondTeamPositions;
     }
+    if (player.position) {
+      this.getTileAtPosition(player.position).player = null;
+    }
 
     for (const position of possiblePositions) {
       if (!this.getTileAtPosition(position).player) {
@@ -130,6 +146,12 @@ export class Board {
         break;
       }
     }
+
+    if (!player.position) {
+      throw new Error('No free position for player');
+    }
+
+    this.getTileAtPosition(player.position).player = player;
   }
 
   private generateBoard() {
