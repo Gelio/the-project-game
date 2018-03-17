@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Net;
 
 using Newtonsoft.Json;
 
 using Player.Messages;
 using Player.Common;
+using System.Net.Sockets;
 
 namespace Player
 {
@@ -56,10 +58,17 @@ namespace Player
             var helloMessageSerialized = JsonConvert.SerializeObject(helloMessage);
             _communicator.Send(helloMessageSerialized);
 
-
             var receivedMessageSerialized = _communicator.Receive();
-            var receivedMessage = JsonConvert.DeserializeObject<Message<PlayerHelloResponsePayload>>(receivedMessageSerialized);
-            Id = receivedMessage.Payload.AssignedPlayerId;
+
+            var receivedGenericMessage = JsonConvert.DeserializeObject<Message>(receivedMessageSerialized);
+            if (receivedGenericMessage.Type == Consts.PlayerRejected)
+            {
+                var rejectedMessage = JsonConvert.DeserializeObject<Message<PlayerRejectedPayload>>(receivedMessageSerialized);
+                throw new PlayerRejectedException(rejectedMessage.Payload.Reason);
+            }
+
+            var acceptedMessage = JsonConvert.DeserializeObject<Message<PlayerAcceptedPayload>>(receivedMessageSerialized);
+            Id = acceptedMessage.Payload.AssignedPlayerId;
         }
     }
 }

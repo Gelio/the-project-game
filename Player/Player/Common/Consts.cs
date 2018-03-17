@@ -11,6 +11,8 @@ namespace Player.Common
         public static int CommunicationServerId = -3;
 
         public static string PlayerHelloRequest = "PLAYER_HELLO";
+        public static string PlayerAccepted = "PLAYER_ACCEPTED";
+        public static string PlayerRejected = "PLAYER_REJECTED";
         public static string ListGamesResponse = "LIST_GAME_RESPONSE";
         public static string ListGamesRequest = "LIST_GAME_REQUEST";
     }

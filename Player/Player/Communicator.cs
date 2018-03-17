@@ -14,7 +14,7 @@ namespace Player
         private string _serverHostName;
         private int _serverPort;
 
-        public bool IsConnected => _tcpClient.Connected;
+        public bool IsConnected => _tcpClient != null;
         public string ServerHostName => _serverHostName;
         public int ServerPort => _serverPort;
 

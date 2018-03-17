@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace Player.Messages
 {
-    public class Message<T> where T:IPayload
+    public class Message<T> where T : IPayload
     {
         public string Type;
         public int SenderId;
