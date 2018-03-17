@@ -7,23 +7,21 @@ namespace Player
     {
         static void Main(string[] args)
         {
-            var playerCommunicator = new Communicator("localhost", 4200);
-
-            var message = @"{
-  ""type"": ""PLAYER_HELLO"",
-  ""senderId"": -2,
-  ""payload"": {
-    ""teamId"": 1,
-    ""isLeader"": true,
-    ""temporaryId"": 12431253
-  }
-}";
-
-            playerCommunicator.Send(message);
-            while (true)
+            if(args.Length == 0)
             {
-                var recv = playerCommunicator.Receive();
-                Console.WriteLine($"Received message: {recv}");
+                var communicator = new Communicator("10.1.2.106", 4200);
+                communicator.Connect();
+                var gameService = new GameService(communicator);
+                var gamesList = gameService.GetGamesList();
+
+                foreach (var game in gamesList)
+                {
+                    Console.WriteLine(game);
+                }
+            }
+            else
+            {
+
             }
         }
     }

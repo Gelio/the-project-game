@@ -13,6 +13,13 @@ namespace Player
         public int MaxRounds;
         public int GoalLimit;
         public Delays Delays;
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            sb.Append($"{Name} : {Description}");
+            return sb.ToString();
+        }
     }
 
     public class BoardSize

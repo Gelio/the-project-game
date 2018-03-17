@@ -23,14 +23,7 @@ namespace Player.Tests
         public void ConnectsToServer()
         {
             // Give
-            string expectedMessage = @"
-{
-    ""type"": ""PLAYER_ACCEPTED"",
-    ""senderId"": -1,
-    ""recipientId"": 45645641568,
-    ""payload"": {
-                ""assignedPlayerId"": 5
-    }}";
+            string expectedMessage = Consts.PLAYER_ACCEPTED;
             _communicator.Setup(x => x.Receive()).Returns(expectedMessage);
 
             var playerConfigMock = new Mock<IPlayerConfig>();
