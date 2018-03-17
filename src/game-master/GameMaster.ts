@@ -311,7 +311,7 @@ export class GameMaster implements Service {
 
     this.game.setPlayersPositions();
     this.periodicPieceGenerator.init();
-    const roundStartedPayload: GameStartedMessagePayload = {
+    const gameStartedPayload: GameStartedMessagePayload = {
       teamInfo: {
         1: {
           players: team1Players.map(player => player.playerId),
@@ -331,7 +331,7 @@ export class GameMaster implements Service {
         senderId: -1,
         recipientId: player.playerId,
         type: 'GAME_STARTED',
-        payload: roundStartedPayload
+        payload: gameStartedPayload
       };
 
       this.communicator.sendMessage(message);
