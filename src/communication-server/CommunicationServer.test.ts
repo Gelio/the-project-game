@@ -32,7 +32,6 @@ function getRegisterGameRequest(): RegisterGameRequest {
       delays: <any>{},
       description: 'Test',
       goalLimit: 10,
-      maxRounds: 4,
       name: 'aaa'
     }
   };

@@ -11,7 +11,6 @@ export interface GameDefinition {
   description: string;
   teamSizes: TeamSizes;
   boardSize: BoardSize;
-  maxRounds: number;
   goalLimit: number;
   delays: ActionDelays;
 }
