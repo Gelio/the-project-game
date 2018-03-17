@@ -50,7 +50,8 @@
       "**/*.{js,jsx,ts,tsx}",
       "!**/*.d.ts",
       "!**/node_modules/**",
-      "!**/vendor/**"
+      "!**/vendor/**",
+      "!**/coverage/**"
     ]
   },
   "lint-staged": {
