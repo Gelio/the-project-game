@@ -10,7 +10,6 @@ import { CommunicationServer, CommunicationServerOptions } from './Communication
 import { MessageRouter } from './MessageRouter';
 
 import { Message } from '../interfaces/Message';
-
 import { PlayerAcceptedMessage } from '../interfaces/messages/PlayerAcceptedMessage';
 import { PlayerDisconnectedMessage } from '../interfaces/messages/PlayerDisconnectedMessage';
 import { PlayerHelloMessage } from '../interfaces/messages/PlayerHelloMessage';
@@ -18,6 +17,7 @@ import { PlayerRejectedMessage } from '../interfaces/messages/PlayerRejectedMess
 import { ListGamesRequest } from '../interfaces/requests/ListGamesRequest';
 import { RegisterGameRequest } from '../interfaces/requests/RegisterGameRequest';
 import { UnregisterGameRequest } from '../interfaces/requests/UnregisterGameRequest';
+import { ListGamesResponse } from '../interfaces/responses/ListGamesResponse';
 import { RegisterGameResponse } from '../interfaces/responses/RegisterGameResponse';
 
 function getRegisterGameRequest(): RegisterGameRequest {
@@ -227,9 +227,9 @@ describe('[CS] CommunicationServer', () => {
       };
       playerCommunicator.sendMessage(playerListGamesRequest);
 
-      const receivedListGamesResponse = await playerCommunicator.waitForAnyMessage();
+      const receivedListGamesResponse = <ListGamesResponse>await playerCommunicator.waitForAnyMessage();
 
-      expect(receivedListGamesResponse.payload.games.length).toEqual(0);
+      expect(receivedListGamesResponse.payload.games).toHaveLength(0);
 
       playerCommunicator.destroy();
     });
@@ -315,9 +315,10 @@ describe('[CS] CommunicationServer', () => {
         };
         playerCommunicator.sendMessage(playerListGamesRequest);
 
-        const receivedListGamesResponse = await playerCommunicator.waitForAnyMessage();
+        const receivedListGamesResponse = <ListGamesResponse>await playerCommunicator.waitForAnyMessage();
 
-        expect(receivedListGamesResponse.payload.games.length).toEqual(1);
+        expect(receivedListGamesResponse.type).toEqual('LIST_GAMES_RESPONSE');
+        expect(receivedListGamesResponse.payload.games).toHaveLength(1);
 
         const registeredGame = receivedListGamesResponse.payload.games[0];
 
@@ -337,9 +338,9 @@ describe('[CS] CommunicationServer', () => {
         };
         playerCommunicator.sendMessage(playerListGamesRequest);
 
-        const receivedListGamesResponse = await playerCommunicator.waitForAnyMessage();
+        const receivedListGamesResponse = <ListGamesResponse>await playerCommunicator.waitForAnyMessage();
 
-        expect(receivedListGamesResponse.payload.games.length).toEqual(0);
+        expect(receivedListGamesResponse.payload.games).toHaveLength(0);
         playerCommunicator.destroy();
       });
 
