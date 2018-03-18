@@ -27,6 +27,7 @@ export class GameMaster implements Service {
     this.game = game;
 
     this.handleMessage = this.handleMessage.bind(this);
+    this.destroy = this.destroy.bind(this);
   }
 
   public init() {
@@ -35,6 +36,7 @@ export class GameMaster implements Service {
       this.communicator
     );
     this.communicator.on('message', this.handleMessage);
+    this.communicator.on('destroy', this.destroy);
   }
 
   public destroy() {
@@ -46,6 +48,7 @@ export class GameMaster implements Service {
     }
 
     this.communicator.removeListener('message', this.handleMessage);
+    this.communicator.removeListener('destroy', this.destroy);
     this.game.destroy();
   }
 

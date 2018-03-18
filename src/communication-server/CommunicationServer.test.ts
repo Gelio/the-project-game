@@ -11,11 +11,11 @@ import { MessageRouter } from './MessageRouter';
 
 import { Message } from '../interfaces/Message';
 import { PlayerAcceptedMessage } from '../interfaces/messages/PlayerAcceptedMessage';
+import { PlayerDisconnectedMessage } from '../interfaces/messages/PlayerDisconnectedMessage';
 import { PlayerHelloMessage } from '../interfaces/messages/PlayerHelloMessage';
 import { PlayerRejectedMessage } from '../interfaces/messages/PlayerRejectedMessage';
 import { RegisterGameRequest } from '../interfaces/requests/RegisterGameRequest';
 import { RegisterGameResponse } from '../interfaces/responses/RegisterGameResponse';
-import { PlayerDisconnectedMessage } from '../interfaces/messages/PlayerDisconnectedMessage';
 
 function getRegisterGameRequest(): RegisterGameRequest {
   return {
@@ -338,8 +338,42 @@ describe('[CS] CommunicationServer', () => {
       // tslint:disable-next-line:mocha-no-side-effect-code no-empty
       it.skip('should return empty games list after GM disconnects', () => {});
 
-      // tslint:disable-next-line:mocha-no-side-effect-code no-empty
-      it.skip('should disconnect a player after his GM disconnects', () => {});
+      it('should disconnect a player after his GM disconnects', async done => {
+        const gmCommunicator = await createConnectedCommunicator();
+        const registerGameRequest = getRegisterGameRequest();
+        gmCommunicator.sendMessage(registerGameRequest);
+        await gmCommunicator.waitForAnyMessage();
+
+        // Join game
+        const playerCommunicator = await createConnectedCommunicator();
+        const playerHelloMessage: PlayerHelloMessage = {
+          type: 'PLAYER_HELLO',
+          senderId: -2,
+          payload: {
+            teamId: 1,
+            isLeader: false,
+            temporaryId: 123,
+            game: registerGameRequest.payload.name
+          }
+        };
+        playerCommunicator.sendMessage(playerHelloMessage);
+        await gmCommunicator.waitForAnyMessage();
+
+        // Accept player
+        const playerAcceptedMessage: PlayerAcceptedMessage = {
+          payload: { assignedPlayerId: 2 },
+          type: 'PLAYER_ACCEPTED',
+          senderId: -1,
+          recipientId: playerHelloMessage.payload.temporaryId
+        };
+        gmCommunicator.sendMessage(playerAcceptedMessage);
+        await playerCommunicator.waitForAnyMessage();
+
+        playerCommunicator.once('destroy', () => {
+          done();
+        });
+        gmCommunicator.destroy();
+      });
     });
   });
 });

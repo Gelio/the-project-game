@@ -44,6 +44,7 @@ export class Player implements Service {
     if (this.messageRouter.hasRegisteredPlayerCommunicator(this.id)) {
       this.messageRouter.unregisterPlayerCommunicator(this.id);
     }
+    this.communicator.destroy();
   }
 
   private handleMessage<T>(message: Message<T>) {
