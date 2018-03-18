@@ -12,6 +12,7 @@ import { MessageRouter } from './MessageRouter';
 import { Message } from '../interfaces/Message';
 import { PlayerAcceptedMessage } from '../interfaces/messages/PlayerAcceptedMessage';
 import { PlayerHelloMessage } from '../interfaces/messages/PlayerHelloMessage';
+import { PlayerRejectedMessage } from '../interfaces/messages/PlayerRejectedMessage';
 import { RegisterGameRequest } from '../interfaces/requests/RegisterGameRequest';
 import { RegisterGameResponse } from '../interfaces/responses/RegisterGameResponse';
 
@@ -57,6 +58,14 @@ describe('[CS] CommunicationServer', () => {
         () => resolve(socket)
       );
     });
+  }
+
+  async function createConnectedCommunicator(): Promise<Communicator> {
+    const socket = await connectSocketToServer();
+    const communicator = new Communicator(socket, logger);
+    communicator.bindListeners();
+
+    return communicator;
   }
 
   beforeEach(() => {
@@ -120,9 +129,7 @@ describe('[CS] CommunicationServer', () => {
     });
 
     it("should log incorrect initial client's messages", async () => {
-      const socket = await connectSocketToServer();
-      const communicator = new Communicator(socket, logger);
-      communicator.bindListeners();
+      const communicator = await createConnectedCommunicator();
 
       logger.error = jest.fn();
       const message: Message<any> = {
@@ -139,16 +146,12 @@ describe('[CS] CommunicationServer', () => {
     });
 
     it("should register GM's game", async () => {
-      const gmSocket = await connectSocketToServer();
-      const gmCommunicator = new Communicator(gmSocket, logger);
-      gmCommunicator.bindListeners();
-
-      const responsePromise = gmCommunicator.waitForAnyMessage();
+      const gmCommunicator = await createConnectedCommunicator();
 
       jest.spyOn(messageRouter, 'registerGameMasterCommunicator');
       const registerGameRequest = getRegisterGameRequest();
       gmCommunicator.sendMessage(registerGameRequest);
-      const response = await responsePromise;
+      const response = await gmCommunicator.waitForAnyMessage();
 
       expect(messageRouter.registerGameMasterCommunicator).toHaveBeenCalledWith(
         registerGameRequest.payload.name,
@@ -158,27 +161,25 @@ describe('[CS] CommunicationServer', () => {
       expect((<RegisterGameResponse>response).payload.registered).toEqual(true);
 
       gmCommunicator.destroy();
-      gmSocket.destroy();
     });
 
     it('should not register two games with the same name', async () => {
-      const gmSockets = await Promise.all([connectSocketToServer(), connectSocketToServer()]);
-      const gmCommunicators = gmSockets.map(socket => new Communicator(socket, logger));
-      gmCommunicators.forEach(comm => comm.bindListeners());
+      const gmCommunicators = await Promise.all([
+        createConnectedCommunicator(),
+        createConnectedCommunicator()
+      ]);
 
       const registerGameRequest = getRegisterGameRequest();
-      const response1Promise = gmCommunicators[0].waitForAnyMessage();
       gmCommunicators[0].sendMessage(registerGameRequest);
-      await response1Promise;
+      await gmCommunicators[0].waitForAnyMessage();
 
-      const response2Promise = gmCommunicators[1].waitForAnyMessage();
       gmCommunicators[1].sendMessage(registerGameRequest);
-      const response2 = await response2Promise;
+      const response2 = await gmCommunicators[1].waitForAnyMessage();
 
       expect(response2.type).toEqual('REGISTER_GAME_RESPONSE');
       expect((<RegisterGameResponse>response2).payload.registered).toEqual(false);
 
-      gmCommunicators.forEach(comm => comm.destroy());
+      gmCommunicators.forEach(communicator => communicator.destroy());
     });
 
     // tslint:disable-next-line:mocha-no-side-effect-code no-empty
@@ -186,18 +187,13 @@ describe('[CS] CommunicationServer', () => {
 
     describe('and game registration', () => {
       it('should pass messages between Player and GM', async () => {
-        const gmSocket = await connectSocketToServer();
-        const gmCommunicator = new Communicator(gmSocket, logger);
-        gmCommunicator.bindListeners();
+        const gmCommunicator = await createConnectedCommunicator();
 
-        const registerGameResponsePromise = gmCommunicator.waitForAnyMessage();
         const registerGameRequest = getRegisterGameRequest();
         gmCommunicator.sendMessage(registerGameRequest);
-        await registerGameResponsePromise;
+        await gmCommunicator.waitForAnyMessage();
 
-        const playerSocket = await connectSocketToServer();
-        const playerCommunicator = new Communicator(playerSocket, logger);
-        playerCommunicator.bindListeners();
+        const playerCommunicator = await createConnectedCommunicator();
 
         // Exchange messages
         const playerHelloMessage: PlayerHelloMessage = {
@@ -230,8 +226,47 @@ describe('[CS] CommunicationServer', () => {
         gmCommunicator.destroy();
       });
 
-      // tslint:disable-next-line:mocha-no-side-effect-code no-empty
-      it.skip('should not register player when he is rejected', () => {});
+      it('should not register player when he is rejected', async () => {
+        const gmCommunicator = await createConnectedCommunicator();
+
+        const registerGameRequest = getRegisterGameRequest();
+        gmCommunicator.sendMessage(registerGameRequest);
+        await gmCommunicator.waitForAnyMessage();
+
+        const playerCommunicator = await createConnectedCommunicator();
+
+        // Exchange messages
+        const playerHelloMessage: PlayerHelloMessage = {
+          type: 'PLAYER_HELLO',
+          senderId: -2,
+          payload: {
+            teamId: 1,
+            isLeader: false,
+            temporaryId: 123,
+            game: registerGameRequest.payload.name
+          }
+        };
+        playerCommunicator.sendMessage(playerHelloMessage);
+        await gmCommunicator.waitForAnyMessage();
+
+        spyOn(messageRouter, 'registerPlayerCommunicator');
+
+        const playerRejectedMessage: PlayerRejectedMessage = {
+          payload: { reason: 'test' },
+          type: 'PLAYER_REJECTED',
+          senderId: -1,
+          recipientId: playerHelloMessage.payload.temporaryId
+        };
+        gmCommunicator.sendMessage(playerRejectedMessage);
+
+        const receivedPlayerAcceptedMessage = await playerCommunicator.waitForAnyMessage();
+        expect(receivedPlayerAcceptedMessage).toEqual(playerRejectedMessage);
+
+        expect(messageRouter.registerPlayerCommunicator).not.toHaveBeenCalled();
+
+        playerCommunicator.destroy();
+        gmCommunicator.destroy();
+      });
 
       // tslint:disable-next-line:mocha-no-side-effect-code no-empty
       it.skip("should notify GM about Player's disconnection", () => {});
