@@ -28,5 +28,6 @@
     "communicationAccept": 4000,
     "tryPiece": 4000
   },
-  "timeout": 10000
+  "timeout": 10000,
+  "registrationTriesLimit": 5
 }

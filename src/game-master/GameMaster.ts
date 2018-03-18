@@ -52,6 +52,7 @@ export interface GameMasterOptions {
   resultFileName: string;
   actionDelays: ActionDelays;
   timeout: number;
+  registrationTriesLimit: number;
 }
 
 export class GameMaster implements Service {
@@ -227,7 +228,19 @@ export class GameMaster implements Service {
       return;
     }
 
-    throw new Error('Failed to register new game!');
+    if (this.options.registrationTriesLimit === 0) {
+      throw new Error('Failed to register new game, limit of tries reached');
+    }
+
+    this.options.registrationTriesLimit--;
+
+    this.logger.error(
+      `Failed to register new game! Next attempt will be made in 10 seconds. Attempts left: ${
+        this.options.registrationTriesLimit
+      }`
+    );
+
+    setTimeout(() => this.registerGame(), 10000);
   }
 
   private tryAcceptPlayer(message: PlayerHelloMessage) {
