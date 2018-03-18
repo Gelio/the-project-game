@@ -22,6 +22,7 @@ import { PlayerAcceptedMessage } from '../interfaces/messages/PlayerAcceptedMess
 import { PlayerDisconnectedMessage } from '../interfaces/messages/PlayerDisconnectedMessage';
 import { PlayerHelloMessage } from '../interfaces/messages/PlayerHelloMessage';
 import { PlayerRejectedMessage } from '../interfaces/messages/PlayerRejectedMessage';
+import { MessageWithRecipient } from '../interfaces/MessageWithRecipient';
 import { RegisterGameRequest } from '../interfaces/requests/RegisterGameRequest';
 import { RegisterGameResponse } from '../interfaces/responses/RegisterGameResponse';
 
@@ -67,8 +68,7 @@ export class GameMaster implements Service {
 
   private readonly messageHandlers: { [type: string]: Function } = {
     PLAYER_HELLO: this.handlePlayerHelloMessage,
-    PLAYER_DISCONNECTED: this.handlePlayerDisconnectedMessage,
-    REGISTER_GAME_RESPONSE: this.handleRegisterGameResponse
+    PLAYER_DISCONNECTED: this.handlePlayerDisconnectedMessage
   };
 
   constructor(
@@ -107,7 +107,6 @@ export class GameMaster implements Service {
     this.communicator.bindListeners();
 
     this.communicator.once('close', this.handleServerDisconnection.bind(this));
-    this.communicator.on('message', this.handleMessage);
 
     this.registerGame();
   }
@@ -194,7 +193,7 @@ export class GameMaster implements Service {
     }
   }
 
-  private registerGame() {
+  private async registerGame() {
     const game: GameDefinition = {
       name: this.options.gameName,
       description: this.options.gameDescription,
@@ -209,13 +208,21 @@ export class GameMaster implements Service {
       payload: game
     };
 
-    return this.communicator.sendMessage(registerGameMessage);
+    this.communicator.sendMessage(registerGameMessage);
+
+    const listGamesResponse = <RegisterGameResponse>await this.communicator.waitForSpecificMessage(
+      (msg: MessageWithRecipient<RegisterGameResponse>) => msg.type === 'REGISTER_GAME_RESPONSE'
+    );
+
+    this.handleRegisterGameResponse(listGamesResponse);
   }
 
   private handleRegisterGameResponse(message: RegisterGameResponse) {
     if (message.payload.registered === true) {
       this.logger.verbose('Received game registered response');
       this.updateState(GameMasterState.WaitingForPlayers);
+
+      this.communicator.on('message', this.handleMessage);
 
       return;
     }
