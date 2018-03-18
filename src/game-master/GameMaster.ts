@@ -244,10 +244,6 @@ export class GameMaster implements Service {
   }
 
   private tryAcceptPlayer(message: PlayerHelloMessage) {
-    if (this.state === GameMasterState.Connecting) {
-      throw new Error('Game Master is not connected to CS');
-    }
-
     const teamPlayers = this.game.playersContainer.getPlayersFromTeam(message.payload.teamId);
 
     if (this.game.hasStarted) {
