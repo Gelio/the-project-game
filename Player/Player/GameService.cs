@@ -19,7 +19,7 @@ namespace Player
         {
             var message = new Message
             {
-                Type = Common.Consts.ListGamesResponse,
+                Type = Common.Consts.ListGamesRequest,
                 SenderId = Common.Consts.UnknownPlayerId
             };
 

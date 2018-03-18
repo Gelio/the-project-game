@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Player.Messages
 {
-    class PlayerAcceptedPayload : IPayload
+    public class PlayerAcceptedPayload : IPayload
     {
         public int AssignedPlayerId;
     }

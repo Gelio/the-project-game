@@ -11,7 +11,7 @@ namespace Player
     {
         static void Main(string[] args)
         {
-            var communicator = new Communicator("10.1.2.106", 4200);
+            var communicator = new Communicator("localhost", 4200);
 
             if (args.Length == 0)
             {
@@ -25,9 +25,14 @@ namespace Player
                 var gameService = new GameService(communicator);
                 var gamesList = gameService.GetGamesList();
 
+                if (gamesList.Count == 0)
+                {
+                    Console.WriteLine("There are no games available.");
+                    return;
+                }
+
                 foreach (var game in gamesList)
                     Console.WriteLine(game);
-
                 return;
             }
 
