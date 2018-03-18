@@ -60,10 +60,6 @@ export class Player implements Service {
   }
 
   private isMessageValid<T>(message: Message<T>) {
-    if (!this.id) {
-      return true;
-    }
-
     return this.id === message.senderId;
   }
 }

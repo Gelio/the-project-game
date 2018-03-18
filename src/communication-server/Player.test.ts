@@ -64,4 +64,15 @@ describe('[CS] Player', () => {
 
     expect(gameMasterCommunicator.sendMessage).toHaveBeenLastCalledWith(message);
   });
+
+  it('should not send message when player ID is missing', () => {
+    const message = {
+      payload: {},
+      senderId: 0,
+      type: 'OTHER_MESSAGE'
+    };
+
+    playerCommunicator.emit('message', message);
+    expect(gameMasterCommunicator.sendMessage).not.toHaveBeenCalled();
+  });
 });
