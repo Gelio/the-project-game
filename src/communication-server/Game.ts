@@ -11,9 +11,17 @@ export class Game {
     this.gameDefinition = gameDefinition;
   }
 
+  /**
+   * Used when game is destroyed because the GM disconnected
+   */
   public destroy() {
     this.team1Players.forEach(player => player.destroy());
     this.team2Players.forEach(player => player.destroy());
+  }
+
+  public finish() {
+    this.team1Players.forEach(player => player.onGameFinished());
+    this.team2Players.forEach(player => player.onGameFinished());
   }
 
   public getPlayersCount() {

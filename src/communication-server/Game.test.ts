@@ -31,6 +31,36 @@ describe('[CS] Game', () => {
     });
   });
 
+  describe('finish', () => {
+    it('should call onGameFinished on each player from team1', () => {
+      const game = new Game(<any>{});
+      const fn1 = jest.fn();
+      const fn2 = jest.fn();
+      const fn3 = jest.fn();
+      const fn4 = jest.fn();
+
+      game.team1Players.push(<any>{
+        onGameFinished: fn1
+      });
+      game.team1Players.push(<any>{
+        onGameFinished: fn2
+      });
+      game.team2Players.push(<any>{
+        onGameFinished: fn3
+      });
+      game.team2Players.push(<any>{
+        onGameFinished: fn4
+      });
+
+      game.finish();
+
+      expect(fn1).toHaveBeenCalledTimes(1);
+      expect(fn2).toHaveBeenCalledTimes(1);
+      expect(fn3).toHaveBeenCalledTimes(1);
+      expect(fn4).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('getPlayersCount', () => {
     it('should sum the number of players', () => {
       const game = new Game(<any>{});
