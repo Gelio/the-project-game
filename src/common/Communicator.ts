@@ -51,7 +51,7 @@ export class Communicator extends CustomEventEmitter {
     }
   }
 
-  public sendMessage<T>(message: Message<T>) {
+  public sendMessage(message: Message<any>) {
     const serializedMessage = JSON.stringify(message);
     this.logger.debug(`Sending message ${message.type} (${serializedMessage.length})`);
 
