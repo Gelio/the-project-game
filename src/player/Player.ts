@@ -13,11 +13,10 @@ import { Message } from '../interfaces/Message';
 import { PlayerAcceptedMessage } from '../interfaces/messages/PlayerAcceptedMessage';
 import { PlayerHelloMessage } from '../interfaces/messages/PlayerHelloMessage';
 import { PlayerRejectedMessage } from '../interfaces/messages/PlayerRejectedMessage';
-import { Service } from '../interfaces/Service';
-
-import { ListGamesResponse } from '../interfaces/responses/ListGamesResponse';
-
+import { MessageWithRecipient } from '../interfaces/MessageWithRecipient';
 import { ListGamesRequest } from '../interfaces/requests/ListGamesRequest';
+import { ListGamesResponse } from '../interfaces/responses/ListGamesResponse';
+import { Service } from '../interfaces/Service';
 
 import { registerUncaughtExceptionHandler } from '../registerUncaughtExceptionHandler';
 
@@ -45,10 +44,9 @@ export class Player implements Service {
   private readonly uiController: UIController;
   private readonly loggerFactory: LoggerFactory;
 
-  private messageHandlers = {
+  private messageHandlers: { [type: string]: Function } = {
     PLAYER_ACCEPTED: this.handlePlayerAccepted,
-    PLAYER_REJECTED: this.handlePlayerRejected,
-    LIST_GAMES_RESPONSE: this.handleListGamesResponse
+    PLAYER_REJECTED: this.handlePlayerRejected
   };
 
   constructor(options: PlayerOptions, uiController: UIController, loggerFactory: LoggerFactory) {
@@ -114,7 +112,7 @@ export class Player implements Service {
     this.communicator.sendMessage(message);
   }
 
-  private sendListGames() {
+  private async sendListGames() {
     const message: ListGamesRequest = {
       type: 'LIST_GAMES_REQUEST',
       senderId: -2,
@@ -122,11 +120,18 @@ export class Player implements Service {
     };
 
     this.communicator.sendMessage(message);
+    const listGamesResponse = <ListGamesResponse>await this.communicator.waitForSpecificMessage(
+      (msg: MessageWithRecipient<ListGamesResponse>) => msg.type === 'LIST_GAMES_RESPONSE'
+    );
+
+    this.handleListGamesResponse(listGamesResponse);
   }
 
   private handleMessage<T>(message: Message<T>) {
     // @ts-ignore
-    this.messageHandlers[message.type](message);
+    if (this.messageHandlers[message.type] !== undefined) {
+      return this.messageHandlers[message.type](message);
+    }
   }
 
   private handleListGamesResponse(message: ListGamesResponse) {
