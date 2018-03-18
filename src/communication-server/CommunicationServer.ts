@@ -286,10 +286,10 @@ export class CommunicationServer implements Service {
     player.init();
   }
 
-  private handleListGamesRequest(_communicator: Communicator) {
+  private handleListGamesRequest(communicator: Communicator) {
     const games: GameDefinition[] = [];
 
-    this.gameMasters.forEach(value => games.push(value.game.gameDefinition));
+    this.gameMasters.forEach(gameMaster => games.push(gameMaster.game.gameDefinition));
 
     const listGamesResponsePaylod: ListGamesResponsePayload = {
       games: games
@@ -301,7 +301,7 @@ export class CommunicationServer implements Service {
       recipientId: -2,
       payload: listGamesResponsePaylod
     };
-    _communicator.sendMessage(listGamesResponse);
+    communicator.sendMessage(listGamesResponse);
   }
 
   private handlePlayerDisconnection(player: Player) {
