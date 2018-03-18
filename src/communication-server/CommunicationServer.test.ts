@@ -206,6 +206,16 @@ describe('[CS] CommunicationServer', () => {
       gmCommunicators.forEach(communicator => communicator.destroy());
     });
 
+    it('should reject player when the game he/she wants to join does not exist', async () => {
+      const playerCommunicator = await createConnectedCommunicator();
+      const playerHelloMessage = getPlayerHelloMessage('a');
+      playerCommunicator.sendMessage(playerHelloMessage);
+
+      const response = await playerCommunicator.waitForAnyMessage();
+
+      expect(response.type).toEqual('PLAYER_REJECTED');
+    });
+
     // tslint:disable-next-line:mocha-no-side-effect-code no-empty
     it.skip('should return empty games list', () => {});
 
@@ -264,15 +274,6 @@ describe('[CS] CommunicationServer', () => {
         expect(messageRouter.registerPlayerCommunicator).not.toHaveBeenCalled();
       });
 
-      it('should reject player when the game he/she wants to join does not exist', async () => {
-        const playerHelloMessage = getPlayerHelloMessage(registerGameRequest.payload.name);
-        playerCommunicator.sendMessage(playerHelloMessage);
-
-        const response = await playerCommunicator.waitForAnyMessage();
-
-        expect(response.type).toEqual('PLAYER_REJECTED');
-      });
-
       it("should notify GM about Player's disconnection", async () => {
         const playerHelloMessage = getPlayerHelloMessage(registerGameRequest.payload.name);
         playerCommunicator.sendMessage(playerHelloMessage);
@@ -326,12 +327,13 @@ describe('[CS] CommunicationServer', () => {
           }
         };
         gmCommunicator.sendMessage(unregisterGameRequest);
-        await gmCommunicator.waitForAnyMessage();
+        console.log(await gmCommunicator.waitForAnyMessage());
 
         // Test connection by sending player hello and awaiting a response
+        const p = playerCommunicator.waitForAnyMessage();
         playerCommunicator.sendMessage(playerHelloMessage);
         console.log('registered sent');
-        const response = await playerCommunicator.waitForAnyMessage();
+        const response = await p;
         expect(response.type).toEqual('PLAYER_REJECTED');
       });
 
