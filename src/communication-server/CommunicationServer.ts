@@ -225,6 +225,10 @@ export class CommunicationServer implements Service {
         }
       };
 
+      this.logger.verbose(
+        `Client ${communicator.address} wanted to join game ${gameName} but it does not exist`
+      );
+
       communicator.sendMessage(response);
 
       return;
@@ -264,7 +268,7 @@ export class CommunicationServer implements Service {
     }
 
     this.logger.info(
-      `A new player joined the game ${gameName} (${gameMaster.game.getPlayersCount()} / ${gameMaster.game.getGameCapacity()}`
+      `A new player joined the game ${gameName} (${gameMaster.game.getPlayersCount()} / ${gameMaster.game.getGameCapacity()})`
     );
 
     player.once('destroy', () => this.handlePlayerDisconnection(player));

@@ -90,5 +90,7 @@ export class GameMaster extends CustomEventEmitter {
   private unbindListeners() {
     this.communicator.removeListener('destroy', this.onDisconnected);
     this.communicator.removeListener('message', this.handleMessage);
+
+    this.messageRouter.unregisterGameMasterCommunicator(this.game.gameDefinition.name);
   }
 }
