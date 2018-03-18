@@ -15,6 +15,7 @@ import { PlayerHelloMessage } from '../interfaces/messages/PlayerHelloMessage';
 import { PlayerRejectedMessage } from '../interfaces/messages/PlayerRejectedMessage';
 import { RegisterGameRequest } from '../interfaces/requests/RegisterGameRequest';
 import { RegisterGameResponse } from '../interfaces/responses/RegisterGameResponse';
+import { PlayerDisconnectedMessage } from '../interfaces/messages/PlayerDisconnectedMessage';
 
 function getRegisterGameRequest(): RegisterGameRequest {
   return {
@@ -291,8 +292,45 @@ describe('[CS] CommunicationServer', () => {
         playerCommunicator.destroy();
       });
 
-      // tslint:disable-next-line:mocha-no-side-effect-code no-empty
-      it.skip("should notify GM about Player's disconnection", () => {});
+      it("should notify GM about Player's disconnection", async () => {
+        const gmCommunicator = await createConnectedCommunicator();
+        const registerGameRequest = getRegisterGameRequest();
+        gmCommunicator.sendMessage(registerGameRequest);
+        await gmCommunicator.waitForAnyMessage();
+
+        // Join game
+        const playerCommunicator = await createConnectedCommunicator();
+        const playerHelloMessage: PlayerHelloMessage = {
+          type: 'PLAYER_HELLO',
+          senderId: -2,
+          payload: {
+            teamId: 1,
+            isLeader: false,
+            temporaryId: 123,
+            game: registerGameRequest.payload.name
+          }
+        };
+        playerCommunicator.sendMessage(playerHelloMessage);
+        await gmCommunicator.waitForAnyMessage();
+
+        // Accept player
+        const playerAcceptedMessage: PlayerAcceptedMessage = {
+          payload: { assignedPlayerId: 2 },
+          type: 'PLAYER_ACCEPTED',
+          senderId: -1,
+          recipientId: playerHelloMessage.payload.temporaryId
+        };
+        gmCommunicator.sendMessage(playerAcceptedMessage);
+        await playerCommunicator.waitForAnyMessage();
+
+        playerCommunicator.destroy();
+        const playerDisconnectedMessage = <PlayerDisconnectedMessage>await gmCommunicator.waitForAnyMessage();
+
+        expect(playerDisconnectedMessage.type).toEqual('PLAYER_DISCONNECTED');
+        expect(playerDisconnectedMessage.payload.playerId).toEqual(2);
+
+        gmCommunicator.destroy();
+      });
 
       // tslint:disable-next-line:mocha-no-side-effect-code no-empty
       it.skip('should list registered game when requested', () => {});
