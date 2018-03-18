@@ -268,6 +268,29 @@ describe('[CS] CommunicationServer', () => {
         gmCommunicator.destroy();
       });
 
+      it('should reject player when the game he/she wants to join does not exist', async () => {
+        const playerCommunicator = await createConnectedCommunicator();
+
+        // Exchange messages
+        const playerHelloMessage: PlayerHelloMessage = {
+          type: 'PLAYER_HELLO',
+          senderId: -2,
+          payload: {
+            teamId: 1,
+            isLeader: false,
+            temporaryId: 123,
+            game: 'does not exist'
+          }
+        };
+        playerCommunicator.sendMessage(playerHelloMessage);
+
+        const response = await playerCommunicator.waitForAnyMessage();
+
+        expect(response.type).toEqual('PLAYER_REJECTED');
+
+        playerCommunicator.destroy();
+      });
+
       // tslint:disable-next-line:mocha-no-side-effect-code no-empty
       it.skip("should notify GM about Player's disconnection", () => {});
 
