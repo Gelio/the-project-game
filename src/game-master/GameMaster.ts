@@ -53,6 +53,7 @@ export interface GameMasterOptions {
   actionDelays: ActionDelays;
   timeout: number;
   registrationTriesLimit: number;
+  registerGameInterval: number;
 }
 
 export class GameMaster implements Service {
@@ -219,7 +220,7 @@ export class GameMaster implements Service {
   }
 
   private handleRegisterGameResponse(message: RegisterGameResponse) {
-    if (message.payload.registered === true) {
+    if (message.payload.registered) {
       this.logger.verbose('Received game registered response');
       this.updateState(GameMasterState.WaitingForPlayers);
 
@@ -240,7 +241,7 @@ export class GameMaster implements Service {
       }`
     );
 
-    setTimeout(() => this.registerGame(), 10000);
+    setTimeout(() => this.registerGame(), this.options.registerGameInterval);
   }
 
   private tryAcceptPlayer(message: PlayerHelloMessage) {

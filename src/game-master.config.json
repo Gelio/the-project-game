@@ -29,5 +29,6 @@
     "tryPiece": 4000
   },
   "timeout": 10000,
-  "registrationTriesLimit": 5
+  "registrationTriesLimit": 5,
+  "registerGameInterval": 10000
 }
