@@ -291,9 +291,7 @@ export class CommunicationServer implements Service {
 
     this.gameMasters.forEach(gameMaster => games.push(gameMaster.game.gameDefinition));
 
-    const listGamesResponsePaylod: ListGamesResponsePayload = {
-      games: games
-    };
+    const listGamesResponsePaylod: ListGamesResponsePayload = { games };
 
     const listGamesResponse: ListGamesResponse = {
       type: 'LIST_GAMES_RESPONSE',
