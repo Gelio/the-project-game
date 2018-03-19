@@ -67,6 +67,7 @@ export class GameMaster implements Service {
   private readonly loggerFactory: LoggerFactory;
   private periodicPieceGenerator: PeriodicPieceGenerator;
   private logger: LoggerInstance;
+  private failedRegistrations: number;
 
   private readonly messageHandlers: { [type: string]: Function } = {
     PLAYER_HELLO: this.handlePlayerHelloMessage,
@@ -82,6 +83,8 @@ export class GameMaster implements Service {
     this.uiController = uiController;
     this.loggerFactory = loggerFactory;
     this.state = GameMasterState.Connecting;
+
+    this.failedRegistrations = 0;
 
     bindObjectProperties(this.messageHandlers, this);
     this.destroy = this.destroy.bind(this);
@@ -222,23 +225,26 @@ export class GameMaster implements Service {
   private handleRegisterGameResponse(message: RegisterGameResponse) {
     if (message.payload.registered) {
       this.logger.verbose('Received game registered response');
+
       this.updateState(GameMasterState.WaitingForPlayers);
+      this.failedRegistrations = 0;
 
       this.communicator.on('message', this.handleMessage);
 
       return;
     }
 
-    if (this.options.registrationTriesLimit === 0) {
+    if (this.options.registrationTriesLimit === this.failedRegistrations) {
       throw new Error('Failed to register new game, limit of tries reached');
     }
 
-    this.options.registrationTriesLimit--;
+    this.failedRegistrations++;
 
+    const registrationsTriesLeft = this.options.registrationTriesLimit - this.failedRegistrations;
     this.logger.error(
-      `Failed to register new game! Next attempt will be made in 10 seconds. Attempts left: ${
-        this.options.registrationTriesLimit
-      }`
+      `Failed to register new game! Next attempt will be made in ${
+        this.options.registerGameInterval
+      } miliseconds. Attempts left: ${registrationsTriesLeft}`
     );
 
     setTimeout(() => this.registerGame(), this.options.registerGameInterval);
