@@ -127,6 +127,10 @@ export class Communicator extends CustomEventEmitter {
     const message = JSON.parse(messageBuffer.toString());
     this.logger.silly(`Received message ${message.type} (${messageBuffer.length})`);
     this.eventEmitter.emit('message', message);
+
+    if (this.socket.readableLength > 0) {
+      this.readMessage();
+    }
   }
 
   private tryReadMessageLength() {
