@@ -240,9 +240,12 @@ export class CommunicationServer implements Service {
     const gameMasterResponse = await gameMaster.communicator.waitForSpecificMessage(
       (msg: MessageWithRecipient<any>) => msg.recipientId === helloMessage.payload.temporaryId
     );
+    /**
+     * NOTE: The response will be forwarded to the player via `MessageRouter`, so there is no
+     * need to send it to `communicator` again
+     */
 
     this.messageRouter.unregisterPlayerCommunicator(helloMessage.payload.temporaryId);
-    communicator.sendMessage(gameMasterResponse);
 
     if (gameMasterResponse.type !== 'PLAYER_ACCEPTED') {
       return;

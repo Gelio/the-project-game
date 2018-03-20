@@ -308,8 +308,7 @@ describe('[CS] CommunicationServer', () => {
         playerCommunicator.once('destroy', done);
       });
 
-      // tslint:disable-next-line:mocha-no-side-effect-code
-      it.only('should not disconnect a player after the game finished', async () => {
+      it('should not disconnect a player after the game finished', async () => {
         const playerHelloMessage = getPlayerHelloMessage(registerGameRequest.payload.name);
         playerCommunicator.sendMessage(playerHelloMessage);
         await gmCommunicator.waitForAnyMessage();
@@ -327,13 +326,11 @@ describe('[CS] CommunicationServer', () => {
           }
         };
         gmCommunicator.sendMessage(unregisterGameRequest);
-        console.log(await gmCommunicator.waitForAnyMessage());
+        await gmCommunicator.waitForAnyMessage();
 
         // Test connection by sending player hello and awaiting a response
-        const p = playerCommunicator.waitForAnyMessage();
         playerCommunicator.sendMessage(playerHelloMessage);
-        console.log('registered sent');
-        const response = await p;
+        const response = await playerCommunicator.waitForAnyMessage();
         expect(response.type).toEqual('PLAYER_REJECTED');
       });
 
