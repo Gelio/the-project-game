@@ -175,10 +175,10 @@ describe('[CS] CommunicationServer', () => {
       await gmCommunicators[0].waitForAnyMessage();
 
       gmCommunicators[1].sendMessage(registerGameRequest);
-      const response2 = await gmCommunicators[1].waitForAnyMessage();
+      const response = await gmCommunicators[1].waitForAnyMessage();
 
-      expect(response2.type).toEqual('REGISTER_GAME_RESPONSE');
-      expect((<RegisterGameResponse>response2).payload.registered).toEqual(false);
+      expect(response.type).toEqual('REGISTER_GAME_RESPONSE');
+      expect((<RegisterGameResponse>response).payload.registered).toEqual(false);
 
       gmCommunicators.forEach(communicator => communicator.destroy());
     });
