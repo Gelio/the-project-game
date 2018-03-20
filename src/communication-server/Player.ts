@@ -34,26 +34,27 @@ export class Player extends CustomEventEmitter {
 
     this.handleMessage = this.handleMessage.bind(this);
     this.destroy = this.destroy.bind(this);
+    this.onCommunicatorDestroyed = this.onCommunicatorDestroyed.bind(this);
   }
 
   public init() {
     this.messageRouter.registerPlayerCommunicator(this.id, this.communicator);
     this.communicator.on('message', this.handleMessage);
-    this.communicator.once('destroy', this.destroy);
+    this.communicator.once('destroy', this.onCommunicatorDestroyed);
   }
 
   /**
    * Invoked when the player or the GM that hosts the game disconnects
    */
   public destroy() {
-    this.unbindListeners();
     this.logger.verbose(`Destroying player ${this.id} and disconnecting his/her communicator`);
 
-    this.tryUnregisterFromMessageRouter();
+    /**
+     * NOTE: The order is right here, because `onCommunicatorDestroyed` will remove the listener
+     * for the `destroy` event. If we kept it, we would call `destroy` on the communicator twice
+     */
+    this.onCommunicatorDestroyed();
     this.communicator.destroy();
-
-    this.emit('destroy');
-    this.removeAllListeners();
   }
 
   public onGameFinished() {
@@ -62,6 +63,14 @@ export class Player extends CustomEventEmitter {
     this.tryUnregisterFromMessageRouter();
 
     this.emit('gameFinish');
+    this.removeAllListeners();
+  }
+
+  private onCommunicatorDestroyed() {
+    this.unbindListeners();
+    this.tryUnregisterFromMessageRouter();
+
+    this.emit('destroy');
     this.removeAllListeners();
   }
 
@@ -89,6 +98,6 @@ export class Player extends CustomEventEmitter {
 
   private unbindListeners() {
     this.communicator.removeListener('message', this.handleMessage);
-    this.communicator.removeListener('destroy', this.destroy);
+    this.communicator.removeListener('destroy', this.onCommunicatorDestroyed);
   }
 }
