@@ -95,9 +95,9 @@ describe('[CS] CommunicationServer', () => {
   beforeEach(() => {
     messageRouter = new MessageRouter();
     const loggerFactory = new LoggerFactory();
-    // loggerFactory.logLevel = 'error';
+    loggerFactory.logLevel = 'error';
 
-    logger = loggerFactory.createConsoleLogger();
+    logger = loggerFactory.createEmptyLogger();
 
     communicationServer = new CommunicationServer(options, messageRouter, logger);
   });
@@ -304,6 +304,8 @@ describe('[CS] CommunicationServer', () => {
         const playerAcceptedMessage = getPlayerAcceptedMessage(playerHelloMessage);
         gmCommunicator.sendMessage(playerAcceptedMessage);
         await playerCommunicator.waitForAnyMessage();
+
+        gmCommunicator.destroy();
 
         playerCommunicator.once('destroy', done);
       });
