@@ -3,10 +3,11 @@ import { EventEmitter } from 'events';
 import { Communicator } from '../common/Communicator';
 import { LoggerFactory } from '../common/logging/LoggerFactory';
 
+import { UnregisterGameRequest } from '../interfaces/requests/UnregisterGameRequest';
+
 import { Game } from './Game';
 import { GameMaster } from './GameMaster';
 import { MessageRouter } from './MessageRouter';
-import { UnregisterGameRequest } from '../interfaces/requests/UnregisterGameRequest';
 
 function createMockCommunicator(): Communicator {
   const communicator: Communicator = <any>new EventEmitter();
