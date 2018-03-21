@@ -71,9 +71,9 @@ export class Player implements Service {
         host: serverHostname,
         port: serverPort
       },
-      () => {
+      async () => {
         this.logger.info(`Connected to the server at ${serverHostname}:${serverPort}`);
-        this.sendListGames();
+        await this.sendListGames();
         this.sendHandshake();
       }
     );
@@ -127,10 +127,11 @@ export class Player implements Service {
     this.handleListGamesResponse(listGamesResponse);
   }
 
-  private handleMessage<T>(message: Message<T>) {
-    // @ts-ignore
-    if (this.messageHandlers[message.type] !== undefined) {
-      return this.messageHandlers[message.type](message);
+  private handleMessage(message: Message<any>) {
+    const handler = this.messageHandlers[message.type];
+
+    if (handler) {
+      return handler(message);
     }
   }
 
@@ -146,7 +147,7 @@ export class Player implements Service {
       this.logger.info(
         `\n Goal limit:${game.goalLimit} teamSizes: 1:${game.teamSizes[1]} 2:${game.teamSizes[2]}`
       );
-      this.logger.info(`\n ${JSON.stringify(game.delays)}`);
+      this.logger.info(`\n ${JSON.stringify(game.delays, null, 2)}`);
     }
   }
 
