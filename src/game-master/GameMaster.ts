@@ -132,8 +132,10 @@ export class GameMaster implements Service {
   }
 
   private async handleMessage<T>(message: Message<T>) {
-    if (this.messageHandlers[message.type] !== undefined) {
-      return this.messageHandlers[message.type](message);
+    const handler = this.messageHandlers[message.type];
+
+    if (handler) {
+      return handler(message);
     }
 
     const result = this.game.processMessage(message);
