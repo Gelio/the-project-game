@@ -131,7 +131,7 @@ export class GameMaster implements Service {
     this.destroy();
   }
 
-  private async handleMessage<T>(message: Message<T>) {
+  private async handleMessage(message: Message<any>) {
     const handler = this.messageHandlers[message.type];
 
     if (handler) {
