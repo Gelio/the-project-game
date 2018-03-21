@@ -224,7 +224,7 @@ export class GameMaster implements Service {
 
   private handleRegisterGameResponse(message: RegisterGameResponse) {
     if (message.payload.registered) {
-      this.logger.verbose('Received game registered response');
+      this.logger.verbose(`Game \`${this.options.gameName}\` has been registered`);
 
       this.updateState(GameMasterState.WaitingForPlayers);
       this.failedRegistrations = 0;
