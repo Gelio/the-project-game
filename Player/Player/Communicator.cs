@@ -36,6 +36,8 @@ namespace Player
             // Encode message to byte array
             var buffer = System.Text.Encoding.UTF8.GetBytes(message);
 
+            Console.WriteLine($"Sending:\n{message}");
+
             // Send 4-byte message length
             var messageLen = BitConverter.GetBytes(IPAddress.HostToNetworkOrder((Int32)buffer.Length));
             stream.Write(messageLen, 0, 4/*messageLen.Length*/);
@@ -57,6 +59,7 @@ namespace Player
             var buffer = new byte[messageLen];
             stream.Read(buffer, 0, messageLen);
 
+            Console.WriteLine($"Received:\n{System.Text.Encoding.UTF8.GetString(buffer)}");
             return System.Text.Encoding.UTF8.GetString(buffer);
         }
     }
