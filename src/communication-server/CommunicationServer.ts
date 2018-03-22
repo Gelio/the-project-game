@@ -160,7 +160,8 @@ export class CommunicationServer implements Service {
     const gameMaster = new GameMaster(communicator, this.messageRouter, this.logger, game);
     this.gameMasters.set(game.gameDefinition.name, gameMaster);
 
-    communicator.once('destroy', this.handleGameMasterDisconnection.bind(this, gameMaster));
+    gameMaster.once('disconnect', this.handleGameMasterDisconnection.bind(this, gameMaster));
+    gameMaster.once('gameFinish', this.handleGameFinished.bind(this, gameMaster));
 
     this.logger.info(`Registered game ${game.gameDefinition.name}`);
     gameMaster.init();
@@ -178,8 +179,27 @@ export class CommunicationServer implements Service {
   }
 
   private handleGameMasterDisconnection(gameMaster: GameMaster) {
+    this.unregisterGameMaster(gameMaster);
+  }
+
+  private handleGameFinished(gameMaster: GameMaster) {
+    const { communicator: gmCommunicator } = gameMaster;
+    gmCommunicator.on('message', this.handleClientsFirstMessage.bind(this, gmCommunicator));
+
+    this.unregisterGameMaster(gameMaster);
+
+    // Register players as regular clients (listen for initial message)
+    const playerCommunicators = [
+      ...gameMaster.game.team1Players.map(player => player.communicator),
+      ...gameMaster.game.team2Players.map(player => player.communicator)
+    ];
+    playerCommunicators.forEach(communicator =>
+      communicator.on('message', this.handleClientsFirstMessage.bind(this, communicator))
+    );
+  }
+
+  private unregisterGameMaster(gameMaster: GameMaster) {
     const gameName = gameMaster.game.gameDefinition.name;
-    this.logger.info(`Game Master from game ${gameName} disconnected`);
 
     if (this.gameMasters.get(gameName) !== gameMaster) {
       this.logger.error(
@@ -205,6 +225,10 @@ export class CommunicationServer implements Service {
         }
       };
 
+      this.logger.verbose(
+        `Client ${communicator.address} wanted to join game "${gameName}" but it does not exist`
+      );
+
       communicator.sendMessage(response);
 
       return;
@@ -216,9 +240,12 @@ export class CommunicationServer implements Service {
     const gameMasterResponse = await gameMaster.communicator.waitForSpecificMessage(
       (msg: MessageWithRecipient<any>) => msg.recipientId === helloMessage.payload.temporaryId
     );
+    /**
+     * NOTE: The response will be forwarded to the player via `MessageRouter`, so there is no
+     * need to send it to `communicator` again
+     */
 
     this.messageRouter.unregisterPlayerCommunicator(helloMessage.payload.temporaryId);
-    communicator.sendMessage(gameMasterResponse);
 
     if (gameMasterResponse.type !== 'PLAYER_ACCEPTED') {
       return;
@@ -244,10 +271,10 @@ export class CommunicationServer implements Service {
     }
 
     this.logger.info(
-      `A new player joined the game ${gameName} (${gameMaster.game.getPlayersCount()} / ${gameMaster.game.getGameCapacity()}`
+      `A new player joined the game "${gameName}" (${gameMaster.game.getPlayersCount()} / ${gameMaster.game.getGameCapacity()})`
     );
 
-    communicator.once('destroy', () => this.handlePlayerDisconnection(player));
+    player.once('destroy', () => this.handlePlayerDisconnection(player));
     player.init();
   }
 

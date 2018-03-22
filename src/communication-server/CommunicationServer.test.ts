@@ -15,6 +15,7 @@ import { PlayerDisconnectedMessage } from '../interfaces/messages/PlayerDisconne
 import { PlayerHelloMessage } from '../interfaces/messages/PlayerHelloMessage';
 import { PlayerRejectedMessage } from '../interfaces/messages/PlayerRejectedMessage';
 import { RegisterGameRequest } from '../interfaces/requests/RegisterGameRequest';
+import { UnregisterGameRequest } from '../interfaces/requests/UnregisterGameRequest';
 import { RegisterGameResponse } from '../interfaces/responses/RegisterGameResponse';
 
 function getRegisterGameRequest(): RegisterGameRequest {
@@ -37,6 +38,28 @@ function getRegisterGameRequest(): RegisterGameRequest {
       maxRounds: 4,
       name: 'aaa'
     }
+  };
+}
+
+function getPlayerHelloMessage(gameName: string): PlayerHelloMessage {
+  return {
+    type: 'PLAYER_HELLO',
+    senderId: -2,
+    payload: {
+      teamId: 1,
+      isLeader: false,
+      temporaryId: 123,
+      game: gameName
+    }
+  };
+}
+
+function getPlayerAcceptedMessage(playerHelloMessage: PlayerHelloMessage): PlayerAcceptedMessage {
+  return {
+    payload: { assignedPlayerId: 2 },
+    type: 'PLAYER_ACCEPTED',
+    senderId: -1,
+    recipientId: playerHelloMessage.payload.temporaryId
   };
 }
 
@@ -183,70 +206,55 @@ describe('[CS] CommunicationServer', () => {
       gmCommunicators.forEach(communicator => communicator.destroy());
     });
 
+    it('should reject player when the game he/she wants to join does not exist', async () => {
+      const playerCommunicator = await createConnectedCommunicator();
+      const playerHelloMessage = getPlayerHelloMessage('a');
+      playerCommunicator.sendMessage(playerHelloMessage);
+
+      const response = await playerCommunicator.waitForAnyMessage();
+
+      expect(response.type).toEqual('PLAYER_REJECTED');
+    });
+
     // tslint:disable-next-line:mocha-no-side-effect-code no-empty
     it.skip('should return empty games list', () => {});
 
     describe('and game registration', () => {
-      it('should pass messages between Player and GM', async () => {
-        const gmCommunicator = await createConnectedCommunicator();
+      let gmCommunicator: Communicator;
+      let playerCommunicator: Communicator;
+      let registerGameRequest: RegisterGameRequest;
 
-        const registerGameRequest = getRegisterGameRequest();
+      beforeEach(async () => {
+        gmCommunicator = await createConnectedCommunicator();
+        playerCommunicator = await createConnectedCommunicator();
+
+        registerGameRequest = getRegisterGameRequest();
+
         gmCommunicator.sendMessage(registerGameRequest);
         await gmCommunicator.waitForAnyMessage();
+      });
 
-        const playerCommunicator = await createConnectedCommunicator();
+      afterEach(() => {
+        gmCommunicator.destroy();
+        playerCommunicator.destroy();
+      });
 
-        // Exchange messages
-        const playerHelloMessage: PlayerHelloMessage = {
-          type: 'PLAYER_HELLO',
-          senderId: -2,
-          payload: {
-            teamId: 1,
-            isLeader: false,
-            temporaryId: 123,
-            game: registerGameRequest.payload.name
-          }
-        };
+      it('should pass messages between Player and GM', async () => {
+        const playerHelloMessage = getPlayerHelloMessage(registerGameRequest.payload.name);
         playerCommunicator.sendMessage(playerHelloMessage);
 
         const receivedPlayerHelloMessage = await gmCommunicator.waitForAnyMessage();
         expect(receivedPlayerHelloMessage).toEqual(playerHelloMessage);
 
-        const playerAcceptedMessage: PlayerAcceptedMessage = {
-          payload: { assignedPlayerId: 2 },
-          type: 'PLAYER_ACCEPTED',
-          senderId: -1,
-          recipientId: playerHelloMessage.payload.temporaryId
-        };
+        const playerAcceptedMessage = getPlayerAcceptedMessage(playerHelloMessage);
         gmCommunicator.sendMessage(playerAcceptedMessage);
 
         const receivedPlayerAcceptedMessage = await playerCommunicator.waitForAnyMessage();
         expect(receivedPlayerAcceptedMessage).toEqual(playerAcceptedMessage);
-
-        playerCommunicator.destroy();
-        gmCommunicator.destroy();
       });
 
       it('should not register player when he is rejected', async () => {
-        const gmCommunicator = await createConnectedCommunicator();
-
-        const registerGameRequest = getRegisterGameRequest();
-        gmCommunicator.sendMessage(registerGameRequest);
-        await gmCommunicator.waitForAnyMessage();
-
-        const playerCommunicator = await createConnectedCommunicator();
-
-        // Exchange messages
-        const playerHelloMessage: PlayerHelloMessage = {
-          type: 'PLAYER_HELLO',
-          senderId: -2,
-          payload: {
-            teamId: 1,
-            isLeader: false,
-            temporaryId: 123,
-            game: registerGameRequest.payload.name
-          }
-        };
+        const playerHelloMessage = getPlayerHelloMessage(registerGameRequest.payload.name);
         playerCommunicator.sendMessage(playerHelloMessage);
         await gmCommunicator.waitForAnyMessage();
 
@@ -264,62 +272,14 @@ describe('[CS] CommunicationServer', () => {
         expect(receivedPlayerAcceptedMessage).toEqual(playerRejectedMessage);
 
         expect(messageRouter.registerPlayerCommunicator).not.toHaveBeenCalled();
-
-        playerCommunicator.destroy();
-        gmCommunicator.destroy();
-      });
-
-      it('should reject player when the game he/she wants to join does not exist', async () => {
-        const playerCommunicator = await createConnectedCommunicator();
-
-        // Exchange messages
-        const playerHelloMessage: PlayerHelloMessage = {
-          type: 'PLAYER_HELLO',
-          senderId: -2,
-          payload: {
-            teamId: 1,
-            isLeader: false,
-            temporaryId: 123,
-            game: 'does not exist'
-          }
-        };
-        playerCommunicator.sendMessage(playerHelloMessage);
-
-        const response = await playerCommunicator.waitForAnyMessage();
-
-        expect(response.type).toEqual('PLAYER_REJECTED');
-
-        playerCommunicator.destroy();
       });
 
       it("should notify GM about Player's disconnection", async () => {
-        const gmCommunicator = await createConnectedCommunicator();
-        const registerGameRequest = getRegisterGameRequest();
-        gmCommunicator.sendMessage(registerGameRequest);
-        await gmCommunicator.waitForAnyMessage();
-
-        // Join game
-        const playerCommunicator = await createConnectedCommunicator();
-        const playerHelloMessage: PlayerHelloMessage = {
-          type: 'PLAYER_HELLO',
-          senderId: -2,
-          payload: {
-            teamId: 1,
-            isLeader: false,
-            temporaryId: 123,
-            game: registerGameRequest.payload.name
-          }
-        };
+        const playerHelloMessage = getPlayerHelloMessage(registerGameRequest.payload.name);
         playerCommunicator.sendMessage(playerHelloMessage);
         await gmCommunicator.waitForAnyMessage();
 
-        // Accept player
-        const playerAcceptedMessage: PlayerAcceptedMessage = {
-          payload: { assignedPlayerId: 2 },
-          type: 'PLAYER_ACCEPTED',
-          senderId: -1,
-          recipientId: playerHelloMessage.payload.temporaryId
-        };
+        const playerAcceptedMessage = getPlayerAcceptedMessage(playerHelloMessage);
         gmCommunicator.sendMessage(playerAcceptedMessage);
         await playerCommunicator.waitForAnyMessage();
 
@@ -328,8 +288,6 @@ describe('[CS] CommunicationServer', () => {
 
         expect(playerDisconnectedMessage.type).toEqual('PLAYER_DISCONNECTED');
         expect(playerDisconnectedMessage.payload.playerId).toEqual(2);
-
-        gmCommunicator.destroy();
       });
 
       // tslint:disable-next-line:mocha-no-side-effect-code no-empty
@@ -339,40 +297,62 @@ describe('[CS] CommunicationServer', () => {
       it.skip('should return empty games list after GM disconnects', () => {});
 
       it('should disconnect a player after his GM disconnects', async done => {
-        const gmCommunicator = await createConnectedCommunicator();
-        const registerGameRequest = getRegisterGameRequest();
-        gmCommunicator.sendMessage(registerGameRequest);
-        await gmCommunicator.waitForAnyMessage();
-
-        // Join game
-        const playerCommunicator = await createConnectedCommunicator();
-        const playerHelloMessage: PlayerHelloMessage = {
-          type: 'PLAYER_HELLO',
-          senderId: -2,
-          payload: {
-            teamId: 1,
-            isLeader: false,
-            temporaryId: 123,
-            game: registerGameRequest.payload.name
-          }
-        };
+        const playerHelloMessage = getPlayerHelloMessage(registerGameRequest.payload.name);
         playerCommunicator.sendMessage(playerHelloMessage);
         await gmCommunicator.waitForAnyMessage();
 
-        // Accept player
-        const playerAcceptedMessage: PlayerAcceptedMessage = {
-          payload: { assignedPlayerId: 2 },
-          type: 'PLAYER_ACCEPTED',
-          senderId: -1,
-          recipientId: playerHelloMessage.payload.temporaryId
-        };
+        const playerAcceptedMessage = getPlayerAcceptedMessage(playerHelloMessage);
         gmCommunicator.sendMessage(playerAcceptedMessage);
         await playerCommunicator.waitForAnyMessage();
 
-        playerCommunicator.once('destroy', () => {
-          done();
-        });
         gmCommunicator.destroy();
+
+        playerCommunicator.once('destroy', done);
+      });
+
+      it('should not disconnect a player after the game finished', async () => {
+        const playerHelloMessage = getPlayerHelloMessage(registerGameRequest.payload.name);
+        playerCommunicator.sendMessage(playerHelloMessage);
+        await gmCommunicator.waitForAnyMessage();
+
+        const playerAcceptedMessage = getPlayerAcceptedMessage(playerHelloMessage);
+        gmCommunicator.sendMessage(playerAcceptedMessage);
+        await playerCommunicator.waitForAnyMessage();
+
+        const unregisterGameRequest: UnregisterGameRequest = {
+          type: 'UNREGISTER_GAME_REQUEST',
+          senderId: -1,
+          recipientId: -3,
+          payload: {
+            gameName: registerGameRequest.payload.name
+          }
+        };
+        gmCommunicator.sendMessage(unregisterGameRequest);
+        await gmCommunicator.waitForAnyMessage();
+
+        // Test connection by sending player hello and awaiting a response
+        playerCommunicator.sendMessage(playerHelloMessage);
+        const response = await playerCommunicator.waitForAnyMessage();
+        expect(response.type).toEqual('PLAYER_REJECTED');
+      });
+
+      it('should not disconnect a GM after the game finished', async () => {
+        const unregisterGameRequest: UnregisterGameRequest = {
+          type: 'UNREGISTER_GAME_REQUEST',
+          senderId: -1,
+          recipientId: -3,
+          payload: {
+            gameName: registerGameRequest.payload.name
+          }
+        };
+        gmCommunicator.sendMessage(unregisterGameRequest);
+        await gmCommunicator.waitForAnyMessage();
+
+        // Test connection by registering another game
+        gmCommunicator.sendMessage(registerGameRequest);
+        const response = await gmCommunicator.waitForAnyMessage();
+        expect(response.type).toEqual('REGISTER_GAME_RESPONSE');
+        expect((<RegisterGameResponse>response).payload.registered).toBe(true);
       });
     });
   });

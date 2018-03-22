@@ -16,6 +16,10 @@ export class Communicator extends CustomEventEmitter {
   private readonly messageLengthBuffer: Buffer;
   private readonly logger: LoggerInstance;
 
+  public get address() {
+    return `${this.socket.remoteAddress}:${this.socket.remotePort}`;
+  }
+
   constructor(socket: Socket, logger: LoggerInstance) {
     super();
 
@@ -34,7 +38,7 @@ export class Communicator extends CustomEventEmitter {
     });
 
     this.socket.on('close', () => {
-      this.logger.info('Client disconnected');
+      this.logger.info(`Client ${this.address} disconnected`);
 
       this.eventEmitter.emit('close');
       this.destroy();
@@ -51,9 +55,9 @@ export class Communicator extends CustomEventEmitter {
     }
   }
 
-  public sendMessage<T>(message: Message<T>) {
+  public sendMessage(message: Message<any>) {
     const serializedMessage = JSON.stringify(message);
-    this.logger.debug(`Sending message ${message.type} (${serializedMessage.length})`);
+    this.logger.silly(`Sending message ${message.type} (${serializedMessage.length})`);
 
     htonl(this.messageLengthArray, 0, serializedMessage.length);
     this.socket.write(this.messageLengthBuffer);
@@ -121,8 +125,12 @@ export class Communicator extends CustomEventEmitter {
     this.expectedMessageLength = null;
 
     const message = JSON.parse(messageBuffer.toString());
-    this.logger.debug(`Received message ${message.type} (${messageBuffer.length})`);
+    this.logger.silly(`Received message ${message.type} (${messageBuffer.length})`);
     this.eventEmitter.emit('message', message);
+
+    if (this.socket.readableLength > 0) {
+      this.readMessage();
+    }
   }
 
   private tryReadMessageLength() {

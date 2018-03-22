@@ -75,4 +75,46 @@ describe('[CS] Player', () => {
     playerCommunicator.emit('message', message);
     expect(gameMasterCommunicator.sendMessage).not.toHaveBeenCalled();
   });
+
+  describe('destroy', () => {
+    it('should unregister the player from MessageRouter', () => {
+      jest.spyOn(messageRouter, 'unregisterPlayerCommunicator');
+
+      player.destroy();
+      expect(messageRouter.unregisterPlayerCommunicator).toHaveBeenCalledWith(player.id);
+    });
+
+    it('should emit the "destroy" event', () => {
+      const handler = jest.fn();
+      player.once('destroy', handler);
+
+      player.destroy();
+
+      expect(handler).toHaveBeenCalled();
+    });
+
+    it('should destroy the communicator', () => {
+      player.destroy();
+
+      expect(playerCommunicator.destroy).toHaveBeenCalled();
+    });
+  });
+
+  describe('onGameFinished', () => {
+    it('should unregister the player from MessageRouter', () => {
+      jest.spyOn(messageRouter, 'unregisterPlayerCommunicator');
+
+      player.onGameFinished();
+      expect(messageRouter.unregisterPlayerCommunicator).toHaveBeenCalledWith(player.id);
+    });
+
+    it('should emit the "gameFinish" event', () => {
+      const handler = jest.fn();
+      player.once('gameFinish', handler);
+
+      player.onGameFinished();
+
+      expect(handler).toHaveBeenCalled();
+    });
+  });
 });
