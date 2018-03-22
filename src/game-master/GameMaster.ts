@@ -234,11 +234,11 @@ export class GameMaster implements Service {
       return;
     }
 
+    this.failedRegistrations++;
+
     if (this.options.registrationTriesLimit === this.failedRegistrations) {
       throw new Error('Failed to register new game, limit of tries reached');
     }
-
-    this.failedRegistrations++;
 
     const registrationsTriesLeft = this.options.registrationTriesLimit - this.failedRegistrations;
     this.logger.error(
