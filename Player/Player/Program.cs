@@ -45,22 +45,40 @@ namespace Player
                 return;
             }
 
-            string configFilePath = "Player/player.config.json";
+
+            PlayerConfig configObject;
+            string configFilePath = "player.config.json";
             if (args.Length >= 4)
             {
                 configFilePath = args[3];
             }
-            var configObject = ReadConfigFile(configFilePath);
+
+            try
+            {
+                configObject = ReadConfigFile(configFilePath);
+            }
+            catch (FileNotFoundException)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Error: Config file {configFilePath} does not exist!");
+                return;
+            }
+
             configObject.GameName = args[2];
             var player = new Player(communicator, configObject);
 
             BeginGame(player);
         }
 
-        static PlayerConfig ReadConfigFile(string _configFilePath)
+        static PlayerConfig ReadConfigFile(string configFilePath)
         {
+            if (!File.Exists(configFilePath))
+            {
+                throw new FileNotFoundException();
+            }
+
             PlayerConfig configFileObject;
-            using (StreamReader file = File.OpenText(_configFilePath))
+            using (StreamReader file = File.OpenText(configFilePath))
             {
                 JsonSerializer serializer = new JsonSerializer();
                 configFileObject = (PlayerConfig)serializer.Deserialize(file, typeof(PlayerConfig));
