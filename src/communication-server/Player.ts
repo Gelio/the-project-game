@@ -44,6 +44,7 @@ export class Player implements Service {
     if (this.messageRouter.hasRegisteredPlayerCommunicator(this.id)) {
       this.messageRouter.unregisterPlayerCommunicator(this.id);
     }
+    this.communicator.destroy();
   }
 
   private handleMessage<T>(message: Message<T>) {
@@ -59,10 +60,6 @@ export class Player implements Service {
   }
 
   private isMessageValid<T>(message: Message<T>) {
-    if (!this.id) {
-      return true;
-    }
-
     return this.id === message.senderId;
   }
 }
