@@ -26,7 +26,15 @@ namespace Player
 
         public void Connect()
         {
-            _tcpClient = new TcpClient(_serverHostName, _serverPort);
+            _tcpClient = new TcpClient();
+            _tcpClient.ConnectAsync(_serverHostName, _serverPort).Wait(2000);
+            if (!_tcpClient.Connected)
+                throw new SocketException();
+        }
+
+        public void Disconnect()
+        {
+            _tcpClient.Close();
         }
 
         public void Send(string message)

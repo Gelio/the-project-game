@@ -67,11 +67,15 @@ namespace Player
             }
             catch (PlayerRejectedException e)
             {
-                Console.WriteLine($"Connection rejected: {e.Message}");
+                Console.WriteLine($"!!! Connection rejected: {e.Message}");
+                player.Disconnect();
+                return;
             }
-            catch (SocketException e)
+            catch (SocketException)
             {
-                Console.WriteLine($"Connection failed: {e.Message}");
+                Console.WriteLine($"!!! Connection failed: Could not connect to host");
+                player.Disconnect();
+                return;
             }
             player.WaitForGameStart();
         }

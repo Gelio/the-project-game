@@ -75,6 +75,11 @@ namespace Player
             Id = acceptedMessage.Payload.AssignedPlayerId;
         }
 
+        public void Disconnect()
+        {
+            _communicator.Disconnect();
+            Console.WriteLine("Player disconnected.");
+        }
         public bool WaitForGameStart()
         {
             string receivedMessageSerialized;
