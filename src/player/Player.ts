@@ -101,7 +101,7 @@ export class Player implements Service {
         isLeader: this.options.teamLeader,
         teamId: this.options.teamNumber,
         temporaryId,
-        game: 'a'
+        game: 'the project game'
       }
     };
 
