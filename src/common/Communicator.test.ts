@@ -28,16 +28,20 @@ function createTestMessage(): Message<any> {
   };
 }
 
-function writeMessageToStream(stream: Stream.Writable, message: Message<any>) {
+function serializeMessage(message: Message<any>) {
   const stringifiedMessage = JSON.stringify(message);
 
-  const messageLengthBuffer = new Buffer(4);
+  const buffer = new Buffer(stringifiedMessage.length + 4);
   // Network order is Big Endian
-  messageLengthBuffer.writeUInt32BE(stringifiedMessage.length, 0);
+  buffer.writeUInt32BE(stringifiedMessage.length, 0);
 
-  const messageBuffer = new Buffer(stringifiedMessage);
+  buffer.write(stringifiedMessage, 4);
 
-  stream.write(messageLengthBuffer);
+  return buffer;
+}
+
+function writeMessageToStream(stream: Stream.Writable, message: Message<any>) {
+  const messageBuffer = serializeMessage(message);
   stream.write(messageBuffer);
 }
 
@@ -289,6 +293,27 @@ describe('Communicator', () => {
         writeMessageToStream(socket, message);
 
         expect.assertions(1);
+      });
+
+      it('should be emitted when multiple messages arrived in a single TCP packet', () => {
+        const message = createTestMessage();
+        const serializedMessage = serializeMessage(message);
+        const repeatedMessages = new Buffer(serializedMessage.length * 2);
+        serializedMessage.copy(repeatedMessages, 0);
+        serializedMessage.copy(repeatedMessages, serializedMessage.length);
+
+        const communicator = createCommunicator(socket);
+        communicator.bindListeners();
+
+        const handler = jest.fn();
+        communicator.on('message', handler);
+
+        socket.write(repeatedMessages);
+
+        expect(handler).toHaveBeenCalledTimes(2);
+        expect(handler).toHaveBeenCalledWith(message);
+
+        communicator.removeAllListeners();
       });
     });
   });
