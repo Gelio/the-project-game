@@ -230,8 +230,6 @@ describe('[CS] CommunicationServer', () => {
       const receivedListGamesResponse = <ListGamesResponse>await playerCommunicator.waitForAnyMessage();
 
       expect(receivedListGamesResponse.payload.games).toHaveLength(0);
-
-      playerCommunicator.destroy();
     });
 
     describe('and game registration', () => {
@@ -306,8 +304,6 @@ describe('[CS] CommunicationServer', () => {
       });
 
       it('should list registered game when requested', async () => {
-        gmCommunicator.sendMessage(registerGameRequest);
-
         const playerListGamesRequest: ListGamesRequest = {
           type: 'LIST_GAMES_REQUEST',
           senderId: -2,
@@ -326,10 +322,9 @@ describe('[CS] CommunicationServer', () => {
       });
 
       it('should return empty games list after GM disconnects', async () => {
-        gmCommunicator.sendMessage(registerGameRequest);
-        await gmCommunicator.waitForAnyMessage();
-
         gmCommunicator.destroy();
+
+        await createDelay(100);
 
         const playerListGamesRequest: ListGamesRequest = {
           type: 'LIST_GAMES_REQUEST',
@@ -341,7 +336,6 @@ describe('[CS] CommunicationServer', () => {
         const receivedListGamesResponse = <ListGamesResponse>await playerCommunicator.waitForAnyMessage();
 
         expect(receivedListGamesResponse.payload.games).toHaveLength(0);
-        playerCommunicator.destroy();
       });
 
       it('should disconnect a player after his GM disconnects', async done => {
