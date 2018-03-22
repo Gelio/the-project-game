@@ -1,4 +1,8 @@
+using Newtonsoft.Json;
+using Player.Common;
 using System;
+using System.IO;
+using System.Net.Sockets;
 using System.Runtime.Serialization.Json;
 
 namespace Player
@@ -7,24 +11,73 @@ namespace Player
     {
         static void Main(string[] args)
         {
-            var playerCommunicator = new Communicator("localhost", 4200);
-
-            var message = @"{
-  ""type"": ""PLAYER_HELLO"",
-  ""senderId"": -2,
-  ""payload"": {
-    ""teamId"": 1,
-    ""isLeader"": true,
-    ""temporaryId"": 12431253
-  }
-}";
-
-            playerCommunicator.Send(message);
-            while (true)
+            if (args.Length < 3)
             {
-                var recv = playerCommunicator.Receive();
-                Console.WriteLine($"Received message: {recv}");
+                Console.WriteLine("player server_ip server_port -l\nplayer server_ip server_port game_name [config_file_path]");
+                return;
             }
+            var communicator = new Communicator(args[0], Int32.Parse(args[1]));
+
+            if (args[2] == "-l")
+            {
+                communicator.Connect();
+                var gameService = new GameService(communicator);
+                var gamesList = gameService.GetGamesList();
+
+                if (gamesList.Count == 0)
+                {
+                    Console.WriteLine("There are no games available.");
+                    return;
+                }
+
+                foreach (var game in gamesList)
+                    Console.WriteLine(game);
+                return;
+            }
+
+            string configFilePath = "Player/player.config.json";
+            if (args.Length >= 4)
+            {
+                configFilePath = args[3];
+            }
+            var configObject = ReadConfigFile(configFilePath);
+            configObject.GameName = args[2];
+            var player = new Player(communicator, configObject);
+
+            BeginGame(player);
+        }
+
+        static PlayerConfig ReadConfigFile(string _configFilePath)
+        {
+            PlayerConfig configFileObject;
+            using (StreamReader file = File.OpenText(_configFilePath))
+            {
+                JsonSerializer serializer = new JsonSerializer();
+                configFileObject = (PlayerConfig)serializer.Deserialize(file, typeof(PlayerConfig));
+            };
+
+            return configFileObject;
+        }
+
+        static void BeginGame(Player player)
+        {
+            try
+            {
+                player.ConnectToServer();
+            }
+            catch (PlayerRejectedException e)
+            {
+                Console.WriteLine($"!!! Connection rejected: {e.Message}");
+                player.Disconnect();
+                return;
+            }
+            catch (SocketException)
+            {
+                Console.WriteLine($"!!! Connection failed: Could not connect to host");
+                player.Disconnect();
+                return;
+            }
+            player.WaitForGameStart();
         }
     }
 }

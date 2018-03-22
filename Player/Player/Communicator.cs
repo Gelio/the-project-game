@@ -14,6 +14,7 @@ namespace Player
         private string _serverHostName;
         private int _serverPort;
 
+        public bool IsConnected => _tcpClient != null;
         public string ServerHostName => _serverHostName;
         public int ServerPort => _serverPort;
 
@@ -25,7 +26,15 @@ namespace Player
 
         public void Connect()
         {
-            _tcpClient = new TcpClient(_serverHostName, _serverPort);
+            _tcpClient = new TcpClient();
+            _tcpClient.ConnectAsync(_serverHostName, _serverPort).Wait(2000);
+            if (!_tcpClient.Connected)
+                throw new SocketException();
+        }
+
+        public void Disconnect()
+        {
+            _tcpClient.Close();
         }
 
         public void Send(string message)
@@ -34,6 +43,8 @@ namespace Player
 
             // Encode message to byte array
             var buffer = System.Text.Encoding.UTF8.GetBytes(message);
+
+            Console.WriteLine($"Sending:\n{message}");
 
             // Send 4-byte message length
             var messageLen = BitConverter.GetBytes(IPAddress.HostToNetworkOrder((Int32)buffer.Length));
@@ -56,6 +67,7 @@ namespace Player
             var buffer = new byte[messageLen];
             stream.Read(buffer, 0, messageLen);
 
+            Console.WriteLine($"Received:\n{System.Text.Encoding.UTF8.GetString(buffer)}");
             return System.Text.Encoding.UTF8.GetString(buffer);
         }
     }
