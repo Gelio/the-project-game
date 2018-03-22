@@ -26,7 +26,8 @@ namespace Player
                 }
                 catch (SocketException e)
                 {
-                    Console.WriteLine($"!!! Connection failed: {e.Message}");
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"Connection failed: {e.Message}");
                     return;
                 }
                 var gameService = new GameService(communicator);
@@ -34,6 +35,7 @@ namespace Player
 
                 if (gamesList.Count == 0)
                 {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.WriteLine("There are no games available.");
                     return;
                 }
@@ -75,13 +77,15 @@ namespace Player
             }
             catch (PlayerRejectedException e)
             {
-                Console.WriteLine($"!!! Connection rejected: {e.Message}");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Connection rejected: {e.Message}");
                 player.Disconnect();
                 return;
             }
             catch (SocketException)
             {
-                Console.WriteLine($"!!! Connection failed: Could not connect to host");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Connection failed: Could not connect to host");
                 player.Disconnect();
                 return;
             }
