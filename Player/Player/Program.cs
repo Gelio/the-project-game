@@ -100,10 +100,10 @@ namespace Player
                 player.Disconnect();
                 return;
             }
-            catch (SocketException)
+            catch (SocketException e)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"Connection failed: Could not connect to host");
+                Console.WriteLine($"Connection failed: {e.Message}");
                 player.Disconnect();
                 return;
             }
