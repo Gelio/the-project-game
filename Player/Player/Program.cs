@@ -11,15 +11,14 @@ namespace Player
     {
         static void Main(string[] args)
         {
-            var communicator = new Communicator("localhost", 4200);
-
-            if (args.Length == 0)
+            if (args.Length < 3)
             {
-                Console.WriteLine("usage: ./player game_name config_file_path");
+                Console.WriteLine("player server_ip server_port -l\nplayer server_ip server_port game_name [config_file_path]");
                 return;
             }
+            var communicator = new Communicator(args[0], Int32.Parse(args[1]));
 
-            if (args[0] == "-l")
+            if (args[2] == "-l")
             {
                 communicator.Connect();
                 var gameService = new GameService(communicator);
@@ -36,11 +35,13 @@ namespace Player
                 return;
             }
 
-            string configFilePath = args[1];
+            string configFilePath = "Player/player.config.json";
+            if (args.Length >= 4)
+            {
+                configFilePath = args[3];
+            }
             var configObject = ReadConfigFile(configFilePath);
-            configObject.GameName = args[0];
-            // Console.Write(JsonConvert.SerializeObject(configObject));
-
+            configObject.GameName = args[2];
             var player = new Player(communicator, configObject);
 
             BeginGame(player);
@@ -72,6 +73,7 @@ namespace Player
             {
                 Console.WriteLine($"Connection failed: {e.Message}");
             }
+            player.WaitForGameStart();
         }
     }
 }

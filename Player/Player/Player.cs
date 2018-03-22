@@ -77,8 +77,17 @@ namespace Player
 
         public bool WaitForGameStart()
         {
-            var messageSerialized = _communicator.Receive();
-            var message = JsonConvert.DeserializeObject<Message<GameStartedPayload>>(messageSerialized);
+            string receivedMessageSerialized;
+            while (true)
+            {
+                receivedMessageSerialized = _communicator.Receive();
+                var receivedGenericMessage = JsonConvert.DeserializeObject<Message>(receivedMessageSerialized);
+
+                if (receivedGenericMessage.Type == Consts.GameStarted) break;
+                // if (receivedGenericMessage.Type == SOMETHING_ELSE) doSomethingElse;
+            }
+
+            var message = JsonConvert.DeserializeObject<Message<GameStartedPayload>>(receivedMessageSerialized);
 
             TeamMembersIds = message.Payload.TeamInfo[TeamId].Players;
             LeaderId = message.Payload.TeamInfo[TeamId].LeaderId;
