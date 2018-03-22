@@ -14,8 +14,10 @@ import { PlayerAcceptedMessage } from '../interfaces/messages/PlayerAcceptedMess
 import { PlayerDisconnectedMessage } from '../interfaces/messages/PlayerDisconnectedMessage';
 import { PlayerHelloMessage } from '../interfaces/messages/PlayerHelloMessage';
 import { PlayerRejectedMessage } from '../interfaces/messages/PlayerRejectedMessage';
+import { ListGamesRequest } from '../interfaces/requests/ListGamesRequest';
 import { RegisterGameRequest } from '../interfaces/requests/RegisterGameRequest';
 import { UnregisterGameRequest } from '../interfaces/requests/UnregisterGameRequest';
+import { ListGamesResponse } from '../interfaces/responses/ListGamesResponse';
 import { RegisterGameResponse } from '../interfaces/responses/RegisterGameResponse';
 
 function getRegisterGameRequest(): RegisterGameRequest {
@@ -215,8 +217,20 @@ describe('[CS] CommunicationServer', () => {
       expect(response.type).toEqual('PLAYER_REJECTED');
     });
 
-    // tslint:disable-next-line:mocha-no-side-effect-code no-empty
-    it.skip('should return empty games list', () => {});
+    it('should return empty games list', async () => {
+      const playerCommunicator = await createConnectedCommunicator();
+
+      const playerListGamesRequest: ListGamesRequest = {
+        type: 'LIST_GAMES_REQUEST',
+        senderId: -2,
+        payload: undefined
+      };
+      playerCommunicator.sendMessage(playerListGamesRequest);
+
+      const receivedListGamesResponse = <ListGamesResponse>await playerCommunicator.waitForAnyMessage();
+
+      expect(receivedListGamesResponse.payload.games).toHaveLength(0);
+    });
 
     describe('and game registration', () => {
       let gmCommunicator: Communicator;
@@ -289,11 +303,40 @@ describe('[CS] CommunicationServer', () => {
         expect(playerDisconnectedMessage.payload.playerId).toEqual(2);
       });
 
-      // tslint:disable-next-line:mocha-no-side-effect-code no-empty
-      it.skip('should list registered game when requested', () => {});
+      it('should list registered game when requested', async () => {
+        const playerListGamesRequest: ListGamesRequest = {
+          type: 'LIST_GAMES_REQUEST',
+          senderId: -2,
+          payload: undefined
+        };
+        playerCommunicator.sendMessage(playerListGamesRequest);
 
-      // tslint:disable-next-line:mocha-no-side-effect-code no-empty
-      it.skip('should return empty games list after GM disconnects', () => {});
+        const receivedListGamesResponse = <ListGamesResponse>await playerCommunicator.waitForAnyMessage();
+
+        expect(receivedListGamesResponse.type).toEqual('LIST_GAMES_RESPONSE');
+        expect(receivedListGamesResponse.payload.games).toHaveLength(1);
+
+        const registeredGame = receivedListGamesResponse.payload.games[0];
+
+        expect(registeredGame).toEqual(registerGameRequest.payload);
+      });
+
+      it('should return empty games list after GM disconnects', async () => {
+        gmCommunicator.destroy();
+
+        await createDelay(100);
+
+        const playerListGamesRequest: ListGamesRequest = {
+          type: 'LIST_GAMES_REQUEST',
+          senderId: -2,
+          payload: undefined
+        };
+        playerCommunicator.sendMessage(playerListGamesRequest);
+
+        const receivedListGamesResponse = <ListGamesResponse>await playerCommunicator.waitForAnyMessage();
+
+        expect(receivedListGamesResponse.payload.games).toHaveLength(0);
+      });
 
       it('should disconnect a player after his GM disconnects', async done => {
         const playerHelloMessage = getPlayerHelloMessage(registerGameRequest.payload.name);

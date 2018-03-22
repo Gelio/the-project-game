@@ -39,7 +39,6 @@ describe('[CS] GameMaster', () => {
       delays: <any>{},
       description: 'Game description',
       goalLimit: 2,
-      maxRounds: 5,
       name: gameName,
       teamSizes: {
         1: 2,
