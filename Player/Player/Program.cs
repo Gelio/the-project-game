@@ -20,7 +20,15 @@ namespace Player
 
             if (args[2] == "-l")
             {
-                communicator.Connect();
+                try
+                {
+                    communicator.Connect();
+                }
+                catch (SocketException e)
+                {
+                    Console.WriteLine($"!!! Connection failed: {e.Message}");
+                    return;
+                }
                 var gameService = new GameService(communicator);
                 var gamesList = gameService.GetGamesList();
 
