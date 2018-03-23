@@ -36,7 +36,7 @@ namespace Player
                 throw e.InnerException;
             }
             if (!_tcpClient.Connected)
-                throw new SocketException();
+                throw new TimeoutException();
         }
 
         public void Disconnect()

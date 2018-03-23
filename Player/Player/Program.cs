@@ -28,6 +28,13 @@ namespace Player
                     var gameService = new GameService(communicator);
                     gamesList = gameService.GetGamesList();
                 }
+                catch (TimeoutException e)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(e.Message);
+                    Console.ResetColor();
+                    return;
+                }
                 catch (SocketException e)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
@@ -88,18 +95,25 @@ namespace Player
                 Console.ResetColor();
                 return;
             }
-            catch (SocketException e)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"Connection failed: {e.Message}");
-                player.Disconnect();
-                Console.ResetColor();
-                return;
-            }
             catch (OperationCanceledException e)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine(e.Message);
+                player.Disconnect();
+                Console.ResetColor();
+                return;
+            }
+            catch (TimeoutException e)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(e.Message);
+                Console.ResetColor();
+                return;
+            }
+            catch (SocketException e)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Connection failed: {e.Message}");
                 player.Disconnect();
                 Console.ResetColor();
                 return;
