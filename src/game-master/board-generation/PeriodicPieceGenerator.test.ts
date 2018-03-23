@@ -64,6 +64,14 @@ describe('[GM] PeriodicPieceGenerator', () => {
     });
   });
 
+  describe('destroy', () => {
+    it('should throw an error when not initialized', () => {
+      const generator = new PeriodicPieceGenerator(board, options, logger);
+
+      expect(() => generator.destroy()).toThrow();
+    });
+  });
+
   describe('after init', () => {
     let generator: PeriodicPieceGenerator;
 
@@ -74,6 +82,10 @@ describe('[GM] PeriodicPieceGenerator', () => {
 
     afterEach(() => {
       generator.destroy();
+    });
+
+    it('should not throw an error when calling init again', () => {
+      expect(() => generator.init()).not.toThrow();
     });
 
     it('should do nothing when the board is full', () => {
