@@ -52,16 +52,24 @@ The terminal you ran the command in should now display GM UI.
 
 ### Players
 
-The configuration of each Player is read from the same file (`src/player.config.json`), so make
-sure to edit it accordingly after starting each Player.
+The configuration of each Player is read from the same file inside current working directory (`player.config.json`),
+so make sure to edit it accordingly after starting each Player.
 
-Run
+Listing games:
 
 ```bash
-npm run player
+cd Player/Player
+dotnet run player <comm_server_addr> <comm_server_port> -l
 ```
 
-to start a single Player. The terminal you ran the command in should now display Player UI.
+Running Player:
+
+```bash
+cd Player/Player
+dotnet run player <comm_server_addr> <comm_server_port> <game_name> [config_file]
+```
+
+to start a single Player. The terminal you ran the command in should now display sent and received messages.
 
 ## Testing
 
