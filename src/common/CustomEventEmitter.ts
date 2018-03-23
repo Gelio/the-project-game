@@ -17,6 +17,10 @@ export class CustomEventEmitter {
     this.eventEmitter.removeListener(event, listener);
   }
 
+  public removeAllListeners(event?: string | symbol) {
+    this.eventEmitter.removeAllListeners(event);
+  }
+
   public emit(event: string | symbol, ...args: any[]): boolean {
     return this.eventEmitter.emit(event, args);
   }

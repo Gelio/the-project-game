@@ -1,11 +1,11 @@
 import { LoggerInstance } from 'winston';
 
 import { Player } from './Player';
+import { PlayersContainer } from './PlayersContainer';
 
 import { createDelay } from '../common/createDelay';
-import { Point } from '../common/Point';
-import { TeamId } from '../common/TeamId';
 
+import { BoardSize } from '../interfaces/BoardSize';
 import { Message } from '../interfaces/Message';
 import { MessageWithRecipient } from '../interfaces/MessageWithRecipient';
 
@@ -18,16 +18,25 @@ import { UIController } from './ui/UIController';
 export class Game {
   public hasStarted = false;
   public board: Board;
+  public playersContainer: PlayersContainer;
 
   // @ts-ignore
   private readonly logger: LoggerInstance;
   private readonly uiController: UIController;
   private nextPlayerId = 1;
 
-  constructor(board: Board, logger: LoggerInstance, uiController: UIController) {
-    this.board = board;
+  //TODO: Consider implementing board factory
+  constructor(
+    boardSize: BoardSize,
+    pointsLimit: number,
+    logger: LoggerInstance,
+    uiController: UIController,
+    playersContainer: PlayersContainer
+  ) {
+    this.board = new Board(boardSize, pointsLimit);
     this.logger = logger;
     this.uiController = uiController;
+    this.playersContainer = playersContainer;
   }
 
   public getNextPlayerId() {
@@ -37,7 +46,7 @@ export class Game {
   public processMessage<T, U>(message: Message<T>): ProcessMessageResult<U> {
     const delay = 500;
 
-    const sender = this.board.players.find(player => player.playerId === message.senderId);
+    const sender = this.playersContainer.getPlayerById(message.senderId);
     if (!sender) {
       return {
         valid: false,
@@ -68,20 +77,6 @@ export class Game {
     };
   }
 
-  public addNewPlayer(player: Player) {
-    this.setRandomPlayerPosition(player);
-    this.board.addPlayer(player);
-    this.updateBoard();
-  }
-
-  public getPlayersFromTeam(teamId: TeamId) {
-    return this.board.players.filter(player => player.teamId === teamId);
-  }
-
-  public getConnectedPlayers() {
-    return this.board.players.filter(player => player.isConnected);
-  }
-
   public start() {
     this.hasStarted = true;
   }
@@ -90,22 +85,27 @@ export class Game {
     this.hasStarted = false;
   }
 
-  private setRandomPlayerPosition(player: Player) {
-    const yRange = { min: 0, max: this.board.size.goalArea };
-    if (player.teamId === 2) {
-      yRange.min = this.board.size.goalArea + this.board.size.taskArea;
-      yRange.max = yRange.min + this.board.size.goalArea;
+  public reset() {
+    this.board.reset();
+    this.setPlayersPositions();
+  }
+
+  public removePlayer(disconnectedPlayer: Player) {
+    this.board.removePlayer(disconnectedPlayer);
+    this.playersContainer.removePlayer(disconnectedPlayer);
+  }
+
+  public setPlayersPositions() {
+    this.playersContainer.players.forEach(x => this.board.setRandomPlayerPosition(x));
+  }
+
+  public addPlayer(player: Player) {
+    if (player.position === undefined) {
+      this.board.setRandomPlayerPosition(player);
     }
-
-    let position: Point;
-    do {
-      position = {
-        x: Math.floor(Math.random() * this.board.size.x),
-        y: yRange.min + Math.floor(Math.random() * (yRange.max - yRange.min))
-      };
-    } while (this.board.getTileAtPosition(position).player);
-
-    player.position = position;
+    this.playersContainer.addPlayer(player);
+    this.board.addPlayer(player);
+    this.updateBoard();
   }
 
   private updateBoard() {

@@ -1,15 +1,22 @@
 {
   "serverHostname": "localhost",
   "serverPort": 4200,
-  "roundLimit": 5,
-  "teamSize": 5,
+  "gameName": "the project game",
+  "gameDescription": "High sham chance, many pieces",
+  "gamesLimit": 5,
+  "teamSizes": {
+    "1": 5,
+    "2": 5
+  },
   "pointsLimit": 20,
-  "boardWidth": 30,
-  "taskAreaHeight": 15,
-  "goalAreaHeight": 4,
-  "shamChance": 0.6,
+  "boardSize": {
+    "x": 30,
+    "taskArea": 30,
+    "goalArea": 10
+  },
+  "shamChance": 0.8,
   "generatePiecesInterval": 3000,
-  "piecesLimit": 10,
+  "piecesLimit": 15,
   "resultFileName": "result.json",
   "actionDelays": {
     "move": 4000,
@@ -21,5 +28,7 @@
     "communicationAccept": 4000,
     "tryPiece": 4000
   },
-  "timeout": 10000
+  "timeout": 10000,
+  "registrationTriesLimit": 5,
+  "registerGameInterval": 10000
 }

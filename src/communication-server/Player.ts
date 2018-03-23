@@ -1,56 +1,86 @@
 import { LoggerInstance } from 'winston';
 
 import { Communicator } from '../common/Communicator';
+import { CustomEventEmitter } from '../common/CustomEventEmitter';
 
 import { Message } from '../interfaces/Message';
-import { PlayerAcceptedMessage } from '../interfaces/messages/PlayerAcceptedMessage';
-import { PlayerHelloMessage } from '../interfaces/messages/PlayerHelloMessage';
-import { Service } from '../interfaces/Service';
 
 import { MessageRouter } from './MessageRouter';
+import { PlayerInfo } from './PlayerInfo';
 
-export class Player implements Service {
-  private _isAccepted = false;
-  // @ts-ignore
-  private _id: number;
+export class Player extends CustomEventEmitter {
+  public readonly communicator: Communicator;
+  public readonly info: PlayerInfo;
 
-  private readonly communicator: Communicator;
   private readonly messageRouter: MessageRouter;
   private readonly logger: LoggerInstance;
 
-  public get isAccepted() {
-    return this._isAccepted;
+  public get id() {
+    return this.info.id;
   }
 
-  public get id(): number {
-    return this._id;
-  }
+  constructor(
+    communicator: Communicator,
+    messageRouter: MessageRouter,
+    logger: LoggerInstance,
+    playerInfo: PlayerInfo
+  ) {
+    super();
 
-  constructor(communicator: Communicator, messageRouter: MessageRouter, logger: LoggerInstance) {
     this.communicator = communicator;
     this.messageRouter = messageRouter;
     this.logger = logger;
+    this.info = playerInfo;
 
     this.handleMessage = this.handleMessage.bind(this);
-    this.handleMessageSent = this.handleMessageSent.bind(this);
+    this.destroy = this.destroy.bind(this);
+    this.onCommunicatorDestroyed = this.onCommunicatorDestroyed.bind(this);
   }
 
   public init() {
-    this.communicator.bindListeners();
+    this.messageRouter.registerPlayerCommunicator(this.id, this.communicator);
     this.communicator.on('message', this.handleMessage);
-    this.communicator.on('messageSent', this.handleMessageSent);
+    this.communicator.once('destroy', this.onCommunicatorDestroyed);
   }
 
+  /**
+   * Invoked when the player or the GM that hosts the game disconnects
+   */
   public destroy() {
-    this.logger.verbose(`Destroying player ${this.id}`);
-    this.communicator.destroy();
+    this.logger.verbose(`Destroying player ${this.id} and disconnecting his/her communicator`);
 
+    /**
+     * NOTE: The order is right here, because `onCommunicatorDestroyed` will remove the listener
+     * for the `destroy` event. If we kept it, we would call `destroy` on the communicator twice
+     */
+    this.onCommunicatorDestroyed();
+    this.communicator.destroy();
+  }
+
+  public onGameFinished() {
+    this.unbindListeners();
+    this.logger.verbose(`Destroying player ${this.id} because the game finished`);
+    this.tryUnregisterFromMessageRouter();
+
+    this.emit('gameFinish');
+    this.removeAllListeners();
+  }
+
+  private onCommunicatorDestroyed() {
+    this.unbindListeners();
+    this.tryUnregisterFromMessageRouter();
+
+    this.emit('destroy');
+    this.removeAllListeners();
+  }
+
+  private tryUnregisterFromMessageRouter() {
     if (this.messageRouter.hasRegisteredPlayerCommunicator(this.id)) {
       this.messageRouter.unregisterPlayerCommunicator(this.id);
     }
   }
 
-  private handleMessage<T>(message: Message<T>) {
+  private handleMessage(message: Message<any>) {
     if (!this.isMessageValid(message)) {
       this.logger.warn(
         `Received message with sender ID ${message.senderId} but player ID is ${this.id}`
@@ -59,47 +89,15 @@ export class Player implements Service {
       return;
     }
 
-    if (!this._isAccepted) {
-      if (message.type === 'PLAYER_HELLO') {
-        return this.handlePlayerHelloMessage(<any>message);
-      }
-
-      this.logger.warn(
-        `Player ${this._id} tried to send other message than PLAYER_HELLO as handshake`
-      );
-
-      return;
-    }
-
-    this.messageRouter.sendMessageToGameMaster(message);
+    this.messageRouter.sendMessageToGameMaster(this.info.gameName, message);
   }
 
-  private handlePlayerHelloMessage(message: PlayerHelloMessage) {
-    this._id = message.payload.temporaryId;
-    this.messageRouter.registerPlayerCommunicator(this._id, this.communicator);
-    this.messageRouter.sendMessageToGameMaster(message);
-  }
-
-  private handleMessageSent<T>(message: Message<T>) {
-    if (message.type === 'PLAYER_ACCEPTED') {
-      const acceptedMessage: PlayerAcceptedMessage = <any>message;
-      this._isAccepted = true;
-      this.messageRouter.unregisterPlayerCommunicator(this._id);
-      this._id = acceptedMessage.payload.assignedPlayerId;
-      this.messageRouter.registerPlayerCommunicator(this._id, this.communicator);
-
-      this.communicator.removeListener('messageSent', this.handleMessageSent);
-    } else if (message.type === 'PLAYER_REJECTED') {
-      this.messageRouter.unregisterPlayerCommunicator(this._id);
-      this.destroy();
-    }
-  }
-
-  private isMessageValid<T>(message: Message<T>) {
-    if (!this.id) {
-      return true;
-    }
-
+  private isMessageValid(message: Message<any>) {
     return this.id === message.senderId;
+  }
+
+  private unbindListeners() {
+    this.communicator.removeListener('message', this.handleMessage);
+    this.communicator.removeListener('destroy', this.onCommunicatorDestroyed);
   }
 }

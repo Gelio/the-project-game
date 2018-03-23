@@ -20,7 +20,7 @@ is used to leverage [Typescript](https://www.typescriptlang.org/)'s type system 
 
 First, install all necessary dependencies:
 
-``` bash
+```bash
 npm install
 ```
 
@@ -31,7 +31,7 @@ should be available.
 
 Next, run:
 
-``` bash
+```bash
 npm run communication-server
 ```
 
@@ -44,7 +44,7 @@ and port of the Communication Server are correct.
 
 Next, run:
 
-``` bash
+```bash
 npm run game-master
 ```
 
@@ -52,33 +52,47 @@ The terminal you ran the command in should now display GM UI.
 
 ### Players
 
-The configuration of each Player is read from the same file (`src/player.config.json`), so make
-sure to edit it accordingly after starting each Player.
+The configuration of each Player is read from the same file inside current working directory (`player.config.json`),
+so make sure to edit it accordingly after starting each Player.
 
-Run
+Listing games:
 
-``` bash
-npm run player
+```bash
+cd Player/Player
+dotnet run player <comm_server_addr> <comm_server_port> -l
 ```
 
-to start a single Player. The terminal you ran the command in should now display Player UI.
+Running Player:
+
+```bash
+cd Player/Player
+dotnet run player <comm_server_addr> <comm_server_port> <game_name> [config_file]
+```
+
+to start a single Player. The terminal you ran the command in should now display sent and received messages.
 
 ## Testing
 
 The following command runs the tests:
 
-``` bash
+```bash
 npm run test
 ```
 
 During development it is convenient to use the _watch_ mode:
 
-``` bash
+```bash
 npm run test:watch
 ```
 
 It only runs test suites that correspond to changed files and is generally much faster
 than running the whole test suite every time.
+
+To generate test coverage run:
+
+```bash
+npm run test:coverage
+```
 
 This project uses [jest](https://facebook.github.io/jest/) as a testing framework.
 
@@ -86,7 +100,7 @@ This project uses [jest](https://facebook.github.io/jest/) as a testing framewor
 
 The following command runs the linter:
 
-``` bash
+```bash
 npm run lint
 ```
 
@@ -95,7 +109,7 @@ and [tslint](https://palantir.github.io/tslint/) for linting and error-checking.
 
 You may want to use one of the following commands:
 
-``` bash
+```bash
 npm run lint:tsc
 npm run lint:tslint
 ```

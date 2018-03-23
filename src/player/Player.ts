@@ -13,6 +13,9 @@ import { Message } from '../interfaces/Message';
 import { PlayerAcceptedMessage } from '../interfaces/messages/PlayerAcceptedMessage';
 import { PlayerHelloMessage } from '../interfaces/messages/PlayerHelloMessage';
 import { PlayerRejectedMessage } from '../interfaces/messages/PlayerRejectedMessage';
+import { MessageWithRecipient } from '../interfaces/MessageWithRecipient';
+import { ListGamesRequest } from '../interfaces/requests/ListGamesRequest';
+import { ListGamesResponse } from '../interfaces/responses/ListGamesResponse';
 import { Service } from '../interfaces/Service';
 
 import { registerUncaughtExceptionHandler } from '../registerUncaughtExceptionHandler';
@@ -41,7 +44,7 @@ export class Player implements Service {
   private readonly uiController: UIController;
   private readonly loggerFactory: LoggerFactory;
 
-  private messageHandlers = {
+  private messageHandlers: { [type: string]: Function } = {
     PLAYER_ACCEPTED: this.handlePlayerAccepted,
     PLAYER_REJECTED: this.handlePlayerRejected
   };
@@ -68,8 +71,9 @@ export class Player implements Service {
         host: serverHostname,
         port: serverPort
       },
-      () => {
+      async () => {
         this.logger.info(`Connected to the server at ${serverHostname}:${serverPort}`);
+        await this.sendListGames();
         this.sendHandshake();
       }
     );
@@ -100,16 +104,51 @@ export class Player implements Service {
       payload: {
         isLeader: this.options.teamLeader,
         teamId: this.options.teamNumber,
-        temporaryId
+        temporaryId,
+        game: 'the project game'
       }
     };
 
     this.communicator.sendMessage(message);
   }
 
-  private handleMessage<T>(message: Message<T>) {
-    // @ts-ignore
-    this.messageHandlers[message.type](message);
+  private async sendListGames() {
+    const message: ListGamesRequest = {
+      type: 'LIST_GAMES_REQUEST',
+      senderId: -2,
+      payload: undefined
+    };
+
+    this.communicator.sendMessage(message);
+    const listGamesResponse = <ListGamesResponse>await this.communicator.waitForSpecificMessage(
+      (msg: MessageWithRecipient<ListGamesResponse>) => msg.type === 'LIST_GAMES_RESPONSE'
+    );
+
+    this.handleListGamesResponse(listGamesResponse);
+  }
+
+  private handleMessage(message: Message<any>) {
+    const handler = this.messageHandlers[message.type];
+
+    if (handler) {
+      return handler(message);
+    }
+  }
+
+  private handleListGamesResponse(message: ListGamesResponse) {
+    const games = message.payload.games;
+    for (const game of games) {
+      this.logger.info(`\n Game \"${game.name}\" : \"${game.description}\"`);
+      this.logger.info(
+        `\n boardSize: x:${game.boardSize.x} taskArea:${game.boardSize.taskArea} goalArea: ${
+          game.boardSize.goalArea
+        }`
+      );
+      this.logger.info(
+        `\n Goal limit:${game.goalLimit} teamSizes: 1:${game.teamSizes[1]} 2:${game.teamSizes[2]}`
+      );
+      this.logger.info(`\n ${JSON.stringify(game.delays, null, 2)}`);
+    }
   }
 
   private handlePlayerAccepted(message: PlayerAcceptedMessage) {

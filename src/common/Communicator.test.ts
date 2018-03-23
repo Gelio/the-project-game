@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events';
+import * as Stream from 'stream';
 
 import { Message } from '../interfaces/Message';
 import { Communicator } from './Communicator';
@@ -28,22 +28,21 @@ function createTestMessage(): Message<any> {
   };
 }
 
-function makeReadableEventEmitter(eventEmitter: EventEmitter, message: Message<any>) {
+function serializeMessage(message: Message<any>) {
   const stringifiedMessage = JSON.stringify(message);
 
-  const messageLengthBuffer = new Buffer(4);
+  const buffer = new Buffer(stringifiedMessage.length + 4);
   // Network order is Big Endian
-  messageLengthBuffer.writeUInt32BE(stringifiedMessage.length, 0);
+  buffer.writeUInt32BE(stringifiedMessage.length, 0);
 
-  const messageBuffer = new Buffer(stringifiedMessage);
+  buffer.write(stringifiedMessage, 4);
 
-  (<any>eventEmitter).read = (bytesToRead: number) => {
-    if (bytesToRead === 4) {
-      return messageLengthBuffer;
-    }
+  return buffer;
+}
 
-    return messageBuffer;
-  };
+function writeMessageToStream(stream: Stream.Writable, message: Message<any>) {
+  const messageBuffer = serializeMessage(message);
+  stream.write(messageBuffer);
 }
 
 describe('Communicator', () => {
@@ -54,6 +53,10 @@ describe('Communicator', () => {
     beforeEach(() => {
       socket = new MockSocket();
       communicator = createCommunicator(socket);
+    });
+
+    afterEach(() => {
+      communicator.removeAllListeners();
     });
 
     it('should send data in 2 chunks', () => {
@@ -103,21 +106,137 @@ describe('Communicator', () => {
     });
   });
 
-  describe('(events)', () => {
-    let eventEmitter: EventEmitter;
+  describe('waitForAnyMessage', () => {
+    let socket: Stream.PassThrough;
+    let communicator: Communicator;
 
     beforeEach(() => {
-      eventEmitter = new EventEmitter();
+      socket = new Stream.PassThrough();
+      communicator = createCommunicator(socket);
     });
 
     afterEach(() => {
-      eventEmitter.removeAllListeners();
+      socket.removeAllListeners();
+      communicator.removeAllListeners();
+    });
+
+    it('should resolve with a message', () => {
+      const message = createTestMessage();
+      const promise = communicator.waitForAnyMessage();
+
+      communicator.bindListeners();
+      writeMessageToStream(socket, message);
+
+      expect(promise).resolves.toEqual(message);
+    });
+
+    it('should reject with an error when socket errors', () => {
+      const promise = communicator.waitForAnyMessage();
+
+      communicator.bindListeners();
+      socket.emit('error', 'a');
+
+      expect(promise).rejects.toEqual('a');
+    });
+
+    it('should reject when socket is destroyed', () => {
+      const promise = communicator.waitForAnyMessage();
+
+      communicator.bindListeners();
+      socket.emit('destroy', 'a');
+
+      expect(promise).rejects.toEqual('a');
+    });
+  });
+
+  describe('waitForSpecificMessage', () => {
+    let socket: Stream.PassThrough;
+    let communicator: Communicator;
+
+    beforeEach(() => {
+      socket = new Stream.PassThrough();
+      communicator = createCommunicator(socket);
+    });
+
+    it('should resolve with a message when it matches the filter function', () => {
+      const message = createTestMessage();
+      const message2 = createTestMessage();
+      message2.type = 'TEST2';
+
+      const promise = communicator.waitForSpecificMessage(msg => msg.type === 'TEST2');
+
+      communicator.bindListeners();
+      writeMessageToStream(socket, message);
+      writeMessageToStream(socket, message2);
+
+      expect(promise).resolves.toEqual(message2);
+    });
+
+    it('should call the filter function for each message until a match', async () => {
+      const message = createTestMessage();
+      const message2 = createTestMessage();
+      message2.type = 'TEST2';
+
+      const filterFunction = jest.fn(msg => msg.type === 'TEST2');
+      const promise = communicator.waitForSpecificMessage(filterFunction);
+
+      communicator.bindListeners();
+      writeMessageToStream(socket, message);
+      writeMessageToStream(socket, message2);
+
+      expect(await promise).toEqual(message2);
+      expect(filterFunction).toHaveBeenCalledTimes(2);
+    });
+
+    it('should not call the filter function after a match', async () => {
+      const message = createTestMessage();
+      const message2 = createTestMessage();
+      message2.type = 'TEST2';
+
+      const filterFunction = jest.fn(msg => msg.type === message.type);
+      const promise = communicator.waitForSpecificMessage(filterFunction);
+
+      communicator.bindListeners();
+      writeMessageToStream(socket, message);
+      writeMessageToStream(socket, message2);
+
+      expect(await promise).toEqual(message);
+      expect(filterFunction).toHaveBeenCalledTimes(1);
+    });
+
+    it('should reject with an error when socket errors', () => {
+      const promise = communicator.waitForSpecificMessage(() => true);
+
+      communicator.bindListeners();
+      socket.emit('error', 'a');
+
+      expect(promise).rejects.toEqual('a');
+    });
+
+    it('should reject when socket is destroyed', () => {
+      const promise = communicator.waitForSpecificMessage(() => true);
+
+      communicator.bindListeners();
+      socket.emit('destroy', 'a');
+
+      expect(promise).rejects.toEqual('a');
+    });
+  });
+
+  describe('(events)', () => {
+    let socket: Stream.PassThrough;
+
+    beforeEach(() => {
+      socket = new Stream.PassThrough();
+    });
+
+    afterEach(() => {
+      socket.removeAllListeners();
     });
 
     describe('close event', () => {
       it('should be emitted when socket closes', () => {
-        (<any>eventEmitter).destroy = jest.fn();
-        const communicator = createCommunicator(eventEmitter);
+        const communicator = createCommunicator(socket);
         communicator.bindListeners();
 
         let closed = false;
@@ -125,14 +244,14 @@ describe('Communicator', () => {
           closed = true;
         });
 
-        eventEmitter.emit('close');
+        socket.emit('close');
         expect(closed).toBe(true);
       });
     });
 
     describe('error event', () => {
       it('should be emitted on socket errors', () => {
-        const communicator = createCommunicator(eventEmitter);
+        const communicator = createCommunicator(socket);
         communicator.bindListeners();
 
         let emitted = false;
@@ -140,12 +259,12 @@ describe('Communicator', () => {
           emitted = true;
         });
 
-        eventEmitter.emit('error');
+        socket.emit('error');
         expect(emitted).toBe(true);
       });
 
       it('should pass error event argument', () => {
-        const communicator = createCommunicator(eventEmitter);
+        const communicator = createCommunicator(socket);
         communicator.bindListeners();
 
         let receivedError: Error;
@@ -154,7 +273,7 @@ describe('Communicator', () => {
         });
 
         const emittedError = new Error('foo');
-        eventEmitter.emit('error', emittedError);
+        socket.emit('error', emittedError);
         // @ts-ignore
         expect(receivedError).toBe(emittedError);
       });
@@ -163,18 +282,38 @@ describe('Communicator', () => {
     describe('message event', () => {
       it('should be emitted when message is received', () => {
         const message = createTestMessage();
-        makeReadableEventEmitter(eventEmitter, message);
 
-        const communicator = createCommunicator(eventEmitter);
+        const communicator = createCommunicator(socket);
         communicator.bindListeners();
 
         communicator.once('message', (receivedMessage: Message<any>) => {
           expect(receivedMessage).toEqual(message);
         });
 
-        eventEmitter.emit('readable');
+        writeMessageToStream(socket, message);
 
         expect.assertions(1);
+      });
+
+      it('should be emitted when multiple messages arrived in a single TCP packet', () => {
+        const message = createTestMessage();
+        const serializedMessage = serializeMessage(message);
+        const repeatedMessages = new Buffer(serializedMessage.length * 2);
+        serializedMessage.copy(repeatedMessages, 0);
+        serializedMessage.copy(repeatedMessages, serializedMessage.length);
+
+        const communicator = createCommunicator(socket);
+        communicator.bindListeners();
+
+        const handler = jest.fn();
+        communicator.on('message', handler);
+
+        socket.write(repeatedMessages);
+
+        expect(handler).toHaveBeenCalledTimes(2);
+        expect(handler).toHaveBeenCalledWith(message);
+
+        communicator.removeAllListeners();
       });
     });
   });

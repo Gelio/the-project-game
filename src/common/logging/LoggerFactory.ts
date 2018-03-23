@@ -28,4 +28,12 @@ export class LoggerFactory {
 
     return this.createLogger([consoleTransport]);
   }
+
+  public createEmptyLogger(): winston.LoggerInstance {
+    const consoleTransport = new winston.transports.Console({
+      silent: true
+    });
+
+    return this.createLogger([consoleTransport]);
+  }
 }

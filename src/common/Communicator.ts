@@ -3,7 +3,11 @@ import { htonl, ntohl } from 'network-byte-order';
 import { LoggerInstance } from 'winston';
 
 import { Message } from '../interfaces/Message';
+import { MessageWithRecipient } from '../interfaces/MessageWithRecipient';
+
 import { CustomEventEmitter } from './CustomEventEmitter';
+
+export type FilterFunction<T> = (message: T) => boolean;
 
 export class Communicator extends CustomEventEmitter {
   private readonly socket: Socket;
@@ -11,6 +15,10 @@ export class Communicator extends CustomEventEmitter {
   private readonly messageLengthArray = new Uint8Array(Uint32Array.BYTES_PER_ELEMENT);
   private readonly messageLengthBuffer: Buffer;
   private readonly logger: LoggerInstance;
+
+  public get address() {
+    return `${this.socket.remoteAddress}:${this.socket.remotePort}`;
+  }
 
   constructor(socket: Socket, logger: LoggerInstance) {
     super();
@@ -30,7 +38,7 @@ export class Communicator extends CustomEventEmitter {
     });
 
     this.socket.on('close', () => {
-      this.logger.info('Client disconnected');
+      this.logger.info(`Client ${this.address} disconnected`);
 
       this.eventEmitter.emit('close');
       this.destroy();
@@ -47,15 +55,57 @@ export class Communicator extends CustomEventEmitter {
     }
   }
 
-  public sendMessage<T>(message: Message<T>) {
+  public sendMessage(message: Message<any>) {
     const serializedMessage = JSON.stringify(message);
-    this.logger.debug(`Sending message ${message.type} (${serializedMessage.length})`);
+    this.logger.silly(`Sending message ${message.type} (${serializedMessage.length})`);
 
     htonl(this.messageLengthArray, 0, serializedMessage.length);
     this.socket.write(this.messageLengthBuffer);
     this.socket.write(serializedMessage, 'utf8');
 
     this.eventEmitter.emit('messageSent', message);
+  }
+
+  public waitForAnyMessage(): Promise<Message<any>> {
+    return this.waitForSpecificMessage(() => true);
+  }
+
+  public waitForSpecificMessage(
+    filterFunction: FilterFunction<Message<any>>
+  ): Promise<Message<any>>;
+  public waitForSpecificMessage(
+    filterFunction: FilterFunction<MessageWithRecipient<any>>
+  ): Promise<MessageWithRecipient<any>>;
+  public waitForSpecificMessage(filterFunction: FilterFunction<any>): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const eventEmitter = this.eventEmitter;
+
+      function onMessage(message: Message<any>) {
+        if (!filterFunction(message)) {
+          return;
+        }
+
+        resolve(message);
+        unregisterListeners();
+      }
+
+      function onError(error: any) {
+        reject(error);
+        unregisterListeners();
+      }
+
+      function unregisterListeners() {
+        eventEmitter.removeListener('message', onMessage);
+        eventEmitter.removeListener('error', onError);
+        eventEmitter.removeListener('close', onError);
+        eventEmitter.removeListener('destroy', onError);
+      }
+
+      eventEmitter.on('message', onMessage);
+      eventEmitter.once('error', onError);
+      eventEmitter.once('close', onError);
+      eventEmitter.once('destroy', onError);
+    });
   }
 
   private readMessage() {
@@ -75,8 +125,12 @@ export class Communicator extends CustomEventEmitter {
     this.expectedMessageLength = null;
 
     const message = JSON.parse(messageBuffer.toString());
-    this.logger.debug(`Received message ${message.type} (${messageBuffer.length})`);
+    this.logger.silly(`Received message ${message.type} (${messageBuffer.length})`);
     this.eventEmitter.emit('message', message);
+
+    if (this.socket.readableLength > 0) {
+      this.readMessage();
+    }
   }
 
   private tryReadMessageLength() {
