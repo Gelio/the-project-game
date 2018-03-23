@@ -2,7 +2,7 @@ import { LoggerInstance } from 'winston';
 
 import { Service } from '../../interfaces/Service';
 
-import { Game } from '../Game';
+import { Board } from '../models/Board';
 
 import { createPieceAtRandomPosition } from './createPieceAtRandomPosition';
 
@@ -13,16 +13,18 @@ export interface PeriodicPieceGeneratorOptions {
 }
 
 export class PeriodicPieceGenerator implements Service {
-  private readonly game: Game;
+  private readonly board: Board;
   private readonly options: PeriodicPieceGeneratorOptions;
   private readonly logger: LoggerInstance;
 
   private intervalId: NodeJS.Timer | undefined;
 
-  constructor(game: Game, options: PeriodicPieceGeneratorOptions, logger: LoggerInstance) {
-    this.game = game;
+  constructor(board: Board, options: PeriodicPieceGeneratorOptions, logger: LoggerInstance) {
+    this.board = board;
     this.options = options;
     this.logger = logger;
+
+    this.tryGeneratePieces = this.tryGeneratePieces.bind(this);
   }
 
   public init() {
@@ -44,11 +46,11 @@ export class PeriodicPieceGenerator implements Service {
 
   private tryGeneratePieces() {
     try {
-      while (this.game.board.pieces.length < this.options.piecesLimit) {
-        createPieceAtRandomPosition(this.game.board, this.options.shamChance);
+      while (this.board.pieces.length < this.options.piecesLimit) {
+        createPieceAtRandomPosition(this.board, this.options.shamChance);
       }
     } catch (error) {
-      this.logger.error(error.message);
+      this.logger.error(`Cannot generate more piece: ${error.message}`);
     }
   }
 }
