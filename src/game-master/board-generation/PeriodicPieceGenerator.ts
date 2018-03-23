@@ -1,11 +1,10 @@
-import { arrayShuffle } from '../../common/arrayShuffle';
-
 import { LoggerInstance } from 'winston';
 
-import { Point } from '../../common/Point';
 import { Service } from '../../interfaces/Service';
+
 import { Game } from '../Game';
-import { Piece } from '../models/Piece';
+
+import { createPieceAtRandomPosition } from './createPieceAtRandomPosition';
 
 export interface PeriodicPieceGeneratorOptions {
   shamChance: number;
@@ -44,41 +43,12 @@ export class PeriodicPieceGenerator implements Service {
   }
 
   private tryGeneratePieces() {
-    while (this.game.board.pieces.length < this.options.piecesLimit) {
-      this.createPieceAtRandomPosition();
-    }
-  }
-
-  private createPieceAtRandomPosition() {
-    const minY = this.game.board.size.goalArea + 1;
-    const maxY = this.game.board.size.goalArea + this.game.board.size.taskArea;
-    const yRange = maxY - minY + 1;
-
-    const allPositions: Point[] = [];
-    for (let y = 0; y < yRange; ++y) {
-      for (let x = 0; x < this.game.board.size.x; ++x) {
-        allPositions.push(new Point(x, y));
+    try {
+      while (this.game.board.pieces.length < this.options.piecesLimit) {
+        createPieceAtRandomPosition(this.game.board, this.options.shamChance);
       }
+    } catch (error) {
+      this.logger.error(error.message);
     }
-
-    const piece = new Piece();
-    piece.isSham = Math.random() < this.options.shamChance;
-    piece.isPickedUp = false;
-
-    arrayShuffle(allPositions);
-    const newPiecePosition = allPositions.find(position => {
-      const tile = this.game.board.getTileAtPosition(position);
-
-      return !tile.piece || !tile.piece.isPickedUp;
-    });
-
-    if (!newPiecePosition) {
-      this.logger.warn('No place for next piece to be generated');
-
-      return;
-    }
-
-    piece.position = newPiecePosition;
-    this.game.board.addPiece(piece);
   }
 }
