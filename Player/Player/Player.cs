@@ -40,6 +40,12 @@ namespace Player
             GameName = config.GameName;
         }
 
+        public void Start()
+        {
+            ConnectToServer();
+            WaitForGameStart();
+        }
+
         public void ConnectToServer()
         {
             if (!_communicator.IsConnected)

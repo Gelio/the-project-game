@@ -28,6 +28,7 @@ namespace Player
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine($"Connection failed: {e.Message}");
+                    Console.ResetColor();
                     return;
                 }
                 var gameService = new GameService(communicator);
@@ -37,6 +38,7 @@ namespace Player
                 {
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.WriteLine("There are no games available.");
+                    Console.ResetColor();
                     return;
                 }
 
@@ -67,7 +69,26 @@ namespace Player
             configObject.GameName = args[2];
             var player = new Player(communicator, configObject);
 
-            BeginGame(player);
+            try
+            {
+                player.Start();
+            }
+            catch (PlayerRejectedException e)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Connection rejected: {e.Message}");
+                player.Disconnect();
+                Console.ResetColor();
+                return;
+            }
+            catch (SocketException e)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Connection failed: {e.Message}");
+                player.Disconnect();
+                Console.ResetColor();
+                return;
+            }
         }
 
         static PlayerConfig ReadConfigFile(string configFilePath)
@@ -87,27 +108,5 @@ namespace Player
             return configFileObject;
         }
 
-        static void BeginGame(Player player)
-        {
-            try
-            {
-                player.ConnectToServer();
-            }
-            catch (PlayerRejectedException e)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"Connection rejected: {e.Message}");
-                player.Disconnect();
-                return;
-            }
-            catch (SocketException e)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"Connection failed: {e.Message}");
-                player.Disconnect();
-                return;
-            }
-            player.WaitForGameStart();
-        }
     }
 }
