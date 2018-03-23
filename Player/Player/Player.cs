@@ -92,6 +92,7 @@ namespace Player
             while (true)
             {
                 receivedMessageSerialized = _communicator.Receive();
+
                 var receivedGenericMessage = JsonConvert.DeserializeObject<Message>(receivedMessageSerialized);
 
                 if (receivedGenericMessage.Type == Consts.GameStarted) break;

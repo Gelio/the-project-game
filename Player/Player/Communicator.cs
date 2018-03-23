@@ -70,6 +70,11 @@ namespace Player
             stream.Read(fourBytes, 0, 4);
             var messageLen = IPAddress.NetworkToHostOrder(BitConverter.ToInt32(fourBytes, 0));
 
+            if (messageLen == 0)
+            {
+                throw new OperationCanceledException("Disconnected from communication server");
+            }
+
             // Initialize buffer and read the actual message
             var buffer = new byte[messageLen];
             stream.Read(buffer, 0, messageLen);
