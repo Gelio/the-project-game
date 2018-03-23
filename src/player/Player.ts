@@ -3,7 +3,7 @@ import { LoggerInstance } from 'winston';
 
 import { config } from './config';
 
-import { bindObjectProperties } from '../common/bindObjectProperties';
+import { bindObjectMethods } from '../common/bindObjectMethods';
 import { Communicator } from '../common/Communicator';
 import { LoggerFactory } from '../common/logging/LoggerFactory';
 import { UITransport } from '../common/logging/UITransport';
@@ -55,7 +55,7 @@ export class Player implements Service {
     this.uiController = uiController;
     this.loggerFactory = loggerFactory;
 
-    bindObjectProperties(this.messageHandlers, this);
+    bindObjectMethods(this.messageHandlers, this);
     this.handleMessage = this.handleMessage.bind(this);
     this.handleServerDisconnection = this.handleServerDisconnection.bind(this);
   }
