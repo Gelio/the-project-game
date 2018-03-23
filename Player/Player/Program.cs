@@ -20,12 +20,22 @@ namespace Player
 
             if (args[2] == "-l")
             {
-                communicator.Connect();
+                try
+                {
+                    communicator.Connect();
+                }
+                catch (SocketException e)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"Connection failed: {e.Message}");
+                    return;
+                }
                 var gameService = new GameService(communicator);
                 var gamesList = gameService.GetGamesList();
 
                 if (gamesList.Count == 0)
                 {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.WriteLine("There are no games available.");
                     return;
                 }
@@ -35,22 +45,40 @@ namespace Player
                 return;
             }
 
-            string configFilePath = "Player/player.config.json";
+
+            PlayerConfig configObject;
+            string configFilePath = "player.config.json";
             if (args.Length >= 4)
             {
                 configFilePath = args[3];
             }
-            var configObject = ReadConfigFile(configFilePath);
+
+            try
+            {
+                configObject = ReadConfigFile(configFilePath);
+            }
+            catch (FileNotFoundException)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Error: Config file {configFilePath} does not exist!");
+                return;
+            }
+
             configObject.GameName = args[2];
             var player = new Player(communicator, configObject);
 
             BeginGame(player);
         }
 
-        static PlayerConfig ReadConfigFile(string _configFilePath)
+        static PlayerConfig ReadConfigFile(string configFilePath)
         {
+            if (!File.Exists(configFilePath))
+            {
+                throw new FileNotFoundException();
+            }
+
             PlayerConfig configFileObject;
-            using (StreamReader file = File.OpenText(_configFilePath))
+            using (StreamReader file = File.OpenText(configFilePath))
             {
                 JsonSerializer serializer = new JsonSerializer();
                 configFileObject = (PlayerConfig)serializer.Deserialize(file, typeof(PlayerConfig));
@@ -67,13 +95,15 @@ namespace Player
             }
             catch (PlayerRejectedException e)
             {
-                Console.WriteLine($"!!! Connection rejected: {e.Message}");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Connection rejected: {e.Message}");
                 player.Disconnect();
                 return;
             }
-            catch (SocketException)
+            catch (SocketException e)
             {
-                Console.WriteLine($"!!! Connection failed: Could not connect to host");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Connection failed: {e.Message}");
                 player.Disconnect();
                 return;
             }
