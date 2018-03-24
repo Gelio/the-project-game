@@ -7,7 +7,6 @@ using Moq;
 using Player.Common;
 using Player.Interfaces;
 using Newtonsoft.Json;
-using Player.Interfaces;
 using Player.Messages.Responses;
 
 namespace Player.Tests
@@ -28,7 +27,7 @@ namespace Player.Tests
                 AskLevel = 10,
                 RespondLevel = 10,
                 Timeout = 11,
-                GameName = "asdfasdf",
+                GameName = "Default",
                 TeamNumber = 1
             };
             _gameService = new Mock<IGameService>();
@@ -103,6 +102,31 @@ namespace Player.Tests
             Assert.That(result, Is.True);
             Assert.That(player.LeaderId, Is.EqualTo(expectedLeaderId));
             Assert.That(player.TeamMembersIds, Is.EquivalentTo(expectedTeamMembersIds));
+        }
+
+        [Test]
+        public void GetsChosenGameInfo()
+        {
+            var gamesListMessage = JsonConvert.DeserializeObject<Message<ListGamesResponsePayload>>(Consts.LIST_GAMES_RESPONSE);
+            var gamesList = gamesListMessage.Payload.Games;
+            _gameService.Setup(x => x.GetGamesList()).Returns(gamesList);
+
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object);
+            player.GetGameInfo();
+
+            Assert.That(player.Game, Is.Not.Null);
+            Assert.That(player.Game.Name, Is.EqualTo(player.GameName));
+        }
+
+        [Test]
+        public void NoChosenGameAvailable()
+        {
+            var gamesListMessage = JsonConvert.DeserializeObject<Message<ListGamesResponsePayload>>(Consts.EMPTY_LIST_GAMES_RESPONSE);
+            var gamesList = gamesListMessage.Payload.Games;
+            _gameService.Setup(x => x.GetGamesList()).Returns(gamesList);
+
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object);
+            Assert.Throws<OperationCanceledException>(() => player.GetGameInfo());
         }
     }
 }

@@ -6,6 +6,7 @@ using Player.Common;
 using System.Linq;
 using Player.Messages.Responses;
 using Player.Messages.Requests;
+using Player.GameObjects;
 
 namespace Player
 {

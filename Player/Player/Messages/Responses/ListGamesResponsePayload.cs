@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Player.Interfaces;
+using Player.GameObjects;
 
 namespace Player.Messages.Responses
 {

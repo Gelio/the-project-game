@@ -1,5 +1,6 @@
 using Newtonsoft.Json;
 using Player.Common;
+using Player.GameObjects;
 using System;
 using System.Collections.Generic;
 using System.IO;
