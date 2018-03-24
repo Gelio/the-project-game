@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Player
+namespace Player.GameObjects
 {
     public class Game
     {
@@ -21,25 +21,4 @@ namespace Player
             return sb.ToString();
         }
     }
-
-    public class BoardSize
-    {
-        public int X;
-        public int TaskArea;
-        public int GoalArea;
-    }
-
-    public class Delays
-    {
-        public int Move;
-        public int Pick;
-        public int Discover;
-        public int Destroy;
-        public int Test;
-        public int CommunicationRequest;
-        public int CommunicationAccept;
-        public int TryPiece;
-    }
-
-    
 }

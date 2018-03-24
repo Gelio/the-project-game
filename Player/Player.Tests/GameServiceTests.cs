@@ -5,6 +5,7 @@ using NUnit.Framework;
 using Moq;
 using Newtonsoft.Json;
 using Player.Interfaces;
+using Player.Game;
 
 namespace Player.Tests
 {

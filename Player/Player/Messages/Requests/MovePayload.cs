@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Player.Messages.Requests
 {
-    class MovePayload
+    public class MovePayload
     {
     }
 }
