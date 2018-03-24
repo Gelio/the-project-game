@@ -1,10 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Player.Interfaces;
 
 namespace Player.Messages.Responses
 {
-    class MoveResponsePayload
+    public class MoveResponsePayload : IPayload
     {
+        public int DistanceToPiece;
+        // long working after 2038
+        public long TimeStamp;
     }
 }
