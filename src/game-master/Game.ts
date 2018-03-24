@@ -43,7 +43,7 @@ export class Game {
     return this.nextPlayerId++;
   }
 
-  public processMessage<T, U>(message: Message<T>): ProcessMessageResult<U> {
+  public processMessage(message: Message<any>): ProcessMessageResult<any> {
     const delay = 500;
 
     const sender = this.playersContainer.getPlayerById(message.senderId);
@@ -54,10 +54,17 @@ export class Game {
       };
     }
 
+    if (sender.isBusy) {
+      return {
+        valid: false,
+        reason: 'Sender is busy'
+      };
+    }
+
     sender.isBusy = true;
 
     // TODO: actually handle the message
-    const response: MessageWithRecipient<U> = {
+    const response: MessageWithRecipient<any> = {
       type: 'TEST_RESPONSE',
       payload: <any>5,
       recipientId: message.senderId,
