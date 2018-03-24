@@ -5,6 +5,7 @@ import { PlayersContainer } from './PlayersContainer';
 
 import { createDelay } from '../common/createDelay';
 
+import { ActionDelays } from '../interfaces/ActionDelays';
 import { BoardSize } from '../interfaces/BoardSize';
 import { Message } from '../interfaces/Message';
 import { MessageWithRecipient } from '../interfaces/MessageWithRecipient';
@@ -15,6 +16,8 @@ import { ProcessMessageResult } from './ProcessMessageResult';
 
 import { UIController } from './ui/UIController';
 
+import { PlayerMessageHandler } from './game-logic/PlayerMessageHandler';
+
 export class Game {
   public hasStarted = false;
   public board: Board;
@@ -23,6 +26,8 @@ export class Game {
   // @ts-ignore
   private readonly logger: LoggerInstance;
   private readonly uiController: UIController;
+  private readonly actionDelays: ActionDelays;
+  private readonly playerMessageHandler: PlayerMessageHandler;
   private nextPlayerId = 1;
 
   //TODO: Consider implementing board factory
@@ -31,12 +36,20 @@ export class Game {
     pointsLimit: number,
     logger: LoggerInstance,
     uiController: UIController,
-    playersContainer: PlayersContainer
+    playersContainer: PlayersContainer,
+    actionDelays: ActionDelays
   ) {
     this.board = new Board(boardSize, pointsLimit);
     this.logger = logger;
     this.uiController = uiController;
     this.playersContainer = playersContainer;
+    this.actionDelays = actionDelays;
+
+    this.playerMessageHandler = new PlayerMessageHandler(
+      this.board,
+      this.playersContainer,
+      this.actionDelays
+    );
   }
 
   public getNextPlayerId() {
@@ -44,8 +57,6 @@ export class Game {
   }
 
   public processMessage(message: Message<any>): ProcessMessageResult<any> {
-    const delay = 500;
-
     const sender = this.playersContainer.getPlayerById(message.senderId);
     if (!sender) {
       return {
@@ -63,25 +74,14 @@ export class Game {
 
     sender.isBusy = true;
 
-    // TODO: actually handle the message
-    const response: MessageWithRecipient<any> = {
-      type: 'TEST_RESPONSE',
-      payload: <any>5,
-      recipientId: message.senderId,
-      senderId: -1
-    };
-
-    const responsePromise = createDelay(delay).then(() => {
+    const processMessageResult = this.playerMessageHandler.handleMessage(sender, message);
+    if (processMessageResult.valid) {
+      processMessageResult.responseMessage.then(() => (sender.isBusy = false));
+    } else {
       sender.isBusy = false;
+    }
 
-      return response;
-    });
-
-    return {
-      delay,
-      responseMessage: responsePromise,
-      valid: true
-    };
+    return processMessageResult;
   }
 
   public start() {
