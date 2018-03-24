@@ -1,30 +1,25 @@
 import { REQUEST_TYPE } from '../../common/REQUEST_TYPE';
 
-import { ActionDelays } from '../../interfaces/ActionDelays';
 import { Message } from '../../interfaces/Message';
 
-import { Board } from '../models/Board';
-
 import { Player } from '../Player';
-import { PlayersContainer } from '../PlayersContainer';
 import { ProcessMessageResult } from '../ProcessMessageResult';
 
 import { handleDeletePieceRequest } from './handleDeletePieceRequest';
+import { handleDiscoveryRequest } from './handleDiscoveryRequest';
+import { MessageHandlerDependencies } from './MessageHandlerDependencies';
 
 export class PlayerMessageHandler {
-  private readonly board: Board;
-  private readonly playersContainer: PlayersContainer;
-  private readonly actionDelays: ActionDelays;
+  private readonly dependencies: MessageHandlerDependencies;
 
   private readonly handlerMap: { [requestType: string]: Function } = {
-    [REQUEST_TYPE.DELETE_PIECE_REQUEST]: handleDeletePieceRequest
-    // [REQUEST_TYPE.COMMUNICATION_REQUEST]: handleCommunicationRequest
+    // [REQUEST_TYPE.COMMUNICATION_REQUEST]: handleCommunicationRequest,
+    [REQUEST_TYPE.DELETE_PIECE_REQUEST]: handleDeletePieceRequest,
+    [REQUEST_TYPE.DISCOVERY_REQUEST]: handleDiscoveryRequest
   };
 
-  constructor(board: Board, playersContainer: PlayersContainer, actionDelays: ActionDelays) {
-    this.board = board;
-    this.playersContainer = playersContainer;
-    this.actionDelays = actionDelays;
+  constructor(dependencies: MessageHandlerDependencies) {
+    this.dependencies = dependencies;
   }
 
   public handleMessage(sender: Player, message: Message<any>): ProcessMessageResult<any> {
@@ -37,6 +32,6 @@ export class PlayerMessageHandler {
       };
     }
 
-    return handler(this.board, this.playersContainer, this.actionDelays, sender, message);
+    return handler(this.dependencies, sender, message);
   }
 }

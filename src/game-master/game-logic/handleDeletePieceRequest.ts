@@ -1,19 +1,14 @@
 import { createDelay } from '../../common/createDelay';
 
-import { ActionDelays } from '../../interfaces/ActionDelays';
 import { DeletePieceRequest } from '../../interfaces/requests/DeletePieceRequest';
 import { DeletePieceResponse } from '../../interfaces/responses/DeletePieceResponse';
 
-import { Board } from '../models/Board';
-
 import { Player } from '../Player';
-import { PlayersContainer } from '../PlayersContainer';
 import { ProcessMessageResult } from '../ProcessMessageResult';
+import { MessageHandlerDependencies } from './MessageHandlerDependencies';
 
 export function handleDeletePieceRequest(
-  board: Board,
-  _playersContainer: PlayersContainer,
-  actionDelays: ActionDelays,
+  { board, actionDelays }: MessageHandlerDependencies,
   sender: Player,
   _deletePieceRequest: DeletePieceRequest
 ): ProcessMessageResult<DeletePieceResponse> {

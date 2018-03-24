@@ -42,11 +42,12 @@ export class Game {
     this.playersContainer = playersContainer;
     this.actionDelays = actionDelays;
 
-    this.playerMessageHandler = new PlayerMessageHandler(
-      this.board,
-      this.playersContainer,
-      this.actionDelays
-    );
+    this.playerMessageHandler = new PlayerMessageHandler({
+      board: this.board,
+      playersContainer: this.playersContainer,
+      actionDelays: this.actionDelays,
+      logger: this.logger
+    });
   }
 
   public getNextPlayerId() {

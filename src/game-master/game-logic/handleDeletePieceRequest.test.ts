@@ -1,3 +1,5 @@
+import { LoggerInstance } from 'winston';
+
 import { ActionDelays } from '../../interfaces/ActionDelays';
 import { DeletePieceResponse } from '../../interfaces/responses/DeletePieceResponse';
 
@@ -10,12 +12,14 @@ import { ValidMessageResult } from '../ProcessMessageResult';
 import { Point } from '../../common/Point';
 
 import { handleDeletePieceRequest } from './handleDeletePieceRequest';
+import { LoggerFactory } from '../../common/logging/LoggerFactory';
 
 describe('[GM] handleDeletePieceRequest', () => {
   let board: Board;
   let actionDelays: ActionDelays;
   let player: Player;
   let piece: Piece;
+  let logger: LoggerInstance;
 
   beforeEach(() => {
     board = new Board(
@@ -43,10 +47,24 @@ describe('[GM] handleDeletePieceRequest', () => {
 
     board.addPiece(piece);
     board.getTileAtPosition(piece.position).piece = null;
+
+    const loggerFactory = new LoggerFactory();
+    loggerFactory.logLevel = 'error';
+
+    logger = loggerFactory.createEmptyLogger();
   });
 
   function executeDeletePieceRequest() {
-    return handleDeletePieceRequest(board, <any>{}, <any>actionDelays, player, <any>{});
+    return handleDeletePieceRequest(
+      {
+        board,
+        playersContainer: <any>{},
+        actionDelays: <any>actionDelays,
+        logger
+      },
+      player,
+      <any>{}
+    );
   }
 
   it('should delete piece from the board', () => {
