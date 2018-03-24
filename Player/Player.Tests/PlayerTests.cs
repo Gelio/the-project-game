@@ -7,6 +7,7 @@ using Moq;
 using Player.Common;
 using Player.Messages;
 using Newtonsoft.Json;
+using Player.Interfaces;
 
 namespace Player.Tests
 {
@@ -15,6 +16,7 @@ namespace Player.Tests
     {
         Mock<ICommunicator> _communicator;
         PlayerConfig _playerConfig;
+        Mock<IGameService> _gameService;
 
         [SetUp]
         public void Setup()
@@ -28,6 +30,7 @@ namespace Player.Tests
                 GameName = "asdfasdf",
                 TeamNumber = 1
             };
+            _gameService = new Mock<IGameService>();
 
         }
 
@@ -38,7 +41,7 @@ namespace Player.Tests
             string expectedMessage = Consts.PLAYER_ACCEPTED;
             _communicator.Setup(x => x.Receive()).Returns(expectedMessage);
 
-            var player = new Player(_communicator.Object, _playerConfig);
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object);
 
             // When
             player.ConnectToServer();
@@ -54,7 +57,7 @@ namespace Player.Tests
             string expectedMessage = Consts.PLAYER_REJECTED;
             _communicator.Setup(x => x.Receive()).Returns(expectedMessage);
 
-            var player = new Player(_communicator.Object, _playerConfig);
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object);
 
             Assert.Throws<PlayerRejectedException>(() => player.ConnectToServer());
         }
@@ -90,7 +93,7 @@ namespace Player.Tests
             };
             string expectedMessage = JsonConvert.SerializeObject(message);
             _communicator.Setup(x => x.Receive()).Returns(expectedMessage);
-            var player = new Player(_communicator.Object, _playerConfig);
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object);
 
             // When
             var result = player.WaitForGameStart();

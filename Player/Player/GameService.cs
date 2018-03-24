@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using Player.Interfaces;
 using Player.Messages;
 using System;
 using System.Collections.Generic;
@@ -6,7 +7,7 @@ using System.Text;
 
 namespace Player
 {
-    public class GameService
+    public class GameService : IGameService
     {
         private ICommunicator _comm;
 
@@ -17,6 +18,11 @@ namespace Player
 
         public IList<Game> GetGamesList()
         {
+            if (!_comm.IsConnected)
+            {
+                _comm.Connect();
+            }
+
             var message = new Message
             {
                 Type = Common.Consts.ListGamesRequest,

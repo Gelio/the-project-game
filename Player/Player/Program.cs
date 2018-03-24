@@ -19,13 +19,15 @@ namespace Player
             }
             var communicator = new Communicator(args[0], Int32.Parse(args[1]));
 
+            GameService gameService;
+
             if (args[2] == "-l")
             {
                 IList<Game> gamesList;
                 try
                 {
                     communicator.Connect();
-                    var gameService = new GameService(communicator);
+                    gameService = new GameService(communicator);
                     gamesList = gameService.GetGamesList();
                 }
                 catch (TimeoutException e)
@@ -81,7 +83,11 @@ namespace Player
             }
 
             configObject.GameName = args[2];
-            var player = new Player(communicator, configObject);
+
+            communicator.Connect();
+            gameService = new GameService(communicator);
+
+            var player = new Player(communicator, configObject, gameService);
 
             try
             {

@@ -8,6 +8,8 @@ using Newtonsoft.Json;
 using Player.Messages;
 using Player.Common;
 using System.Net.Sockets;
+using System.Linq;
+using Player.Interfaces;
 
 namespace Player
 {
@@ -25,12 +27,15 @@ namespace Player
         public IList<int> TeamMembersIds;
         public int LeaderId;
 
+        public Game Game;
+
         private ICommunicator _communicator;
+        private IGameService _gameService;
 
-
-        public Player(ICommunicator communicator, PlayerConfig config)
+        public Player(ICommunicator communicator, PlayerConfig config, IGameService gameService)
         {
             _communicator = communicator;
+            _gameService = gameService;
 
             TeamId = config.TeamNumber;
             IsLeader = config.IsLeader;
@@ -42,8 +47,20 @@ namespace Player
 
         public void Start()
         {
+            GetGameInfo();
             ConnectToServer();
             WaitForGameStart();
+        }
+
+        public void GetGameInfo()
+        {
+            var gamesList = _gameService.GetGamesList();
+            Game = gamesList.FirstOrDefault(x => x.Name == GameName);
+
+            if (Game == null)
+            {
+                throw new OperationCanceledException("Game not found");
+            }
         }
 
         public void ConnectToServer()
