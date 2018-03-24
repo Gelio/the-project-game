@@ -1,9 +1,7 @@
-import { MessageWithRecipient } from '../interfaces/MessageWithRecipient';
-
 export interface ValidMessageResult<T> {
   valid: true;
   delay: number;
-  responseMessage: Promise<MessageWithRecipient<T>>;
+  responseMessage: Promise<T>;
 }
 
 export interface InvalidMessageResult {
