@@ -1,5 +1,5 @@
-import { Message } from '../Message';
+import { PlayerRequest } from '../PlayerRequest';
 
-export interface DiscoveryPieceRequest extends Message<undefined> {
+export interface DiscoveryRequest extends PlayerRequest<undefined> {
   type: 'DISCOVERY_REQUEST';
 }
