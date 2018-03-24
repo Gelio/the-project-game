@@ -40,6 +40,12 @@ namespace Player
             GameName = config.GameName;
         }
 
+        public void Start()
+        {
+            ConnectToServer();
+            WaitForGameStart();
+        }
+
         public void ConnectToServer()
         {
             if (!_communicator.IsConnected)
@@ -86,6 +92,7 @@ namespace Player
             while (true)
             {
                 receivedMessageSerialized = _communicator.Receive();
+
                 var receivedGenericMessage = JsonConvert.DeserializeObject<Message>(receivedMessageSerialized);
 
                 if (receivedGenericMessage.Type == Consts.GameStarted) break;
