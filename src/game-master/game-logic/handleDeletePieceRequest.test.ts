@@ -9,10 +9,10 @@ import { Piece } from '../models/Piece';
 import { Player } from '../Player';
 import { ValidMessageResult } from '../ProcessMessageResult';
 
+import { LoggerFactory } from '../../common/logging/LoggerFactory';
 import { Point } from '../../common/Point';
 
 import { handleDeletePieceRequest } from './handleDeletePieceRequest';
-import { LoggerFactory } from '../../common/logging/LoggerFactory';
 
 describe('[GM] handleDeletePieceRequest', () => {
   let board: Board;

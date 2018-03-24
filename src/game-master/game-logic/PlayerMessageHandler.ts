@@ -6,7 +6,6 @@ import { Player } from '../Player';
 import { ProcessMessageResult } from '../ProcessMessageResult';
 
 import { handleDeletePieceRequest } from './handleDeletePieceRequest';
-import { handleDiscoveryRequest } from './handleDiscoveryRequest';
 import { MessageHandlerDependencies } from './MessageHandlerDependencies';
 
 export class PlayerMessageHandler {
@@ -14,8 +13,7 @@ export class PlayerMessageHandler {
 
   private readonly handlerMap: { [requestType: string]: Function } = {
     // [REQUEST_TYPE.COMMUNICATION_REQUEST]: handleCommunicationRequest,
-    [REQUEST_TYPE.DELETE_PIECE_REQUEST]: handleDeletePieceRequest,
-    [REQUEST_TYPE.DISCOVERY_REQUEST]: handleDiscoveryRequest
+    [REQUEST_TYPE.DELETE_PIECE_REQUEST]: handleDeletePieceRequest
   };
 
   constructor(dependencies: MessageHandlerDependencies) {
