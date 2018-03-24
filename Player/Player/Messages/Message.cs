@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Newtonsoft.Json;
 
-namespace Player.Messages
+namespace Player.Interfaces
 {
     public class Message<T> where T : IPayload
     {

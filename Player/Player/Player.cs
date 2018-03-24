@@ -1,15 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Net;
-
 using Newtonsoft.Json;
-
-using Player.Messages;
-using Player.Common;
-using System.Net.Sockets;
-using System.Linq;
 using Player.Interfaces;
+using Player.Common;
+using System.Linq;
+using Player.Messages.Responses;
+using Player.Messages.Requests;
 
 namespace Player
 {

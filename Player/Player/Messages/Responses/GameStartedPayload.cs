@@ -1,8 +1,7 @@
-using System;
+using Player.Interfaces;
 using System.Collections.Generic;
-using System.Text;
 
-namespace Player.Messages
+namespace Player.Messages.Responses
 {
     public class GameStartedPayload : IPayload
     {

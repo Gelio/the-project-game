@@ -5,9 +5,10 @@ using NUnit;
 using NUnit.Framework;
 using Moq;
 using Player.Common;
-using Player.Messages;
+using Player.Interfaces;
 using Newtonsoft.Json;
 using Player.Interfaces;
+using Player.Messages.Responses;
 
 namespace Player.Tests
 {

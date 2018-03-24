@@ -1,6 +1,7 @@
 using Newtonsoft.Json;
 using Player.Interfaces;
-using Player.Messages;
+using Player.Interfaces;
+using Player.Messages.Responses;
 using System;
 using System.Collections.Generic;
 using System.Text;

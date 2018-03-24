@@ -1,9 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Newtonsoft.Json;
+using Player.Interfaces;
 
-namespace Player.Messages
+namespace Player.Messages.Requests
 {
     public class PlayerHelloPayload : IPayload
     {
