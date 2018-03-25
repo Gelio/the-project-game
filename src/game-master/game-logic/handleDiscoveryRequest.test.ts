@@ -133,7 +133,61 @@ describe('[GM] handleDiscoveryRequest', () => {
       }
     });
 
-    // TODO: create tests similar to the one above for 3 other corners
+    it('should contain 4 nearby fields when player is in the upper right corner', async () => {
+      player.position = new Point(10, 0);
+      const result = executeHandler();
+      jest.advanceTimersByTime(actionDelays.discover);
+
+      const { payload } = await result.responseMessage;
+      expect(payload.tiles).toHaveLength(4);
+
+      for (let x = 0; x <= 1; x++) {
+        for (let y = 0; y <= 1; y++) {
+          const foundTiles = payload.tiles.filter(
+            tile => tile.x === board.size.x - x - 1 && tile.y === y
+          );
+          expect(foundTiles).toHaveLength(1);
+        }
+      }
+    });
+
+    it('should contain 4 nearby fields when player is in the lower left corner', async () => {
+      player.position = new Point(0, 40);
+      const result = executeHandler();
+      jest.advanceTimersByTime(actionDelays.discover);
+
+      const { payload } = await result.responseMessage;
+      expect(payload.tiles).toHaveLength(4);
+
+      const boardSizeY = board.size.goalArea * 2 + board.size.taskArea;
+      for (let x = 0; x <= 1; x++) {
+        for (let y = 0; y <= 1; y++) {
+          const foundTiles = payload.tiles.filter(
+            tile => tile.x === x && tile.y === boardSizeY - y - 1
+          );
+          expect(foundTiles).toHaveLength(1);
+        }
+      }
+    });
+
+    it('should contain 4 nearby fields when player is in the lower right corner', async () => {
+      player.position = new Point(10, 40);
+      const result = executeHandler();
+      jest.advanceTimersByTime(actionDelays.discover);
+
+      const { payload } = await result.responseMessage;
+      expect(payload.tiles).toHaveLength(4);
+
+      const boardSizeY = board.size.goalArea * 2 + board.size.taskArea;
+      for (let x = 0; x <= 1; x++) {
+        for (let y = 0; y <= 1; y++) {
+          const foundTiles = payload.tiles.filter(
+            tile => tile.x === board.size.x - x - 1 && tile.y === boardSizeY - y - 1
+          );
+          expect(foundTiles).toHaveLength(1);
+        }
+      }
+    });
 
     it('should list player ids inside fields', async () => {
       player.position = new Point(0, 0);
