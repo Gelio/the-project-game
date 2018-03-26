@@ -98,7 +98,7 @@ describe('[GM] handleDiscoveryRequest', () => {
       jest.advanceTimersByTime(actionDelays.discover);
 
       const { payload } = await result.responseMessage;
-      expect(payload.timestamp).toBe(Date.now());
+      expect(Math.abs(payload.timestamp - Date.now())).toBeLessThanOrEqual(5);
     });
 
     it('should contain 9 nearby fields', async () => {
@@ -134,56 +134,52 @@ describe('[GM] handleDiscoveryRequest', () => {
     });
 
     it('should contain 4 nearby fields when player is in the upper right corner', async () => {
-      player.position = new Point(10, 0);
+      player.position = new Point(9, 0);
       const result = executeHandler();
       jest.advanceTimersByTime(actionDelays.discover);
 
       const { payload } = await result.responseMessage;
       expect(payload.tiles).toHaveLength(4);
 
-      for (let x = 0; x <= 1; x++) {
+      const boardSizeX = board.size.x - 1;
+      for (let x = boardSizeX - 1; x <= boardSizeX; x++) {
         for (let y = 0; y <= 1; y++) {
-          const foundTiles = payload.tiles.filter(
-            tile => tile.x === board.size.x - x - 1 && tile.y === y
-          );
+          const foundTiles = payload.tiles.filter(tile => tile.x === x && tile.y === y);
           expect(foundTiles).toHaveLength(1);
         }
       }
     });
 
     it('should contain 4 nearby fields when player is in the lower left corner', async () => {
-      player.position = new Point(0, 40);
+      player.position = new Point(0, 39);
       const result = executeHandler();
       jest.advanceTimersByTime(actionDelays.discover);
 
       const { payload } = await result.responseMessage;
       expect(payload.tiles).toHaveLength(4);
 
-      const boardSizeY = board.size.goalArea * 2 + board.size.taskArea;
+      const boardSizeY = board.size.goalArea * 2 + board.size.taskArea - 1;
       for (let x = 0; x <= 1; x++) {
-        for (let y = 0; y <= 1; y++) {
-          const foundTiles = payload.tiles.filter(
-            tile => tile.x === x && tile.y === boardSizeY - y - 1
-          );
+        for (let y = boardSizeY - 1; y <= boardSizeY; y++) {
+          const foundTiles = payload.tiles.filter(tile => tile.x === x && tile.y === y);
           expect(foundTiles).toHaveLength(1);
         }
       }
     });
 
     it('should contain 4 nearby fields when player is in the lower right corner', async () => {
-      player.position = new Point(10, 40);
+      player.position = new Point(9, 39);
       const result = executeHandler();
       jest.advanceTimersByTime(actionDelays.discover);
 
       const { payload } = await result.responseMessage;
       expect(payload.tiles).toHaveLength(4);
 
-      const boardSizeY = board.size.goalArea * 2 + board.size.taskArea;
-      for (let x = 0; x <= 1; x++) {
-        for (let y = 0; y <= 1; y++) {
-          const foundTiles = payload.tiles.filter(
-            tile => tile.x === board.size.x - x - 1 && tile.y === boardSizeY - y - 1
-          );
+      const boardSizeX = board.size.x - 1;
+      const boardSizeY = board.size.goalArea * 2 + board.size.taskArea - 1;
+      for (let x = boardSizeX - 1; x <= boardSizeX; x++) {
+        for (let y = boardSizeY - 1; y <= boardSizeY; y++) {
+          const foundTiles = payload.tiles.filter(tile => tile.x === x && tile.y === y);
           expect(foundTiles).toHaveLength(1);
         }
       }
