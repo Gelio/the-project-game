@@ -331,7 +331,8 @@ export class GameMaster implements Service {
       this.options.pointsLimit,
       this.logger,
       this.uiController,
-      this.playersContainer
+      this.playersContainer,
+      this.options.actionDelays
     );
     this.uiController.updateBoard(this.game.board);
 
