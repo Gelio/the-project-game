@@ -336,7 +336,7 @@ export class GameMaster implements Service {
     this.uiController.updateBoard(this.game.board);
 
     this.periodicPieceGenerator = new PeriodicPieceGenerator(
-      this.game,
+      this.game.board,
       {
         checkInterval: this.options.generatePiecesInterval,
         piecesLimit: this.options.piecesLimit,
