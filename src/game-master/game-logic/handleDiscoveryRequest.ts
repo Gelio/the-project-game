@@ -11,22 +11,22 @@ import { MessageHandlerDependencies } from './MessageHandlerDependencies';
 
 import { Board } from '../models/Board';
 
-function getCorrectTiles(playerPosition: Point, board: Board): TileInfo[] {
+function getSurroundingTiles(playerPosition: Point, board: Board): TileInfo[] {
   const outTiles: TileInfo[] = [];
   const fromX = Math.max(0, playerPosition.x - 1);
   const fromY = Math.max(0, playerPosition.y - 1);
   const toX = Math.min(board.size.x - 1, playerPosition.x + 1);
   const toY = Math.min(board.size.goalArea * 2 + board.size.taskArea - 1, playerPosition.y + 1);
 
-  for (let i = fromX; i <= toX; i++) {
-    for (let j = fromY; j <= toY; j++) {
-      const tile = board.getTileAtPosition({ x: i, y: j });
+  for (let x = fromX; x <= toX; x++) {
+    for (let y = fromY; y <= toY; y++) {
+      const tile = board.getTileAtPosition(new Point(x, y));
       outTiles.push({
-        x: i,
-        y: j,
-        playerId: tile.player === null ? null : tile.player.playerId,
-        piece: tile.piece === null ? false : true,
-        distanceToClosestPiece: board.getDistanceToClosestPiece({ x: tile.x, y: tile.y })
+        x: x,
+        y: y,
+        playerId: !!tile.player ? tile.player.playerId : null,
+        piece: !!tile.piece ? true : false,
+        distanceToClosestPiece: board.getDistanceToClosestPiece(new Point(tile.x, tile.y))
       });
     }
   }
@@ -39,20 +39,19 @@ export function handleDiscoveryRequest(
   sender: Player,
   _discoveryRequest: DiscoveryRequest
 ): ProcessMessageResult<DiscoveryResponse> {
-  if (!sender.position) {
+  const playerPosition = sender.position;
+  if (!playerPosition) {
     return {
       valid: false,
       reason: 'Invalid player position. Something is wrong with GM'
     };
   }
 
-  const playerPosition = sender.position;
-
-  const responsePromise = createDelay(actionDelays.destroy).then((): DiscoveryResponse => ({
+  const responsePromise = createDelay(actionDelays.discover).then((): DiscoveryResponse => ({
     type: 'DISCOVERY_RESPONSE',
     payload: {
       timestamp: Date.now(),
-      tiles: getCorrectTiles(playerPosition, board)
+      tiles: getSurroundingTiles(playerPosition, board)
     },
     recipientId: sender.playerId,
     senderId: -1
