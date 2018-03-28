@@ -6,14 +6,11 @@ import { DiscoveryResponse, TileInfo } from '../../interfaces/responses/Discover
 
 import { Player } from '../Player';
 import { ProcessMessageResult } from '../ProcessMessageResult';
+
 import { MessageHandlerDependencies } from './MessageHandlerDependencies';
 
 import { Board } from '../models/Board';
 import { Piece } from '../models/Piece';
-
-function getDistanceToPiece(tilePosition: Point, piece: Piece): number {
-  return Math.abs(tilePosition.x - piece.position.x) + Math.abs(tilePosition.y - piece.position.y);
-}
 
 function getDistanceToClosestPiece(tilePosition: Point, pieces: Piece[]): number {
   if (pieces.length === 0) {
@@ -21,7 +18,7 @@ function getDistanceToClosestPiece(tilePosition: Point, pieces: Piece[]): number
   }
   let minDistance: number = Infinity;
   for (const p of pieces) {
-    const distance = getDistanceToPiece(tilePosition, p);
+    const distance = Point.manhattanDistance(tilePosition, p.position);
     if (minDistance > distance) {
       minDistance = distance;
     }
