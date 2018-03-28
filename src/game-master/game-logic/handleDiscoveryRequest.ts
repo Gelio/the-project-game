@@ -10,22 +10,6 @@ import { ProcessMessageResult } from '../ProcessMessageResult';
 import { MessageHandlerDependencies } from './MessageHandlerDependencies';
 
 import { Board } from '../models/Board';
-import { Piece } from '../models/Piece';
-
-function getDistanceToClosestPiece(tilePosition: Point, pieces: Piece[]): number {
-  if (pieces.length === 0) {
-    return -1;
-  }
-  let minDistance: number = Infinity;
-  for (const p of pieces) {
-    const distance = Point.manhattanDistance(tilePosition, p.position);
-    if (minDistance > distance) {
-      minDistance = distance;
-    }
-  }
-
-  return minDistance;
-}
 
 function getCorrectTiles(playerPosition: Point, board: Board): TileInfo[] {
   const outTiles: TileInfo[] = [];
@@ -42,7 +26,7 @@ function getCorrectTiles(playerPosition: Point, board: Board): TileInfo[] {
         y: j,
         playerId: tile.player === null ? null : tile.player.playerId,
         piece: tile.piece === null ? false : true,
-        distanceToClosestPiece: getDistanceToClosestPiece({ x: tile.x, y: tile.y }, board.pieces)
+        distanceToClosestPiece: board.getDistanceToClosestPiece({ x: tile.x, y: tile.y })
       });
     }
   }
