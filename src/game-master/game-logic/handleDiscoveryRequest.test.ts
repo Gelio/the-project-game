@@ -14,7 +14,7 @@ import { ValidMessageResult } from '../ProcessMessageResult';
 
 import { handleDiscoveryRequest } from './handleDiscoveryRequest';
 
-const TIMESTAMP_DIFFERENCE_THRESHOLD: number = 5;
+const TIMESTAMP_DIFFERENCE_THRESHOLD = 5;
 
 describe('[GM] handleDiscoveryRequest', () => {
   let board: Board;

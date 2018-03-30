@@ -24,8 +24,8 @@ function getSurroundingTiles(playerPosition: Point, board: Board): TileInfo[] {
       outTiles.push({
         x: x,
         y: y,
-        playerId: !!tile.player ? tile.player.playerId : null,
-        piece: !!tile.piece ? true : false,
+        playerId: tile.player ? tile.player.playerId : null,
+        piece: !!tile.piece,
         distanceToClosestPiece: board.getDistanceToClosestPiece(new Point(tile.x, tile.y))
       });
     }
