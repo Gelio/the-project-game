@@ -155,6 +155,18 @@ export class Board {
     this.getTileAtPosition(player.position).player = player;
   }
 
+  public getDistanceToClosestPiece(tilePosition: Point): number {
+    if (this.pieces.length === 0) {
+      return -1;
+    }
+
+    return this.pieces.reduce(
+      (minDistance, piece) =>
+        Math.min(Point.manhattanDistance(tilePosition, piece.position), minDistance),
+      Infinity
+    );
+  }
+
   private generateBoard() {
     const tileGenerator = new TileGenerator();
     const tiles = tileGenerator.generateBoardTiles(this.size);
