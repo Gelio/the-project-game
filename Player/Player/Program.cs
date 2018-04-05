@@ -33,6 +33,7 @@ namespace Player
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine(e.Message);
                     Console.ResetColor();
+                    communicator.Disconnect();
                     return;
                 }
                 catch (SocketException e)
@@ -40,6 +41,7 @@ namespace Player
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine($"Connection failed: {e.Message}");
                     Console.ResetColor();
+                    communicator.Disconnect();
                     return;
                 }
                 catch (IOException e)
@@ -47,6 +49,7 @@ namespace Player
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine(e.Message);
                     Console.ResetColor();
+                    communicator.Disconnect();
                     return;
                 }
 
@@ -56,11 +59,13 @@ namespace Player
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.WriteLine("There are no games available.");
                     Console.ResetColor();
+                    communicator.Disconnect();
                     return;
                 }
 
                 foreach (var game in gamesList)
                     Console.WriteLine(game);
+                communicator.Disconnect();
                 return;
             }
 
@@ -107,6 +112,7 @@ namespace Player
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine(e.Message);
+                player.Disconnect();
                 Console.ResetColor();
                 return;
             }

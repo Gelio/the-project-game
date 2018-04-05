@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using Player.Messages;
 using Player.Common;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 
 namespace Player
 {
@@ -68,7 +69,11 @@ namespace Player
             var helloMessageSerialized = JsonConvert.SerializeObject(helloMessage);
             _communicator.Send(helloMessageSerialized);
 
-            var receivedMessageSerialized = _communicator.Receive();
+            var receivedMessageSerializedTask = Task.Run(() => _communicator.Receive());
+            if (!receivedMessageSerializedTask.Wait(Timeout))
+                throw new TimeoutException($"Did not receive any message after {Timeout}ms");
+
+            var receivedMessageSerialized = receivedMessageSerializedTask.Result;
 
             var receivedGenericMessage = JsonConvert.DeserializeObject<Message>(receivedMessageSerialized);
             if (receivedGenericMessage.Type == Consts.PlayerRejected)
