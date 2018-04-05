@@ -69,10 +69,18 @@ namespace Player
             var helloMessageSerialized = JsonConvert.SerializeObject(helloMessage);
             _communicator.Send(helloMessageSerialized);
 
-            var receivedMessageSerializedTask = Task.Run(() => _communicator.Receive());
-            if (!receivedMessageSerializedTask.Wait(Timeout))
-                throw new TimeoutException($"Did not receive any message after {Timeout}ms");
 
+            Task<string> receivedMessageSerializedTask;
+            try
+            {
+                receivedMessageSerializedTask = Task.Run(() => _communicator.Receive());
+                if (!receivedMessageSerializedTask.Wait(Timeout))
+                    throw new TimeoutException($"Did not receive any message after {Timeout}ms");
+            }
+            catch (AggregateException e)
+            {
+                throw e.InnerException;
+            }
             var receivedMessageSerialized = receivedMessageSerializedTask.Result;
 
             var receivedGenericMessage = JsonConvert.DeserializeObject<Message>(receivedMessageSerialized);

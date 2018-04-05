@@ -52,7 +52,14 @@ namespace Player
                     communicator.Disconnect();
                     return;
                 }
-
+                catch (OperationCanceledException e)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(e.Message);
+                    Console.ResetColor();
+                    communicator.Disconnect();
+                    return;
+                }
 
                 if (gamesList.Count == 0)
                 {
