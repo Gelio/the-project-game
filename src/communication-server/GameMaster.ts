@@ -2,6 +2,7 @@ import { LoggerInstance } from 'winston';
 
 import { Communicator } from '../common/Communicator';
 import { CustomEventEmitter } from '../common/CustomEventEmitter';
+import { REQUEST_TYPE } from '../common/REQUEST_TYPE';
 
 import { Message } from '../interfaces/Message';
 import { MessageWithRecipient } from '../interfaces/MessageWithRecipient';
@@ -68,7 +69,7 @@ export class GameMaster extends CustomEventEmitter {
   }
 
   private handleMessage(message: MessageWithRecipient<any>) {
-    if (message.type === 'UNREGISTER_GAME_REQUEST') {
+    if (message.type === REQUEST_TYPE.UNREGISTER_GAME_REQUEST) {
       this.onGameFinished();
 
       const response: UnregisterGameResponse = {
