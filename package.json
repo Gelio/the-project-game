@@ -27,7 +27,6 @@
     "tsnode": "ts-node",
     "game-master": "ts-node src/start-game-master.ts",
     "communication-server": "ts-node src/start-communication-server.ts",
-    "player": "ts-node src/start-player.ts",
     "precommit": "lint-staged",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -51,8 +50,7 @@
       "!**/*.d.ts",
       "!**/node_modules/**",
       "!**/vendor/**",
-      "!**/coverage/**",
-      "!**/src/player/**"
+      "!**/coverage/**"
     ]
   },
   "lint-staged": {
