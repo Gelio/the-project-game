@@ -159,6 +159,7 @@ describe('[GM] Board', () => {
     describe('movePlayer', () => {
       it('should move player to new position', () => {
         board.addPlayer(player);
+        // FIXME: set `newPosition` based on player's position
         const newPosition = new Point(1, 2);
 
         board.movePlayer(player, newPosition);
@@ -168,6 +169,7 @@ describe('[GM] Board', () => {
 
       it('should throw an error when player position does not match the one on the board', () => {
         board.addPlayer(player);
+        // FIXME: set `newPosition` based on player's position
         const newPosition = new Point(2, 4);
 
         player.position = newPosition;

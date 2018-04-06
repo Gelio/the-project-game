@@ -15,6 +15,8 @@ namespace Player
         public string ServerHostName => _serverHostName;
         public int ServerPort => _serverPort;
 
+        private const int MAX_MSG_LEN = 10000;
+
         public Communicator(string hostname, int port)
         {
             _serverHostName = hostname;
@@ -70,6 +72,10 @@ namespace Player
             if (messageLen == 0)
             {
                 throw new OperationCanceledException("Disconnected from communication server");
+            }
+            if (messageLen > MAX_MSG_LEN)
+            {
+                throw new OperationCanceledException("Received message was too large");
             }
 
             // Initialize buffer and read the actual message

@@ -86,6 +86,7 @@ export class Board {
       throw new Error('Piece already added');
     }
 
+    // TODO: check if piece is picked up and if so, do not place it on the board
     const tile = this.getTileAtPosition(piece.position);
     if (tile.piece) {
       throw new Error('Piece already exists at that position');
@@ -152,6 +153,18 @@ export class Board {
     }
 
     this.getTileAtPosition(player.position).player = player;
+  }
+
+  public getDistanceToClosestPiece(tilePosition: Point): number {
+    if (this.pieces.length === 0) {
+      return -1;
+    }
+
+    return this.pieces.reduce(
+      (minDistance, piece) =>
+        Math.min(Point.manhattanDistance(tilePosition, piece.position), minDistance),
+      Infinity
+    );
   }
 
   private generateBoard() {

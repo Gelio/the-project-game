@@ -1,5 +1,5 @@
-import { Message } from '../Message';
+import { PlayerRequest } from '../PlayerRequest';
 
-export interface DeletePieceRequest extends Message<undefined> {
+export interface DeletePieceRequest extends PlayerRequest<undefined> {
   type: 'DELETE_PIECE_REQUEST';
 }

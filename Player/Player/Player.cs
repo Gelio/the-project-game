@@ -7,6 +7,8 @@ using System.Linq;
 using Player.Messages.Responses;
 using Player.Messages.Requests;
 using Player.GameObjects;
+using System.Net.Sockets;
+using System.Threading.Tasks;
 
 namespace Player
 {
@@ -82,7 +84,19 @@ namespace Player
             var helloMessageSerialized = JsonConvert.SerializeObject(helloMessage);
             _communicator.Send(helloMessageSerialized);
 
-            var receivedMessageSerialized = _communicator.Receive();
+
+            Task<string> receivedMessageSerializedTask;
+            try
+            {
+                receivedMessageSerializedTask = Task.Run(() => _communicator.Receive());
+                if (!receivedMessageSerializedTask.Wait(Timeout))
+                    throw new TimeoutException($"Did not receive any message after {Timeout}ms");
+            }
+            catch (AggregateException e)
+            {
+                throw e.InnerException;
+            }
+            var receivedMessageSerialized = receivedMessageSerializedTask.Result;
 
             var receivedGenericMessage = JsonConvert.DeserializeObject<Message>(receivedMessageSerialized);
             if (receivedGenericMessage.Type == Consts.PlayerRejected)
