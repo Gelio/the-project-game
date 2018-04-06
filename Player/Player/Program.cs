@@ -33,6 +33,7 @@ namespace Player
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine(e.Message);
                     Console.ResetColor();
+                    communicator.Disconnect();
                     return;
                 }
                 catch (SocketException e)
@@ -40,6 +41,7 @@ namespace Player
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine($"Connection failed: {e.Message}");
                     Console.ResetColor();
+                    communicator.Disconnect();
                     return;
                 }
                 catch (IOException e)
@@ -47,20 +49,30 @@ namespace Player
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine(e.Message);
                     Console.ResetColor();
+                    communicator.Disconnect();
                     return;
                 }
-
+                catch (OperationCanceledException e)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(e.Message);
+                    Console.ResetColor();
+                    communicator.Disconnect();
+                    return;
+                }
 
                 if (gamesList.Count == 0)
                 {
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.WriteLine("There are no games available.");
                     Console.ResetColor();
+                    communicator.Disconnect();
                     return;
                 }
 
                 foreach (var game in gamesList)
                     Console.WriteLine(game);
+                communicator.Disconnect();
                 return;
             }
 
@@ -72,15 +84,23 @@ namespace Player
             try
             {
                 configObject = ReadConfigFile(configFilePath);
+                configObject.GameName = args[2];
             }
             catch (FileNotFoundException)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"Error: Config file {configFilePath} does not exist!");
+                Console.ResetColor();
+                return;
+            }
+            catch (Exception e)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Error: {e.Message}");
+                Console.ResetColor();
                 return;
             }
 
-            configObject.GameName = args[2];
             var player = new Player(communicator, configObject);
 
             try
@@ -107,6 +127,7 @@ namespace Player
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine(e.Message);
+                player.Disconnect();
                 Console.ResetColor();
                 return;
             }
