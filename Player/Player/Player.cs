@@ -56,6 +56,7 @@ namespace Player
             var gamesList = _gameService.GetGamesList();
             Game = gamesList.FirstOrDefault(x => x.Name == GameName);
 
+
             if (Game == null)
             {
                 throw new OperationCanceledException("Game not found");

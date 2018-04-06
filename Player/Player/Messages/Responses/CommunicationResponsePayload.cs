@@ -1,4 +1,5 @@
-using Player.GameObjects;
+using System.Collections.Generic;
+using Player.Messages.DTO;
 using Player.Interfaces;
 
 namespace Player.Messages.Responses
@@ -7,6 +8,6 @@ namespace Player.Messages.Responses
     {
         public int TargetPlayerId;
         public bool Accepted;
-        public Board Board;
+        public List<TileCommunicationDTO> Board;
     }
 }

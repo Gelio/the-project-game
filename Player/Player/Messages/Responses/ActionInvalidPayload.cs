@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Player.Interfaces;
 
 namespace Player.Messages.Responses
 {
-    class ActionInvalidPayload
+    public class ActionInvalidPayload : IPayload
     {
     }
 }

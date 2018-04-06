@@ -1,4 +1,4 @@
-using Player.GameObjects;
+using Player.Messages.DTO;
 using Player.Interfaces;
 using System.Collections.Generic;
 
@@ -8,7 +8,7 @@ namespace Player.Messages.Responses
     {
         public long Timestamp;
         public int CurrentPositionDistanceToClosestPiece;
-        public IList<PlayerPosition> PlayerPositions;
+        public IList<PlayerPositionDTO> PlayerPositions;
         public int Team1Score;
         public int Team2Score;
     }

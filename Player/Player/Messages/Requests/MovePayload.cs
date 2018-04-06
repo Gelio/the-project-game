@@ -7,6 +7,6 @@ namespace Player.Messages.Requests
     public class MovePayload : IPayload
     {
         [JsonProperty("direction")]
-        public Direction Direction;
+        public string Direction;
     }
 }

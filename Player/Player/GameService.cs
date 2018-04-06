@@ -48,7 +48,9 @@ namespace Player
             var result = task.Result;
 
             var json = JsonConvert.DeserializeObject<Message<ListGamesResponsePayload>>(result);
-            var gamesList = json.Payload.Games;
+            var gamesDto = json.Payload.Games;
+
+            // TODO: Map GameDto list to Game list!!!!
 
             return gamesList;
         }

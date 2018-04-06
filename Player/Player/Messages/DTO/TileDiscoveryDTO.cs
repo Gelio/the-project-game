@@ -1,6 +1,6 @@
-namespace Player.GameObjects
+namespace Player.Messages.DTO
 {
-    public class Tile
+    public class TileDiscoveryDTO
     {
         public int X;
         public int Y;
