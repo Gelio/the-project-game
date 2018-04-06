@@ -2,6 +2,8 @@ import { createServer, Server, Socket } from 'net';
 import { LoggerInstance } from 'winston';
 
 import { Communicator } from '../common/Communicator';
+import { REQUEST_TYPE } from '../common/REQUEST_TYPE';
+
 import { Game } from './Game';
 import { GameMaster } from './GameMaster';
 import { MessageRouter } from './MessageRouter';
@@ -130,11 +132,11 @@ export class CommunicationServer implements Service {
         this.handlePlayer(communicator, <PlayerHelloMessage>message);
         break;
 
-      case 'LIST_GAMES_REQUEST':
+      case REQUEST_TYPE.LIST_GAMES_REQUEST:
         this.handleListGamesRequest(communicator);
         break;
 
-      case 'REGISTER_GAME_REQUEST':
+      case REQUEST_TYPE.REGISTER_GAME_REQUEST:
         this.handleGameMaster(communicator, <RegisterGameRequest>message);
         break;
 
