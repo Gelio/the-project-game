@@ -1,7 +1,7 @@
 import { createConnection } from 'net';
 import { LoggerInstance } from 'winston';
 
-import { bindObjectProperties } from '../common/bindObjectProperties';
+import { bindObjectMethods } from '../common/bindObjectMethods';
 import { Communicator } from '../common/Communicator';
 import { LoggerFactory } from '../common/logging/LoggerFactory';
 import { UITransport } from '../common/logging/UITransport';
@@ -86,7 +86,7 @@ export class GameMaster implements Service {
 
     this.failedRegistrations = 0;
 
-    bindObjectProperties(this.messageHandlers, this);
+    bindObjectMethods(this.messageHandlers, this);
     this.destroy = this.destroy.bind(this);
     this.handleMessage = this.handleMessage.bind(this);
   }

@@ -1,6 +1,7 @@
 using Newtonsoft.Json;
 using Player.Common;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
 using System.Runtime.Serialization.Json;
@@ -20,54 +21,132 @@ namespace Player
 
             if (args[2] == "-l")
             {
+                IList<Game> gamesList;
                 try
                 {
                     communicator.Connect();
+                    var gameService = new GameService(communicator);
+                    gamesList = gameService.GetGamesList();
+                }
+                catch (TimeoutException e)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(e.Message);
+                    Console.ResetColor();
+                    communicator.Disconnect();
+                    return;
                 }
                 catch (SocketException e)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine($"Connection failed: {e.Message}");
+                    Console.ResetColor();
+                    communicator.Disconnect();
                     return;
                 }
-                var gameService = new GameService(communicator);
-                var gamesList = gameService.GetGamesList();
+                catch (IOException e)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(e.Message);
+                    Console.ResetColor();
+                    communicator.Disconnect();
+                    return;
+                }
+                catch (OperationCanceledException e)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(e.Message);
+                    Console.ResetColor();
+                    communicator.Disconnect();
+                    return;
+                }
 
                 if (gamesList.Count == 0)
                 {
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.WriteLine("There are no games available.");
+                    Console.ResetColor();
+                    communicator.Disconnect();
                     return;
                 }
 
                 foreach (var game in gamesList)
                     Console.WriteLine(game);
+                communicator.Disconnect();
                 return;
             }
 
 
             PlayerConfig configObject;
             string configFilePath = "player.config.json";
-            if (args.Length >= 4)
-            {
-                configFilePath = args[3];
-            }
+            if (args.Length >= 4) configFilePath = args[3];
 
             try
             {
                 configObject = ReadConfigFile(configFilePath);
+                configObject.GameName = args[2];
             }
             catch (FileNotFoundException)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"Error: Config file {configFilePath} does not exist!");
+                Console.ResetColor();
+                return;
+            }
+            catch (Exception e)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Error: {e.Message}");
+                Console.ResetColor();
                 return;
             }
 
-            configObject.GameName = args[2];
             var player = new Player(communicator, configObject);
 
-            BeginGame(player);
+            try
+            {
+                player.Start();
+            }
+            catch (PlayerRejectedException e)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Connection rejected: {e.Message}");
+                player.Disconnect();
+                Console.ResetColor();
+                return;
+            }
+            catch (OperationCanceledException e)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(e.Message);
+                player.Disconnect();
+                Console.ResetColor();
+                return;
+            }
+            catch (TimeoutException e)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(e.Message);
+                player.Disconnect();
+                Console.ResetColor();
+                return;
+            }
+            catch (SocketException e)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Connection failed: {e.Message}");
+                player.Disconnect();
+                Console.ResetColor();
+                return;
+            }
+            catch (IOException e)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(e.Message);
+                player.Disconnect();
+                Console.ResetColor();
+                return;
+            }
         }
 
         static PlayerConfig ReadConfigFile(string configFilePath)
@@ -87,27 +166,5 @@ namespace Player
             return configFileObject;
         }
 
-        static void BeginGame(Player player)
-        {
-            try
-            {
-                player.ConnectToServer();
-            }
-            catch (PlayerRejectedException e)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"Connection rejected: {e.Message}");
-                player.Disconnect();
-                return;
-            }
-            catch (SocketException e)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"Connection failed: {e.Message}");
-                player.Disconnect();
-                return;
-            }
-            player.WaitForGameStart();
-        }
     }
 }

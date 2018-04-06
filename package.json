@@ -51,7 +51,8 @@
       "!**/*.d.ts",
       "!**/node_modules/**",
       "!**/vendor/**",
-      "!**/coverage/**"
+      "!**/coverage/**",
+      "!**/src/player/**"
     ]
   },
   "lint-staged": {
