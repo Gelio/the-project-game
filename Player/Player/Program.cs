@@ -84,21 +84,23 @@ namespace Player
             try
             {
                 configObject = ReadConfigFile(configFilePath);
+                configObject.GameName = args[2];
             }
             catch (FileNotFoundException)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"Error: Config file {configFilePath} does not exist!");
+                Console.ResetColor();
                 return;
             }
             catch (Exception e)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"Error: {e.Message}");
+                Console.ResetColor();
                 return;
             }
 
-            configObject.GameName = args[2];
             var player = new Player(communicator, configObject);
 
             try
