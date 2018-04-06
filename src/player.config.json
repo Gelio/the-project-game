@@ -1,9 +1,0 @@
-{
-  "serverHostname": "localhost",
-  "serverPort": 4200,
-  "askLevel": 10,
-  "respondLevel": 8,
-  "teamNumber": 1,
-  "teamLeader": false,
-  "timeout": 10000
-}
