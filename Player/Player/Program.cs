@@ -91,6 +91,12 @@ namespace Player
                 Console.WriteLine($"Error: Config file {configFilePath} does not exist!");
                 return;
             }
+            catch (Exception e)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Error: {e.Message}");
+                return;
+            }
 
             configObject.GameName = args[2];
             var player = new Player(communicator, configObject);
