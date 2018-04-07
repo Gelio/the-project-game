@@ -98,10 +98,9 @@ namespace Player.Tests
             var player = new Player(_communicator.Object, _playerConfig, _gameService.Object);
 
             // When
-            var result = player.WaitForGameStart();
+            player.WaitForGameStart();
 
             //Then
-            Assert.That(result, Is.True);
             Assert.That(player.LeaderId, Is.EqualTo(expectedLeaderId));
             Assert.That(player.TeamMembersIds, Is.EquivalentTo(expectedTeamMembersIds));
         }

@@ -7,6 +7,6 @@ namespace Player.Messages.Responses
     public class DiscoveryResponsePayload : IPayload
     {
         public long Timestamp;
-        List<TileDiscoveryDTO> Tiles;
+        public List<TileDiscoveryDTO> Tiles;
     }
 }

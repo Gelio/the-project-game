@@ -25,9 +25,8 @@ namespace Player
         public int ServerPort => _communicator.ServerPort;
         public IList<int> TeamMembersIds;
         public int LeaderId;
-
         public Game Game;
-
+        public List<Tile> Board = new List<Tile>();
         private ICommunicator _communicator;
         private IGameService _gameService;
 
@@ -49,17 +48,22 @@ namespace Player
             GetGameInfo();
             ConnectToServer();
             WaitForGameStart();
+            // RefreshBoardState(); -- gives us info about all teammates' (+ ours) initial position
+            Play();
         }
 
         public void GetGameInfo()
         {
             var gamesList = _gameService.GetGamesList();
             Game = gamesList.FirstOrDefault(x => x.Name == GameName);
-
-
             if (Game == null)
             {
                 throw new OperationCanceledException("Game not found");
+            }
+
+            for (int i = 0; i < Game.BoardSize.X * (Game.BoardSize.GoalArea * 2 + Game.BoardSize.TaskArea); i++)
+            {
+                Board.Add(new Tile());
             }
         }
 
@@ -115,7 +119,7 @@ namespace Player
             _communicator.Disconnect();
             Console.WriteLine("Player disconnected.");
         }
-        public bool WaitForGameStart()
+        public void WaitForGameStart()
         {
             string receivedMessageSerialized;
             while (true)
@@ -125,15 +129,50 @@ namespace Player
                 var receivedGenericMessage = JsonConvert.DeserializeObject<Message>(receivedMessageSerialized);
 
                 if (receivedGenericMessage.Type == Consts.GameStarted) break;
-                // if (receivedGenericMessage.Type == SOMETHING_ELSE) doSomethingElse;
             }
 
             var message = JsonConvert.DeserializeObject<Message<GameStartedPayload>>(receivedMessageSerialized);
 
             TeamMembersIds = message.Payload.TeamInfo[TeamId].Players;
             LeaderId = message.Payload.TeamInfo[TeamId].LeaderId;
+        }
 
-            return true;
+        public void Play()
+        {
+            while (true)
+            {
+                Discover();
+                System.Threading.Thread.Sleep(10000);
+            }
+        }
+
+        public void Discover()
+        {
+            var message = new Message<DiscoveryPayload>()
+            {
+                Type = Consts.DiscoveryRequest,
+                RecipientId = Consts.GameMasterId,
+                SenderId = Id
+            };
+            var messageSerialized = JsonConvert.SerializeObject(message);
+            _communicator.Send(messageSerialized);
+
+            var receivedSerialized = _communicator.Receive();
+            var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
+            if (receivedRaw.Type != Consts.DiscoveryResponse)
+                throw new InvalidTypeReceivedException($"Excpected: {Consts.DiscoveryResponse} Received: {receivedRaw.Type}");
+
+            var received = JsonConvert.DeserializeObject<Message<DiscoveryResponsePayload>>(receivedSerialized);
+            foreach (var tileDTO in received.Payload.Tiles)
+            {
+                var tile = Board[tileDTO.X + Game.BoardSize.X * tileDTO.Y];
+                tile = AutoMapper.Mapper.Map<Tile>(tileDTO);
+                tile.Timestamp = received.Payload.Timestamp;
+                if (tileDTO.Piece)
+                {
+                    tile.Piece = new Piece();
+                }
+            }
         }
     }
 }
