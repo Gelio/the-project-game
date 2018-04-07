@@ -8,6 +8,7 @@ using Player.Common;
 using Player.Interfaces;
 using Newtonsoft.Json;
 using Player.Messages.Responses;
+using Player.Messages.DTO;
 
 namespace Player.Tests
 {
@@ -73,16 +74,16 @@ namespace Player.Tests
                 Type = Common.Consts.GameStarted,
                 Payload = new GameStartedPayload
                 {
-                    TeamInfo = new Dictionary<int, TeamInfo>
+                    TeamInfo = new Dictionary<int, TeamInfoDTO>
                     {
-                        {1, new TeamInfo
+                        {1, new TeamInfoDTO
                             {
                                 LeaderId = expectedLeaderId,
                                 Players = expectedTeamMembersIds
                             }
                         },
 
-                        {2, new TeamInfo
+                        {2, new TeamInfoDTO
                             {
                                 LeaderId = 9,
                                 Players = new List<int> {9,10,11,12}
@@ -107,6 +108,7 @@ namespace Player.Tests
         [Test]
         public void GetsChosenGameInfo()
         {
+            // TODO Setup `_gameService.GetGamesList()` to return List<Game> object instead of DTO
             var gamesListMessage = JsonConvert.DeserializeObject<Message<ListGamesResponsePayload>>(Consts.LIST_GAMES_RESPONSE);
             var gamesList = gamesListMessage.Payload.Games;
             _gameService.Setup(x => x.GetGamesList()).Returns(gamesList);
@@ -121,6 +123,7 @@ namespace Player.Tests
         [Test]
         public void NoChosenGameAvailable()
         {
+            // TODO Setup `_gameService.GetGamesList()` to return List<Game> object instead of DTO
             var gamesListMessage = JsonConvert.DeserializeObject<Message<ListGamesResponsePayload>>(Consts.EMPTY_LIST_GAMES_RESPONSE);
             var gamesList = gamesListMessage.Payload.Games;
             _gameService.Setup(x => x.GetGamesList()).Returns(gamesList);

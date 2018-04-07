@@ -50,7 +50,7 @@ namespace Player
             var json = JsonConvert.DeserializeObject<Message<ListGamesResponsePayload>>(result);
             var gamesDto = json.Payload.Games;
 
-            // TODO: Map GameDto list to Game list!!!!
+            // TODO Use Automapper to map GameDTO --> Game
 
             return gamesList;
         }

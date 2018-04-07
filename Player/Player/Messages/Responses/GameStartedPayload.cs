@@ -6,6 +6,6 @@ namespace Player.Messages.Responses
 {
     public class GameStartedPayload : IPayload
     {
-        public List<TeamInfoDTO> TeamInfo;
+        public Dictionary<int, TeamInfoDTO> TeamInfo;
     }
 }
