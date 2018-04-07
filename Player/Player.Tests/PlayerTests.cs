@@ -9,6 +9,7 @@ using Player.Interfaces;
 using Newtonsoft.Json;
 using Player.Messages.Responses;
 using Player.Messages.DTO;
+using Player.GameObjects;
 
 namespace Player.Tests
 {
@@ -109,8 +110,71 @@ namespace Player.Tests
         public void GetsChosenGameInfo()
         {
             // TODO Setup `_gameService.GetGamesList()` to return List<Game> object instead of DTO
-            var gamesListMessage = JsonConvert.DeserializeObject<Message<ListGamesResponsePayload>>(Consts.LIST_GAMES_RESPONSE);
-            var gamesList = gamesListMessage.Payload.Games;
+            List<Game> gamesList = new List<Game>
+            {
+                new Game
+                {
+                    Name = "Default",
+                    Description = "Desc",
+
+                    //TeamSizes = new Dictionary<string, int>()
+                    //{
+                    //    { "1", 3 },
+                    //    { "2", 4 }
+                    //},
+                    //BoardSize = new BoardSize
+                    //{
+                    //    X = 40,
+                    //    GoalArea = 2,
+                    //    TaskArea = 40
+                    //},
+                    MaxRounds = 5,
+                    GoalLimit = 15,
+                    //Delays = new Delays
+                    //{
+                    //    Move = 4000,
+                    //    Pick = 100,
+                    //    Discover = 2500,
+                    //    Destroy = 1000,
+                    //    Test = 3000,
+                    //    CommunicationAccept = 4000,
+                    //    CommunicationRequest = 4000,
+                    //    TryPiece = 4000
+                    //}
+                },
+                new Game
+                {
+                    Name = "Default2",
+                    Description = "Desc2",
+
+                    //TeamSizes = new Dictionary<string, int>()
+                    //{
+                    //    { "1", 32 },
+                    //    { "2", 42 }
+                    //},
+                    //BoardSize = new BoardSize
+                    //{
+                    //    X = 40,
+                    //    GoalArea = 2,
+                    //    TaskArea = 40
+                    //},
+                    MaxRounds = 5,
+                    GoalLimit = 15,
+                    //Delays = new Delays
+                    //{
+                    //    Move = 4000,
+                    //    Pick = 100,
+                    //    Discover = 2500,
+                    //    Destroy = 1000,
+                    //    Test = 3000,
+                    //    CommunicationAccept = 4000,
+                    //    CommunicationRequest = 4000,
+                    //    TryPiece = 4000
+                    //}
+                },
+
+            };
+
             _gameService.Setup(x => x.GetGamesList()).Returns(gamesList);
 
             var player = new Player(_communicator.Object, _playerConfig, _gameService.Object);
@@ -124,8 +188,11 @@ namespace Player.Tests
         public void NoChosenGameAvailable()
         {
             // TODO Setup `_gameService.GetGamesList()` to return List<Game> object instead of DTO
-            var gamesListMessage = JsonConvert.DeserializeObject<Message<ListGamesResponsePayload>>(Consts.EMPTY_LIST_GAMES_RESPONSE);
-            var gamesList = gamesListMessage.Payload.Games;
+            //var gamesListMessage = JsonConvert.DeserializeObject<Message<ListGamesResponsePayload>>(Consts.EMPTY_LIST_GAMES_RESPONSE);
+            //var gamesListDTO = gamesListMessage.Payload.Games;
+            //var gamesList = AutoMapper.Mapper.Map<List<Game>>(gamesListDTO);
+            List<Game> gamesList = new List<Game>();
+
             _gameService.Setup(x => x.GetGamesList()).Returns(gamesList);
 
             var player = new Player(_communicator.Object, _playerConfig, _gameService.Object);

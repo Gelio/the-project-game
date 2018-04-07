@@ -1,6 +1,7 @@
 using Newtonsoft.Json;
 using Player.Common;
 using Player.GameObjects;
+using Player.Messages.DTO;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,6 +13,8 @@ namespace Player
     {
         static void Main(string[] args)
         {
+            MapperInitializer.InitializeMapper();
+
             if (args.Length < 3)
             {
                 Console.WriteLine("player server_ip server_port -l\nplayer server_ip server_port game_name [config_file_path]");
@@ -172,6 +175,5 @@ namespace Player
 
             return configFileObject;
         }
-
     }
 }

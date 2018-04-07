@@ -10,6 +10,11 @@ namespace Player.Tests
     [TestFixture]
     class GameServiceTests
     {
+        [OneTimeSetUp]
+        public void Setup()
+        {
+            MapperInitializer.InitializeMapper();
+        }
 
         [Test]
         public void GetsGameList()
