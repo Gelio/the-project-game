@@ -5,8 +5,15 @@ namespace Player
 {
     public class ConfigFileReader
     {
+        private string _defaultConfigFilePath = "player.config.json";
+
         public PlayerConfig ReadConfigFile(string configFilePath)
         {
+            if (string.IsNullOrEmpty(configFilePath))
+            {
+                configFilePath = _defaultConfigFilePath;
+            }
+
             if (!File.Exists(configFilePath))
             {
                 throw new FileNotFoundException();
@@ -18,6 +25,11 @@ namespace Player
                 JsonSerializer serializer = new JsonSerializer();
                 configFileObject = (PlayerConfig)serializer.Deserialize(file, typeof(PlayerConfig));
             };
+
+            if(configFileObject == null)
+            {
+                throw new InvalidDataException();
+            }
 
             return configFileObject;
         }

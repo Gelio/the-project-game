@@ -83,7 +83,7 @@ namespace Player
 
             ConfigFileReader configFileReader = new ConfigFileReader();
             PlayerConfig configObject;
-            string configFilePath = "player.config.json";
+            string configFilePath = String.Empty;
             if (args.Length >= 4) configFilePath = args[3];
 
             try
