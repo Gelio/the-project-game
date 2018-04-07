@@ -34,8 +34,8 @@ namespace Player.Tests
 ""gameName"": ""Default""
 }";
             File.WriteAllText(_validConfigFilePath, fileContent);
-
             File.Create(_invalidConfigFilePath).Close();
+            File.WriteAllText(fileContent, ConfigFileReader.DefaultConfigFilePath);
         }
 
         [OneTimeTearDown]
@@ -43,6 +43,7 @@ namespace Player.Tests
         {
             File.Delete(_validConfigFilePath);
             File.Delete(_invalidConfigFilePath);
+            File.Delete(ConfigFileReader.DefaultConfigFilePath);
         }
 
         [Test]
@@ -87,6 +88,30 @@ namespace Player.Tests
 
             //Then
             Assert.Throws<InvalidDataException>(() => configFileReader.ReadConfigFile(_invalidConfigFilePath));
+        }
+
+        [Test]
+        public void ReadConfigFileDefault()
+        {
+            //Give
+            var configFileReader = new ConfigFileReader();
+            var expectedResult = new PlayerConfig
+            {
+                ServerHostname = "localhost",
+                ServerPort = 4200,
+                AskLevel = 10,
+                RespondLevel = 8,
+                TeamNumber = 1,
+                IsLeader = false,
+                Timeout = 10000,
+                GameName = "Default"
+            };
+
+            //When
+            var result = configFileReader.ReadConfigFile(String.Empty);
+
+            //Then
+            Assert.That(result, Is.EqualTo(expectedResult));
         }
     }
 }

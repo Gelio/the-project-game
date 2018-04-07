@@ -5,13 +5,13 @@ namespace Player
 {
     public class ConfigFileReader
     {
-        private string _defaultConfigFilePath = "player.config.json";
+        public static string DefaultConfigFilePath = "player.config.json";
 
         public PlayerConfig ReadConfigFile(string configFilePath)
         {
             if (string.IsNullOrEmpty(configFilePath))
             {
-                configFilePath = _defaultConfigFilePath;
+                configFilePath = DefaultConfigFilePath;
             }
 
             if (!File.Exists(configFilePath))
@@ -26,7 +26,7 @@ namespace Player
                 configFileObject = (PlayerConfig)serializer.Deserialize(file, typeof(PlayerConfig));
             };
 
-            if(configFileObject == null)
+            if (configFileObject == null)
             {
                 throw new InvalidDataException();
             }
