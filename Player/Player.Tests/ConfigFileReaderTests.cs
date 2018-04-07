@@ -16,15 +16,13 @@ namespace Player.Tests
 {
     public class ConfigFileReaderTests
     {
-        string _validConfigFile = "validConfigFile.json";
-        string _invalidConfigFile = "invalidConfigFile.txt";
-        string _nonexistingConfigFile = "nonexisting.lol";
+        string _validConfigFilePath = "validConfigFile.json";
+        string _invalidConfigFilePath = "invalidConfigFile.txt";
+        string _nonexistingConfigFilePath = "nonExistingFile.xyz";
 
         [OneTimeSetUp]
         public void SetUp()
         {
-            File.Create(_invalidConfigFile).Close();
-
             string fileContent = @"{
 ""serverHostname"": ""localhost"",
 ""serverPort"": 4200,
@@ -34,15 +32,17 @@ namespace Player.Tests
 ""isLeader"": false,
 ""timeout"": 10000,
 ""gameName"": ""Default""
-}
-";
-            File.WriteAllText("validConfigFile.json", fileContent);
+}";
+            File.WriteAllText(_validConfigFilePath, fileContent);
+
+            File.Create(_invalidConfigFilePath).Close();
         }
 
         [OneTimeTearDown]
         public void TearDown()
         {
-            File.Delete("invalidConfigeFile.txt");
+            File.Delete(_validConfigFilePath);
+            File.Delete(_invalidConfigFilePath);
         }
 
         [Test]
@@ -63,10 +63,10 @@ namespace Player.Tests
             };
 
             //When
-            var result = configFileReader.ReadConfigFile(_validConfigFile);
+            var result = configFileReader.ReadConfigFile(_validConfigFilePath);
 
-            //Then           
-            Assert.That(result, Is.EqualTo(expectedResult));            
+            //Then
+            Assert.That(result, Is.EqualTo(expectedResult));
         }
 
         [Test]
@@ -76,7 +76,7 @@ namespace Player.Tests
             var configFileReader = new ConfigFileReader();
 
             //Then
-            Assert.Throws<FileNotFoundException>(() => configFileReader.ReadConfigFile(_nonexistingConfigFile));
+            Assert.Throws<FileNotFoundException>(() => configFileReader.ReadConfigFile(_nonexistingConfigFilePath));
         }
 
         [Test]
@@ -86,7 +86,7 @@ namespace Player.Tests
             var configFileReader = new ConfigFileReader();
 
             //Then
-            Assert.Throws<InvalidDataException>(() => configFileReader.ReadConfigFile(_invalidConfigFile));
+            Assert.Throws<InvalidDataException>(() => configFileReader.ReadConfigFile(_invalidConfigFilePath));
         }
     }
 }
