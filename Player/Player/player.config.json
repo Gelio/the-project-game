@@ -4,7 +4,7 @@
   "askLevel": 10,
   "respondLevel": 8,
   "teamNumber": 1,
-  "teamLeader": false,
+  "isLeader": false,
   "timeout": 10000,
   "gameName": "Default"
 }

@@ -81,20 +81,27 @@ namespace Player
                 return;
             }
 
-
+            ConfigFileReader configFileReader = new ConfigFileReader();
             PlayerConfig configObject;
             string configFilePath = "player.config.json";
             if (args.Length >= 4) configFilePath = args[3];
 
             try
             {
-                configObject = ReadConfigFile(configFilePath);
+                configObject = configFileReader.ReadConfigFile(configFilePath);
                 configObject.GameName = args[2];
             }
             catch (FileNotFoundException)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"Error: Config file {configFilePath} does not exist!");
+                Console.ResetColor();
+                return;
+            }
+            catch (InvalidDataException)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Error: File {configFilePath} is invalid!");
                 Console.ResetColor();
                 return;
             }
@@ -157,23 +164,6 @@ namespace Player
                 Console.ResetColor();
                 return;
             }
-        }
-
-        static PlayerConfig ReadConfigFile(string configFilePath)
-        {
-            if (!File.Exists(configFilePath))
-            {
-                throw new FileNotFoundException();
-            }
-
-            PlayerConfig configFileObject;
-            using (StreamReader file = File.OpenText(configFilePath))
-            {
-                JsonSerializer serializer = new JsonSerializer();
-                configFileObject = (PlayerConfig)serializer.Deserialize(file, typeof(PlayerConfig));
-            };
-
-            return configFileObject;
         }
     }
 }
