@@ -18,7 +18,7 @@ namespace Player
             _comm = comm;
         }
 
-        public IList<Game> GetGamesList()
+        public IList<GameInfo> GetGamesList()
         {
             if (!_comm.IsConnected)
             {
@@ -49,9 +49,7 @@ namespace Player
 
             var json = JsonConvert.DeserializeObject<Message<ListGamesResponsePayload>>(result);
             var gamesDto = json.Payload.Games;
-
-            var gamesList = AutoMapper.Mapper.Map<List<Game>>(gamesDto);
-            // TODO Use Automapper to map GameDTO --> Game
+            var gamesList = AutoMapper.Mapper.Map<List<GameInfo>>(gamesDto);
 
             return gamesList;
         }

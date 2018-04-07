@@ -109,9 +109,9 @@ namespace Player.Tests
         public void GetsChosenGameInfo()
         {
             // TODO Setup `_gameService.GetGamesList()` to return List<Game> object instead of DTO
-            List<Game> gamesList = new List<Game>
+            List<GameInfo> gamesList = new List<GameInfo>
             {
-                new Game
+                new GameInfo
                 {
                     Name = "Default",
                     Description = "Desc",
@@ -141,7 +141,7 @@ namespace Player.Tests
                         TryPiece = 4000
                     }
                 },
-                new Game
+                new GameInfo
                 {
                     Name = "Default2",
                     Description = "Desc2",
@@ -186,7 +186,7 @@ namespace Player.Tests
         [Test]
         public void NoChosenGameAvailable()
         {
-            List<Game> gamesList = new List<Game>();
+            List<GameInfo> gamesList = new List<GameInfo>();
 
             _gameService.Setup(x => x.GetGamesList()).Returns(gamesList);
 

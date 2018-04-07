@@ -7,6 +7,6 @@ namespace Player.Interfaces
 {
     public interface IGameService
     {
-        IList<Game> GetGamesList();
+        IList<GameInfo> GetGamesList();
     }
 }

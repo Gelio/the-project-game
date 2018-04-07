@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Player.Messages.DTO
 {
-    public class GameDTO
+    public class GameInfoDTO
     {
         public string Name;
         public string Description;

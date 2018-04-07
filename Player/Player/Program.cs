@@ -26,7 +26,7 @@ namespace Player
 
             if (args[2] == "-l")
             {
-                IList<Game> gamesList;
+                IList<GameInfo> gamesList;
                 try
                 {
                     communicator.Connect();
@@ -74,9 +74,12 @@ namespace Player
                     communicator.Disconnect();
                     return;
                 }
-
+                Console.WriteLine("GAMES LIST:");
                 foreach (var game in gamesList)
+                {
+                    Console.WriteLine(new string('-', 60));
                     Console.WriteLine(game);
+                }
                 communicator.Disconnect();
                 return;
             }

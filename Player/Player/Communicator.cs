@@ -7,6 +7,7 @@ namespace Player
 {
     public class Communicator : ICommunicator
     {
+        private const int MAX_MSG_LEN = 10000;
         private TcpClient _tcpClient;
         private string _serverHostName;
         private int _serverPort;
@@ -14,8 +15,6 @@ namespace Player
         public bool IsConnected => _tcpClient != null;
         public string ServerHostName => _serverHostName;
         public int ServerPort => _serverPort;
-
-        private const int MAX_MSG_LEN = 10000;
 
         public Communicator(string hostname, int port)
         {

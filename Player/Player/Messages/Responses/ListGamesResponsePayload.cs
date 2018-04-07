@@ -6,6 +6,6 @@ namespace Player.Messages.Responses
 {
     public class ListGamesResponsePayload : IPayload
     {
-        public IList<GameDTO> Games;
+        public IList<GameInfoDTO> Games;
     }
 }

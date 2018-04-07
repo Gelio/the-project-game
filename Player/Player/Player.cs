@@ -25,7 +25,7 @@ namespace Player
         public int ServerPort => _communicator.ServerPort;
         public IList<int> TeamMembersIds;
         public int LeaderId;
-        public Game Game;
+        public GameInfo Game;
         public List<Tile> Board = new List<Tile>();
         private ICommunicator _communicator;
         private IGameService _gameService;

@@ -10,10 +10,9 @@ namespace Player
         {
             AutoMapper.Mapper.Initialize(cfg =>
             {
-                cfg.CreateMap<GameDTO, Game>();
+                cfg.CreateMap<GameInfoDTO, GameInfo>();
                 cfg.CreateMap<BoardSizeDTO, BoardSize>();
                 cfg.CreateMap<DelaysDTO, Delays>();
-                
             });
         }
     }
