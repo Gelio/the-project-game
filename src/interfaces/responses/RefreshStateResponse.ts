@@ -1,7 +1,7 @@
 import { MessageWithRecipient } from '../MessageWithRecipient';
 import { PlayerPosition } from '../PlayerPosition';
 
-interface RefreshStateResponsePayload {
+export interface RefreshStateResponsePayload {
   timestamp: number;
   currentPositionDistanceToClosestPiece: number;
   playerPositions: PlayerPosition[];
