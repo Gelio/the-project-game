@@ -9,12 +9,11 @@ import { DiscoveryResponse, TileInfo } from '../../interfaces/responses/Discover
 import { Board } from '../models/Board';
 import { Piece } from '../models/Piece';
 
+import { config } from '../config';
 import { Player } from '../Player';
 import { ValidMessageResult } from '../ProcessMessageResult';
 
 import { handleDiscoveryRequest } from './handleDiscoveryRequest';
-
-const TIMESTAMP_DIFFERENCE_THRESHOLD = 5;
 
 describe('[GM] handleDiscoveryRequest', () => {
   let board: Board;
@@ -101,7 +100,7 @@ describe('[GM] handleDiscoveryRequest', () => {
 
       const { payload } = await result.responseMessage;
       expect(Math.abs(payload.timestamp - Date.now())).toBeLessThanOrEqual(
-        TIMESTAMP_DIFFERENCE_THRESHOLD
+        config.tests.timestampDifferenceThreshold
       );
     });
 
