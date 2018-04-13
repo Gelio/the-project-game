@@ -22,5 +22,7 @@ namespace Player.Common
         public static string ActionInvalid = "ACTION_INVALID";
         public static string RefreshStateRequest = "REFRESH_STATE_REQUEST";
         public static string RefreshStateResponse = "REFRESH_STATE_RESPONSE";
+        public static string MoveRequest = "MOVE_REQUEST";
+        public static string MoveResponse = "MOVE_RESPONSE";
     }
 }

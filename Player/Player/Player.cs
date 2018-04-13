@@ -145,6 +145,7 @@ namespace Player
             while (true)
             {
                 Discover();
+                Move("down");
                 System.Threading.Thread.Sleep(10000);
             }
         }
@@ -160,12 +161,7 @@ namespace Player
             var messageSerialized = JsonConvert.SerializeObject(message);
             _communicator.Send(messageSerialized);
 
-            (bool actionResult, object data) = GetActionStatus();
-            if (!actionResult)
-            {
-                Console.WriteLine(data as String);
-                return false;
-            }
+            if (!GetActionStatus()) { return false; }
 
             var receivedSerialized = _communicator.Receive();
             var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
@@ -186,8 +182,7 @@ namespace Player
             return true;
         }
 
-
-        public (bool, object) GetActionStatus()
+        public bool GetActionStatus()
         {
             var receivedSerialized = _communicator.Receive();
             var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
@@ -195,13 +190,16 @@ namespace Player
             if (receivedRaw.Type == Consts.ActionValid)
             {
                 var received = JsonConvert.DeserializeObject<Message<ActionValidPayload>>(receivedSerialized);
-                return (true, received.Payload.Delay);
+                return true;
 
             }
             if (receivedRaw.Type == Consts.ActionInvalid)
             {
                 var received = JsonConvert.DeserializeObject<Message<ActionInvalidPayload>>(receivedSerialized);
-                return (false, received.Payload.Reason);
+                Console.ForegroundColor = System.ConsoleColor.Yellow;
+                Console.WriteLine($"ACTION INVALID: {received.Payload.Reason}");
+                Console.ResetColor();
+                return false;
             }
 
             throw new InvalidTypeReceivedException($"Expected: ACTION_VALID/INVALID Received: {receivedRaw.Type}");
@@ -217,12 +215,7 @@ namespace Player
             var messageSerialized = JsonConvert.SerializeObject(message);
             _communicator.Send(messageSerialized);
 
-            (bool actionResult, object data) = GetActionStatus();
-            if (!actionResult)
-            {
-                Console.WriteLine(data as String);
-                return false;
-            }
+            if (!GetActionStatus()) { return false; }
 
             var receivedSerialized = _communicator.Receive();
             var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
@@ -234,12 +227,65 @@ namespace Player
             foreach (var playerInfo in received.Payload.PlayerPositions)
             {
                 Board[playerInfo.X + Game.BoardSize.X * playerInfo.Y].PlayerId = playerInfo.PlayerId;
+                Board[playerInfo.X + Game.BoardSize.X * playerInfo.Y].Timestamp = received.Payload.Timestamp;
                 if (playerInfo.PlayerId == Id)
                 {
                     X = playerInfo.X;
                     Y = playerInfo.Y;
+                    Board[X + Game.BoardSize.X * Y].DistanceToClosestPiece = received.Payload.CurrentPositionDistanceToClosestPiece;
                 }
             }
+
+            return true;
+        }
+
+        public bool Move(string direction)
+        {
+            int index = 0;
+            switch (direction)
+            {
+                case "up":
+                    index = X + Game.BoardSize.X * (Y - 1);
+                    break;
+                case "down":
+                    index = X + Game.BoardSize.X * (Y + 1);
+                    break;
+                case "left":
+                    index = (X + 1) + Game.BoardSize.X * Y;
+                    break;
+                case "right":
+                    index = (X - 1) + Game.BoardSize.X * Y;
+                    break;
+                default:
+                    return false;
+            }
+
+            var message = new Message<MovePayload>()
+            {
+                Type = Consts.MoveRequest,
+                SenderId = Id,
+                Payload = new MovePayload
+                {
+                    Direction = direction
+                }
+            };
+            var messageSerialized = JsonConvert.SerializeObject(message);
+            _communicator.Send(messageSerialized);
+
+            if (!GetActionStatus()) { return false; }
+
+            var receivedSerialized = _communicator.Receive();
+            var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
+            if (receivedRaw.Type != Consts.MoveResponse)
+                throw new InvalidTypeReceivedException($"Expected: {Consts.MoveResponse} Received: {receivedRaw.Type}");
+
+            var received = JsonConvert.DeserializeObject<Message<MoveResponsePayload>>(receivedSerialized);
+
+
+            Board[X + Game.BoardSize.X * Y].PlayerId = 0;
+            Board[index].PlayerId = Id;
+            Board[index].DistanceToClosestPiece = received.Payload.DistanceToPiece;
+            Board[index].Timestamp = received.Payload.TimeStamp;
 
             return true;
         }

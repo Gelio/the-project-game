@@ -118,7 +118,7 @@ namespace Player
 
             configObject.GameName = args[2];
 
-            communicator.Connect();
+            communicator.Connect();  //FIXME: Should be wrapped in try-catch!!
             gameService = new GameService(communicator);
 
             var player = new Player(communicator, configObject, gameService);
