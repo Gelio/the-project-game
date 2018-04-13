@@ -5,7 +5,6 @@ import { BoardSize } from '../interfaces/BoardSize';
 
 import { DiscoveryRequest } from '../interfaces/requests/DiscoveryRequest';
 
-import { createBlessedScreen } from '../createBlessedScreen';
 import { Game } from './Game';
 import { PlayersContainer } from './PlayersContainer';
 import { InvalidMessageResult, ProcessMessageResult } from './ProcessMessageResult';
@@ -14,6 +13,12 @@ import { UIController } from './ui/UIController';
 
 import { LoggerInstance } from 'winston';
 import { Player } from './Player';
+
+function createMockUiController(): UIController {
+  return <any>{
+    updateBoard: jest.fn()
+  };
+}
 
 describe('[GM] Game', () => {
   const boardSize: BoardSize = {
@@ -42,8 +47,7 @@ describe('[GM] Game', () => {
     const loggerFactory = new LoggerFactory();
     loggerInstance = loggerFactory.createEmptyLogger();
 
-    const screen = createBlessedScreen();
-    uiController = new UIController(screen);
+    uiController = createMockUiController();
   });
 
   beforeEach(() => {
@@ -129,8 +133,8 @@ describe('[GM] Game', () => {
 
   it('should reset the game, players should receive new positions', () => {
     game.addPlayer(player);
-    const oldPosition = player.position;
 
+    const oldPosition = player.position;
     game.reset();
 
     expect(player.position).not.toBe(oldPosition);
@@ -147,6 +151,6 @@ describe('[GM] Game', () => {
 
     game.removePlayer(player);
 
-    expect(game.playersContainer.getPlayerById(player.playerId)).toBeNull();
+    expect(game.playersContainer.getPlayerById(player.playerId)).toBeUndefined();
   });
 });
