@@ -1,7 +1,7 @@
 import { LoggerInstance } from 'winston';
 
 import { ActionDelays } from '../../interfaces/ActionDelays';
-import { DeletePieceResponse } from '../../interfaces/responses/DeletePieceResponse';
+import { PickUpPieceResponse } from '../../interfaces/responses/PickUpPieceResponse';
 
 import { Board } from '../models/Board';
 import { Piece } from '../models/Piece';
@@ -73,7 +73,7 @@ describe('[GM] handlePickUpPieceRequest', () => {
   }
 
   it('should pick up piece from the board', () => {
-    const result: ValidMessageResult<DeletePieceResponse> = <any>executePickUpPieceRequest();
+    const result: ValidMessageResult<PickUpPieceResponse> = <any>executePickUpPieceRequest();
 
     expect(result.valid).toBe(true);
     expect(player.heldPiece).toBe(piece);
@@ -83,7 +83,7 @@ describe('[GM] handlePickUpPieceRequest', () => {
   it('should mark action as invalid when player does hold a piece', () => {
     player.heldPiece = piece;
 
-    const result: ValidMessageResult<DeletePieceResponse> = <any>executePickUpPieceRequest();
+    const result: ValidMessageResult<PickUpPieceResponse> = <any>executePickUpPieceRequest();
 
     expect(result.valid).toBe(false);
   });
@@ -93,7 +93,7 @@ describe('[GM] handlePickUpPieceRequest', () => {
     piece.position = new Point(0, 1);
     board.getTileAtPosition(piece.position).piece = piece;
 
-    const result: ValidMessageResult<DeletePieceResponse> = <any>executePickUpPieceRequest();
+    const result: ValidMessageResult<PickUpPieceResponse> = <any>executePickUpPieceRequest();
 
     expect(result.valid).toBe(false);
   });
@@ -101,13 +101,13 @@ describe('[GM] handlePickUpPieceRequest', () => {
   it('should mark action as invalid when player has invalid position', () => {
     player.position = null;
 
-    const result: ValidMessageResult<DeletePieceResponse> = <any>executePickUpPieceRequest();
+    const result: ValidMessageResult<PickUpPieceResponse> = <any>executePickUpPieceRequest();
 
     expect(result.valid).toBe(false);
   });
 
   it('should resolve the response after action delay', () => {
-    const result: ValidMessageResult<DeletePieceResponse> = <any>executePickUpPieceRequest();
+    const result: ValidMessageResult<PickUpPieceResponse> = <any>executePickUpPieceRequest();
 
     result.responseMessage.then(response => {
       expect(response.recipientId).toBe(2);
@@ -118,7 +118,7 @@ describe('[GM] handlePickUpPieceRequest', () => {
   });
 
   it('should not resolve the response before action delay', done => {
-    const result: ValidMessageResult<DeletePieceResponse> = <any>executePickUpPieceRequest();
+    const result: ValidMessageResult<PickUpPieceResponse> = <any>executePickUpPieceRequest();
 
     result.responseMessage.then(() => done.fail('response resolved before action delay'));
 
