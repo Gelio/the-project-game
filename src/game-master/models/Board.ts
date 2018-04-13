@@ -139,11 +139,14 @@ export class Board {
     }
     if (player.position) {
       this.getTileAtPosition(player.position).player = null;
+      player.position = null;
     }
+    arrayShuffle(possiblePositions);
 
     for (const position of possiblePositions) {
       if (!this.getTileAtPosition(position).player) {
         player.position = position;
+        this.getTileAtPosition(position).player = player;
         break;
       }
     }
