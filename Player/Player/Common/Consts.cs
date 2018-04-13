@@ -20,5 +20,7 @@ namespace Player.Common
         public static string DiscoveryResponse = "DISCOVERY_RESPONSE";
         public static string ActionValid = "ACTION_VALID";
         public static string ActionInvalid = "ACTION_INVALID";
+        public static string RefreshStateRequest = "REFRESH_STATE_REQUEST";
+        public static string RefreshStateResponse = "REFRESH_STATE_RESPONSE";
     }
 }

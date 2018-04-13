@@ -21,6 +21,8 @@ namespace Player
         public int AskLevel;
         public int RespondLevel;
         public int Timeout;
+        public int X;
+        public int Y;
         public string ServerHostName => _communicator.ServerHostName;
         public int ServerPort => _communicator.ServerPort;
         public IList<int> TeamMembersIds;
@@ -48,7 +50,8 @@ namespace Player
             GetGameInfo();
             ConnectToServer();
             WaitForGameStart();
-            // RefreshBoardState(); -- gives us info about all teammates' (+ ours) initial position
+            RefreshBoardState(); // -- gives us info about all teammates' (+ ours) initial position
+            Console.WriteLine($"Player init position: {X} {Y}");
             Play();
         }
 
@@ -157,7 +160,7 @@ namespace Player
             var messageSerialized = JsonConvert.SerializeObject(message);
             _communicator.Send(messageSerialized);
 
-            (bool actionResult, object data) = WaitForActionResult();
+            (bool actionResult, object data) = GetActionStatus();
             if (!actionResult)
             {
                 Console.WriteLine(data as String);
@@ -167,7 +170,7 @@ namespace Player
             var receivedSerialized = _communicator.Receive();
             var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
             if (receivedRaw.Type != Consts.DiscoveryResponse)
-                throw new InvalidTypeReceivedException($"Excpected: {Consts.DiscoveryResponse} Received: {receivedRaw.Type}");
+                throw new InvalidTypeReceivedException($"Expected: {Consts.DiscoveryResponse} Received: {receivedRaw.Type}");
 
             var received = JsonConvert.DeserializeObject<Message<DiscoveryResponsePayload>>(receivedSerialized);
             foreach (var tileDTO in received.Payload.Tiles)
@@ -184,7 +187,7 @@ namespace Player
         }
 
 
-        public (bool, object) WaitForActionResult()
+        public (bool, object) GetActionStatus()
         {
             var receivedSerialized = _communicator.Receive();
             var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
@@ -201,7 +204,44 @@ namespace Player
                 return (false, received.Payload.Reason);
             }
 
-            throw new InvalidTypeReceivedException($"Excpected: ACTION_VALID/INVALID Received: {receivedRaw.Type}");
+            throw new InvalidTypeReceivedException($"Expected: ACTION_VALID/INVALID Received: {receivedRaw.Type}");
+        }
+
+        public bool RefreshBoardState()
+        {
+            var message = new Message<RefreshStatePayload>()
+            {
+                Type = Consts.RefreshStateRequest,
+                SenderId = Id
+            };
+            var messageSerialized = JsonConvert.SerializeObject(message);
+            _communicator.Send(messageSerialized);
+
+            (bool actionResult, object data) = GetActionStatus();
+            if (!actionResult)
+            {
+                Console.WriteLine(data as String);
+                return false;
+            }
+
+            var receivedSerialized = _communicator.Receive();
+            var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
+            if (receivedRaw.Type != Consts.RefreshStateResponse)
+                throw new InvalidTypeReceivedException($"Expected: {Consts.RefreshStateResponse} Received: {receivedRaw.Type}");
+
+            var received = JsonConvert.DeserializeObject<Message<RefreshStateResponsePayload>>(receivedSerialized);
+
+            foreach (var playerInfo in received.Payload.PlayerPositions)
+            {
+                Board[playerInfo.X + Game.BoardSize.X * playerInfo.Y].PlayerId = playerInfo.PlayerId;
+                if (playerInfo.PlayerId == Id)
+                {
+                    X = playerInfo.X;
+                    Y = playerInfo.Y;
+                }
+            }
+
+            return true;
         }
     }
 }
