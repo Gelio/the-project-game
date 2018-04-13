@@ -6,5 +6,5 @@ export interface ActionDelays {
   test: number;
   communicationRequest: number;
   communicationAccept: number;
-  tryPiece: number;
+  place: number;
 }

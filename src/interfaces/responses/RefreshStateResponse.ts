@@ -1,6 +1,8 @@
 import { MessageWithRecipient } from '../MessageWithRecipient';
 import { PlayerPosition } from '../PlayerPosition';
 
+import { GameMasterId } from '../../common/EntityIds';
+
 export interface RefreshStateResponsePayload {
   timestamp: number;
   currentPositionDistanceToClosestPiece: number;
@@ -11,5 +13,5 @@ export interface RefreshStateResponsePayload {
 
 export interface RefreshStateResponse extends MessageWithRecipient<RefreshStateResponsePayload> {
   type: 'REFRESH_STATE_RESPONSE';
-  senderId: -1;
+  senderId: GameMasterId;
 }
