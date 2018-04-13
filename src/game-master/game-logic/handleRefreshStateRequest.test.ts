@@ -8,6 +8,7 @@ import { RefreshStateResponse } from '../../interfaces/responses/RefreshStateRes
 
 import { Board } from '../models/Board';
 import { Piece } from '../models/Piece';
+import { Scoreboard } from '../models/Scoreboard';
 
 import { config } from '../config';
 import { Player } from '../Player';
@@ -55,7 +56,8 @@ describe('[GM] handleRefreshStateRequest', () => {
         board,
         playersContainer,
         actionDelays: <any>actionDelays,
-        logger
+        logger,
+        scoreboard: new Scoreboard(5)
       },
       player,
       <any>{}

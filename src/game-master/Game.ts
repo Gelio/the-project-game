@@ -8,6 +8,7 @@ import { BoardSize } from '../interfaces/BoardSize';
 import { Message } from '../interfaces/Message';
 
 import { Board } from './models/Board';
+import { Scoreboard } from './models/Scoreboard';
 
 import { ProcessMessageResult } from './ProcessMessageResult';
 
@@ -25,6 +26,7 @@ export class Game {
   private readonly uiController: UIController;
   private readonly actionDelays: ActionDelays;
   private readonly playerMessageHandler: PlayerMessageHandler;
+  private readonly scoreboard: Scoreboard;
   private nextPlayerId = 1;
 
   //TODO: Consider implementing board factory
@@ -37,6 +39,7 @@ export class Game {
     actionDelays: ActionDelays
   ) {
     this.board = new Board(boardSize, pointsLimit);
+    this.scoreboard = new Scoreboard(pointsLimit);
     this.logger = logger;
     this.uiController = uiController;
     this.playersContainer = playersContainer;
@@ -46,7 +49,8 @@ export class Game {
       board: this.board,
       playersContainer: this.playersContainer,
       actionDelays: this.actionDelays,
-      logger: this.logger
+      logger: this.logger,
+      scoreboard: this.scoreboard
     });
   }
 

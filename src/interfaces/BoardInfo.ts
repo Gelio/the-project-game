@@ -5,7 +5,12 @@ export interface PieceInfo {
 
 export interface TileInfo {
   distanceToPiece: number;
-  hasCompletedGoal: boolean;
+  /**
+   * `true` when this tile has a completed goal
+   * `false` when this tile does not have a goal
+   * `undefined` when it is not known if this tile has a goal or not
+   */
+  hasCompletedGoal: boolean | undefined;
   piece: PieceInfo | null;
   playerId: number | null;
   timestamp: number;
