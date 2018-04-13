@@ -5,6 +5,7 @@ import { PickUpPieceResponse } from '../../interfaces/responses/PickUpPieceRespo
 
 import { Board } from '../models/Board';
 import { Piece } from '../models/Piece';
+import { Scoreboard } from '../models/Scoreboard';
 
 import { Player } from '../Player';
 import { ValidMessageResult } from '../ProcessMessageResult';
@@ -20,6 +21,7 @@ describe('[GM] handlePickUpPieceRequest', () => {
   let player: Player;
   let piece: Piece;
   let logger: LoggerInstance;
+  let scoreboard: Scoreboard;
 
   beforeEach(() => {
     board = new Board(
@@ -48,10 +50,13 @@ describe('[GM] handlePickUpPieceRequest', () => {
     board.addPiece(piece);
     board.getTileAtPosition(piece.position).piece = piece;
 
+    scoreboard = new Scoreboard(5);
+
     const loggerFactory = new LoggerFactory();
     loggerFactory.logLevel = 'error';
 
     logger = loggerFactory.createEmptyLogger();
+
     jest.useFakeTimers();
   });
 
@@ -65,7 +70,8 @@ describe('[GM] handlePickUpPieceRequest', () => {
         board,
         playersContainer: <any>{},
         actionDelays: <any>actionDelays,
-        logger
+        logger,
+        scoreboard
       },
       player,
       <any>{}
