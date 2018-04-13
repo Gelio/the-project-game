@@ -8,6 +8,7 @@ import { DiscoveryResponse, TileInfo } from '../../interfaces/responses/Discover
 
 import { Board } from '../models/Board';
 import { Piece } from '../models/Piece';
+import { Scoreboard } from '../models/Scoreboard';
 
 import { config } from '../config';
 import { Player } from '../Player';
@@ -52,7 +53,8 @@ describe('[GM] handleDiscoveryRequest', () => {
         board,
         playersContainer: <any>{},
         actionDelays: <any>actionDelays,
-        logger
+        logger,
+        scoreboard: new Scoreboard(5)
       },
       player,
       <any>{}

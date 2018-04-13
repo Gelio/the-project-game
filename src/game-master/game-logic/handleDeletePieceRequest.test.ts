@@ -5,6 +5,7 @@ import { DeletePieceResponse } from '../../interfaces/responses/DeletePieceRespo
 
 import { Board } from '../models/Board';
 import { Piece } from '../models/Piece';
+import { Scoreboard } from '../models/Scoreboard';
 
 import { Player } from '../Player';
 import { ValidMessageResult } from '../ProcessMessageResult';
@@ -60,7 +61,8 @@ describe('[GM] handleDeletePieceRequest', () => {
         board,
         playersContainer: <any>{},
         actionDelays: <any>actionDelays,
-        logger
+        logger,
+        scoreboard: new Scoreboard(5)
       },
       player,
       <any>{}
