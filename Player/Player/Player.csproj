@@ -18,6 +18,7 @@
   <ItemGroup>
     <PackageReference Include="automapper" Version="6.2.2" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.1" />
+    <PackageReference Include="NLog" Version="4.5.2" />
   </ItemGroup>
 
 </Project>
