@@ -4,6 +4,7 @@ import { LoggerInstance } from 'winston';
 import { Communicator } from '../common/Communicator';
 import { createDelay } from '../common/createDelay';
 import { COMMUNICATION_SERVER_ID, GAME_MASTER_ID } from '../common/EntityIds';
+import { GameName } from '../common/GameName';
 import { LoggerFactory } from '../common/logging/LoggerFactory';
 
 import { CommunicationServer, CommunicationServerOptions } from './CommunicationServer';
@@ -43,7 +44,7 @@ function getRegisterGameRequest(): RegisterGameRequest {
   };
 }
 
-function getPlayerHelloMessage(gameName: string): PlayerHelloMessage {
+function getPlayerHelloMessage(gameName: GameName): PlayerHelloMessage {
   return {
     type: 'PLAYER_HELLO',
     senderId: 'player_id',

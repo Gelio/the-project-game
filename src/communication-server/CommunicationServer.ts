@@ -267,12 +267,18 @@ export class CommunicationServer implements Service {
       return;
     }
 
+    this.messageRouter.registerPlayerCommunicator(helloMessage.senderId, communicator);
     gameMaster.sendMessage(helloMessage);
 
     const gameMasterResponse = await gameMaster.communicator.waitForSpecificMessage(
       (msg: MessageWithRecipient<any>) => msg.recipientId === helloMessage.senderId
     );
+    this.messageRouter.unregisterPlayerCommunicator(helloMessage.senderId);
 
+    /**
+     * NOTE: There is no need to send the message to the `communicator` because
+     * `GameMaster` will forward it to the `MessageRouter`
+     */
     if (gameMasterResponse.type !== 'PLAYER_ACCEPTED') {
       return;
     }
