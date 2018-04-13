@@ -23,7 +23,7 @@ export function handlePickUpPieceRequest(
   if (sender.heldPiece) {
     return {
       valid: false,
-      reason: 'Player hold a piece'
+      reason: 'Player is holding a piece'
     };
   }
 
