@@ -129,7 +129,6 @@ describe('[GM] handlePickUpPieceRequest', () => {
     result.responseMessage.then(() => done.fail('response resolved before action delay'));
 
     jest.advanceTimersByTime(actionDelays.pick - 1);
-    jest.useRealTimers();
     done();
   });
 });
