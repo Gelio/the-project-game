@@ -18,8 +18,8 @@ export class PlayerMessageHandler {
     // [REQUEST_TYPE.COMMUNICATION_REQUEST]: handleCommunicationRequest,
     [REQUEST_TYPE.DELETE_PIECE_REQUEST]: handleDeletePieceRequest,
     [REQUEST_TYPE.DISCOVERY_REQUEST]: handleDiscoveryRequest,
-    [REQUEST_TYPE.TEST_PIECE_REQUEST]: handleTestPieceRequest,
-    [REQUEST_TYPE.REFRESH_STATE_REQUEST]: handleRefreshStateRequest
+    [REQUEST_TYPE.REFRESH_STATE_REQUEST]: handleRefreshStateRequest,
+    [REQUEST_TYPE.TEST_PIECE_REQUEST]: handleTestPieceRequest
   };
 
   constructor(dependencies: MessageHandlerDependencies) {

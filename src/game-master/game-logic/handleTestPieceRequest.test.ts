@@ -84,7 +84,7 @@ describe('[GM] handleTestPieceRequest', () => {
     expect(player.heldPiece).toBe(piece);
   });
 
-  it('should mark move as invalid when player does not hold a piece', () => {
+  it('should mark action as invalid when player does not hold a piece', () => {
     player.heldPiece = null;
     piece.isPickedUp = false;
     board.getTileAtPosition(piece.position).piece = piece;
