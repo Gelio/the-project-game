@@ -7,5 +7,6 @@ namespace Player.Messages.Responses
 {
     public class ActionInvalidPayload : IPayload
     {
+        public string Reason;
     }
 }

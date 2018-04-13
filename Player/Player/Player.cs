@@ -146,7 +146,7 @@ namespace Player
             }
         }
 
-        public void Discover()
+        public bool Discover()
         {
             var message = new Message<DiscoveryPayload>()
             {
@@ -156,6 +156,13 @@ namespace Player
             };
             var messageSerialized = JsonConvert.SerializeObject(message);
             _communicator.Send(messageSerialized);
+
+            (bool actionResult, object data) = WaitForActionResult();
+            if (!actionResult)
+            {
+                Console.WriteLine(data as String);
+                return false;
+            }
 
             var receivedSerialized = _communicator.Receive();
             var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
@@ -173,6 +180,28 @@ namespace Player
                     tile.Piece = new Piece();
                 }
             }
+            return true;
+        }
+
+
+        public (bool, object) WaitForActionResult()
+        {
+            var receivedSerialized = _communicator.Receive();
+            var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
+
+            if (receivedRaw.Type == Consts.ActionValid)
+            {
+                var received = JsonConvert.DeserializeObject<Message<ActionValidPayload>>(receivedSerialized);
+                return (true, received.Payload.Delay);
+
+            }
+            if (receivedRaw.Type == Consts.ActionInvalid)
+            {
+                var received = JsonConvert.DeserializeObject<Message<ActionInvalidPayload>>(receivedSerialized);
+                return (false, received.Payload.Reason);
+            }
+
+            throw new InvalidTypeReceivedException($"Excpected: ACTION_VALID/INVALID Received: {receivedRaw.Type}");
         }
     }
 }

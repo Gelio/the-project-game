@@ -18,5 +18,7 @@ namespace Player.Common
         public static string GameStarted = "GAME_STARTED";
         public static string DiscoveryRequest = "DISCOVERY_REQUEST";
         public static string DiscoveryResponse = "DISCOVERY_RESPONSE";
+        public static string ActionValid = "ACTION_VALID";
+        public static string ActionInvalid = "ACTION_INVALID";
     }
 }
