@@ -22,7 +22,7 @@ function getPlayerPosition(player: Player): PlayerPosition {
 }
 
 export function handleRefreshStateRequest(
-  { board, logger, playersContainer }: MessageHandlerDependencies,
+  { board, logger, playersContainer, scoreboard }: MessageHandlerDependencies,
   sender: Player,
   _refreshStateRequeset: RefreshStateRequest
 ): ProcessMessageResult<RefreshStateResponse> {
@@ -39,9 +39,8 @@ export function handleRefreshStateRequest(
     timestamp: Date.now(),
     currentPositionDistanceToClosestPiece: board.getDistanceToClosestPiece(sender.position),
     playerPositions: playersContainer.players.map(getPlayerPosition),
-    // TODO: use real scores
-    team1Score: 0,
-    team2Score: 0
+    team1Score: scoreboard.team1Score,
+    team2Score: scoreboard.team2Score
   };
 
   const response: RefreshStateResponse = {

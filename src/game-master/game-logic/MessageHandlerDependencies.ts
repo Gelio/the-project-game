@@ -1,6 +1,7 @@
 import { LoggerInstance } from 'winston';
 
 import { Board } from '../models/Board';
+import { Scoreboard } from '../models/Scoreboard';
 
 import { PlayersContainer } from '../PlayersContainer';
 
@@ -11,4 +12,5 @@ export interface MessageHandlerDependencies {
   playersContainer: PlayersContainer;
   actionDelays: ActionDelays;
   logger: LoggerInstance;
+  scoreboard: Scoreboard;
 }
