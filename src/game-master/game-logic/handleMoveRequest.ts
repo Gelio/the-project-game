@@ -10,7 +10,6 @@ import { ProcessMessageResult } from '../ProcessMessageResult';
 import { MessageHandlerDependencies } from './MessageHandlerDependencies';
 
 import { Direction } from '../../interfaces/Direction';
-import { Board } from '../models/Board';
 
 export function handleMoveRequest(
   { board, actionDelays }: MessageHandlerDependencies,
@@ -25,23 +24,23 @@ export function handleMoveRequest(
     };
   }
 
-  let newPosition: Point;
+  let newPosition: Point = new Point(-1, -1);
 
   switch (_moveRequest.payload.direction) {
     case Direction.Down: {
-      newPosition = new Point(sender.position.x, sender.position.y + 1);
+      newPosition = new Point(playerPosition.x, playerPosition.y + 1);
       break;
     }
     case Direction.Up: {
-      newPosition = new Point(sender.position.x, sender.position.y - 1);
+      newPosition = new Point(playerPosition.x, playerPosition.y - 1);
       break;
     }
     case Direction.Left: {
-      newPosition = new Point(sender.position.x - 1, sender.position.y);
+      newPosition = new Point(playerPosition.x - 1, playerPosition.y);
       break;
     }
     case Direction.Right: {
-      newPosition = new Point(sender.position.x + 1, sender.position.y);
+      newPosition = new Point(playerPosition.x + 1, playerPosition.y);
       break;
     }
     default:
