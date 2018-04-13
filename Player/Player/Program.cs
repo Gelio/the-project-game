@@ -11,9 +11,11 @@ namespace Player
 {
     class Program
     {
+        private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
         static void Main(string[] args)
         {
             MapperInitializer.InitializeMapper();
+            LoggerInitializer.InitializeLogger();
 
             if (args.Length < 3)
             {
@@ -35,42 +37,32 @@ namespace Player
                 }
                 catch (TimeoutException e)
                 {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine(e.Message);
-                    Console.ResetColor();
+                    logger.Fatal(e, "Connection failed:");
                     communicator.Disconnect();
                     return;
                 }
                 catch (SocketException e)
                 {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"Connection failed: {e.Message}");
-                    Console.ResetColor();
+                    logger.Fatal(e, "Connection failed:");
                     communicator.Disconnect();
                     return;
                 }
                 catch (IOException e)
                 {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine(e.Message);
-                    Console.ResetColor();
+                    logger.Fatal(e.Message);
                     communicator.Disconnect();
                     return;
                 }
                 catch (OperationCanceledException e)
                 {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine(e.Message);
-                    Console.ResetColor();
+                    logger.Fatal(e.Message);
                     communicator.Disconnect();
                     return;
                 }
 
                 if (gamesList.Count == 0)
                 {
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine("There are no games available.");
-                    Console.ResetColor();
+                    logger.Info("There are no games available.");
                     communicator.Disconnect();
                     return;
                 }
@@ -96,23 +88,17 @@ namespace Player
             }
             catch (FileNotFoundException)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"Error: Config file {configFilePath} does not exist!");
-                Console.ResetColor();
+                logger.Fatal($"Error: Config file {configFilePath} does not exist!");
                 return;
             }
             catch (InvalidDataException)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"Error: File {configFilePath} is invalid!");
-                Console.ResetColor();
+                logger.Fatal($"Error: File {configFilePath} is invalid!");
                 return;
             }
             catch (Exception e)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"Error: {e.Message}");
-                Console.ResetColor();
+                logger.Fatal(e);
                 return;
             }
 
@@ -129,42 +115,32 @@ namespace Player
             }
             catch (PlayerRejectedException e)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"Connection rejected: {e.Message}");
+                logger.Fatal(e, "Connection rejected:");
                 player.Disconnect();
-                Console.ResetColor();
                 return;
             }
             catch (OperationCanceledException e)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(e.Message);
+                logger.Fatal(e);
                 player.Disconnect();
-                Console.ResetColor();
                 return;
             }
             catch (TimeoutException e)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(e.Message);
+                logger.Fatal(e);
                 player.Disconnect();
-                Console.ResetColor();
                 return;
             }
             catch (SocketException e)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"Connection failed: {e.Message}");
+                logger.Fatal(e, "Connection failed:");
                 player.Disconnect();
-                Console.ResetColor();
                 return;
             }
             catch (IOException e)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(e.Message);
+                logger.Fatal(e);
                 player.Disconnect();
-                Console.ResetColor();
                 return;
             }
         }

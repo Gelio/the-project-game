@@ -14,6 +14,8 @@ namespace Player
 {
     public class Player
     {
+        private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
         public int Id;
         public int TeamId;
         public bool IsLeader;
@@ -51,7 +53,7 @@ namespace Player
             ConnectToServer();
             WaitForGameStart();
             RefreshBoardState(); // -- gives us info about all teammates' (+ ours) initial position
-            Console.WriteLine($"Player init position: {X} {Y}");
+            logger.Debug($"Player init position: {X} {Y}");
             Play();
         }
 
@@ -115,12 +117,13 @@ namespace Player
 
             var acceptedMessage = JsonConvert.DeserializeObject<Message<PlayerAcceptedPayload>>(receivedMessageSerialized);
             Id = acceptedMessage.Payload.AssignedPlayerId;
+            logger.Info("Player connected to server");
         }
 
         public void Disconnect()
         {
             _communicator.Disconnect();
-            Console.WriteLine("Player disconnected.");
+            logger.Info("Player disconnected.");
         }
         public void WaitForGameStart()
         {
@@ -196,9 +199,7 @@ namespace Player
             if (receivedRaw.Type == Consts.ActionInvalid)
             {
                 var received = JsonConvert.DeserializeObject<Message<ActionInvalidPayload>>(receivedSerialized);
-                Console.ForegroundColor = System.ConsoleColor.Yellow;
-                Console.WriteLine($"ACTION INVALID: {received.Payload.Reason}");
-                Console.ResetColor();
+                logger.Warn("ACTION INVALID: {0}", received.Payload.Reason);
                 return false;
             }
 
