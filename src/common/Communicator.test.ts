@@ -23,7 +23,7 @@ function createCommunicator(socket: any) {
 function createTestMessage(): Message<any> {
   return {
     payload: { foo: 'bar' },
-    senderId: 5,
+    senderId: 'hello',
     type: 'TEST_MESSAGE'
   };
 }

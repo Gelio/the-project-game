@@ -42,7 +42,7 @@ describe('[GM] handleDeletePieceRequest', () => {
 
     player = new Player();
     player.isBusy = true;
-    player.playerId = 2;
+    player.playerId = 'player2';
     player.position = new Point(0, 0);
     player.heldPiece = piece;
 
@@ -93,7 +93,7 @@ describe('[GM] handleDeletePieceRequest', () => {
     const result: ValidMessageResult<DeletePieceResponse> = <any>executeDeletePieceRequest();
 
     result.responseMessage.then(response => {
-      expect(response.recipientId).toBe(2);
+      expect(response.recipientId).toBe(player.playerId);
     });
 
     jest.advanceTimersByTime(actionDelays.destroy);

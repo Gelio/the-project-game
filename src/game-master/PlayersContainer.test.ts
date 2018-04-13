@@ -148,28 +148,28 @@ describe('[GM] PlayersContainer', () => {
     it('should return undefined when there are no players', () => {
       const container = new PlayersContainer();
 
-      expect(container.getPlayerById(0)).toBe(undefined);
+      expect(container.getPlayerById('uuid')).toBe(undefined);
     });
 
     it('should return undefined when the player is not found', () => {
       const container = new PlayersContainer();
-      container.addPlayer(createPlayerMock({ playerId: 1 }));
+      container.addPlayer(createPlayerMock({ playerId: 'uuid' }));
 
-      expect(container.getPlayerById(2)).toBe(undefined);
+      expect(container.getPlayerById('uuid2')).toBe(undefined);
     });
 
     it('should return the player with a given ID', () => {
       const container = new PlayersContainer();
 
       const players = [
-        createPlayerMock({ playerId: 1 }),
-        createPlayerMock({ playerId: 2 }),
-        createPlayerMock({ playerId: 3 })
+        createPlayerMock({ playerId: 'uuid' }),
+        createPlayerMock({ playerId: 'uuid2' }),
+        createPlayerMock({ playerId: 'uuid3' })
       ];
 
       players.forEach(player => container.addPlayer(player));
 
-      const result = container.getPlayerById(2);
+      const result = container.getPlayerById('uuid2');
       expect(result).toBe(players[1]);
     });
   });

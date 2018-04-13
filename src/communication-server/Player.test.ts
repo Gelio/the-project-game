@@ -39,7 +39,7 @@ describe('[CS] Player', () => {
     const logger = loggerFactory.createEmptyLogger();
     playerInfo = {
       gameName,
-      id: 1,
+      id: 'player1',
       isLeader: true,
       teamId: 1
     };
