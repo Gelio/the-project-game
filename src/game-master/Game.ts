@@ -8,13 +8,13 @@ import { BoardSize } from '../interfaces/BoardSize';
 import { Message } from '../interfaces/Message';
 
 import { Board } from './models/Board';
+import { Scoreboard } from './models/Scoreboard';
 
 import { ProcessMessageResult } from './ProcessMessageResult';
 
 import { UIController } from './ui/UIController';
 
 import { PlayerMessageHandler } from './game-logic/PlayerMessageHandler';
-import { Scoreboard } from './models/Scoreboard';
 
 export class Game {
   public hasStarted = false;

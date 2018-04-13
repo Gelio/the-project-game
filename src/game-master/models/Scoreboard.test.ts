@@ -10,4 +10,11 @@ describe('[GM] Scoreboard', () => {
 
     expect(scoreboard.scoreLimit).toBe(5);
   });
+
+  it('should initialize team scores to 0', () => {
+    const scoreboard = new Scoreboard(5);
+
+    expect(scoreboard.team1Score).toBe(0);
+    expect(scoreboard.team2Score).toBe(0);
+  });
 });
