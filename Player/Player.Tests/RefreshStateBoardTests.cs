@@ -32,7 +32,6 @@ namespace Player.Tests
                 TeamNumber = 1
             };
             _gameService = new Mock<IGameService>();
-
         }
 
         [Test]
@@ -300,6 +299,5 @@ namespace Player.Tests
                 Assert.That(player.Board[p.X + game.BoardSize.X * p.Y].Timestamp, Is.EqualTo(messageReceived.Payload.Timestamp));
             }            
         }
-
     }
 }
