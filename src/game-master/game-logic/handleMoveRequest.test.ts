@@ -119,8 +119,8 @@ describe('[GM] handleMoveRequest', () => {
       );
     });
 
-    describe('should move player ', () => {
-      it('down', async () => {
+    describe('move request', () => {
+      it('should move player down', async () => {
         const result = executeHandler(Direction.Down);
         jest.advanceTimersByTime(actionDelays.move);
 
@@ -134,7 +134,7 @@ describe('[GM] handleMoveRequest', () => {
         expect(player.position.y).toBe(16);
       });
 
-      it('up', async () => {
+      it('should move player up', async () => {
         const result = executeHandler(Direction.Up);
         jest.advanceTimersByTime(actionDelays.move);
 
@@ -147,7 +147,7 @@ describe('[GM] handleMoveRequest', () => {
         expect(player.position.y).toBe(14);
       });
 
-      it('right', async () => {
+      it('should move player right', async () => {
         const result = executeHandler(Direction.Right);
         jest.advanceTimersByTime(actionDelays.move);
 
@@ -161,7 +161,7 @@ describe('[GM] handleMoveRequest', () => {
         expect(player.position.y).toBe(15);
       });
 
-      it('left', async () => {
+      it('should move player left', async () => {
         const result = executeHandler(Direction.Left);
         jest.advanceTimersByTime(actionDelays.move);
 
