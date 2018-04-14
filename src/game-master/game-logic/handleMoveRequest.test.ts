@@ -41,7 +41,13 @@ describe('[GM] handleMoveRequest', () => {
     player = new Player();
     player.isBusy = true;
     player.playerId = 1;
+    board.addPlayer(player);
+    if (player.position) {
+      const oldPlayerPosition = player.position;
+      board.getTileAtPosition(oldPlayerPosition).player = null;
+    }
     player.position = new Point(5, 15);
+    board.getTileAtPosition(player.position).player = player;
 
     const loggerFactory = new LoggerFactory();
     loggerFactory.logLevel = 'error';
@@ -49,7 +55,7 @@ describe('[GM] handleMoveRequest', () => {
     logger = loggerFactory.createEmptyLogger();
   });
 
-  function executeHandler(): ValidMessageResult<MoveResponse> {
+  function executeHandler(direction: Direction): ValidMessageResult<MoveResponse> {
     return <any>handleMoveRequest(
       {
         board,
@@ -61,7 +67,7 @@ describe('[GM] handleMoveRequest', () => {
       {
         senderId: 1,
         payload: {
-          direction: Direction.Down
+          direction: direction
         },
         type: 'MOVE_REQUEST'
       }
@@ -69,7 +75,7 @@ describe('[GM] handleMoveRequest', () => {
   }
 
   it('should always be valid', () => {
-    const result = executeHandler();
+    const result = executeHandler(Direction.Down);
 
     expect(result.valid).toBe(true);
   });
@@ -77,7 +83,7 @@ describe('[GM] handleMoveRequest', () => {
   it('should return the response after delay', () => {
     jest.useFakeTimers();
 
-    const result = executeHandler();
+    const result = executeHandler(Direction.Down);
     expect(result.delay).toBe(actionDelays.move);
 
     result.responseMessage.then(response => {
@@ -100,7 +106,7 @@ describe('[GM] handleMoveRequest', () => {
     });
 
     it('should contain current timestamp', async () => {
-      const result = executeHandler();
+      const result = executeHandler(Direction.Down);
       jest.advanceTimersByTime(actionDelays.move);
 
       const { payload } = await result.responseMessage;
@@ -109,9 +115,63 @@ describe('[GM] handleMoveRequest', () => {
       );
     });
 
+    it('should move player down', async () => {
+      const result = executeHandler(Direction.Down);
+      jest.advanceTimersByTime(actionDelays.move);
+
+      await result.responseMessage;
+
+      if (!player.position) {
+        throw new Error('Internal error, player position is not defined');
+      }
+
+      expect(player.position.x).toBe(5);
+      expect(player.position.y).toBe(16);
+    });
+
+    it('should move player up', async () => {
+      const result = executeHandler(Direction.Up);
+      jest.advanceTimersByTime(actionDelays.move);
+
+      await result.responseMessage;
+
+      if (!player.position) {
+        throw new Error('Internal error, player position is not defined');
+      }
+      expect(player.position.x).toBe(5);
+      expect(player.position.y).toBe(14);
+    });
+
+    it('should move player right', async () => {
+      const result = executeHandler(Direction.Right);
+      jest.advanceTimersByTime(actionDelays.move);
+
+      await result.responseMessage;
+
+      if (!player.position) {
+        throw new Error('Internal error, player position is not defined');
+      }
+
+      expect(player.position.x).toBe(6);
+      expect(player.position.y).toBe(15);
+    });
+
+    it('should move player left', async () => {
+      const result = executeHandler(Direction.Left);
+      jest.advanceTimersByTime(actionDelays.move);
+
+      await result.responseMessage;
+
+      if (!player.position) {
+        throw new Error('Internal error, player position is not defined');
+      }
+
+      expect(player.position.x).toBe(4);
+      expect(player.position.y).toBe(15);
+    });
+
     it('should contain distance to closest piece', async () => {
-      player.position = new Point(1, 1);
-      const result = executeHandler();
+      const result = executeHandler(Direction.Down);
       jest.advanceTimersByTime(actionDelays.move);
 
       const { payload } = await result.responseMessage;
@@ -119,7 +179,7 @@ describe('[GM] handleMoveRequest', () => {
     });
 
     it('should set distances to closest piece to -1 when there are no pieces on the board', async () => {
-      const result = executeHandler();
+      const result = executeHandler(Direction.Down);
       jest.advanceTimersByTime(actionDelays.move);
 
       const { payload } = await result.responseMessage;
@@ -128,20 +188,22 @@ describe('[GM] handleMoveRequest', () => {
     });
 
     it("should contain valid distances to closest piece (when it's far away)", async () => {
-      player.position = new Point(0, 0);
-
       const piece = new Piece();
       piece.isPickedUp = false;
       piece.isSham = true;
       piece.position = new Point(5, 5);
       board.addPiece(piece);
 
-      const result = executeHandler();
+      const result = executeHandler(Direction.Down);
       jest.advanceTimersByTime(actionDelays.move);
 
       const { payload } = await result.responseMessage;
-      const newPlayerPosition = new Point(player.position.x, player.position.y + 1);
-      expect(payload.distanceToPiece).toBe(board.getDistanceToClosestPiece(newPlayerPosition));
+
+      if (!player.position) {
+        throw new Error('Internal error, player position is not defined');
+      }
+
+      expect(payload.distanceToPiece).toBe(board.getDistanceToClosestPiece(player.position));
     });
   });
 });
