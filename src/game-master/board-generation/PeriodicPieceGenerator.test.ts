@@ -56,7 +56,7 @@ describe('[GM] PeriodicPieceGenerator', () => {
   });
 
   describe('init', () => {
-    it('should generate pieces on the board', async () => {
+    it('should generate pieces on the board', () => {
       const generator = new PeriodicPieceGenerator(board, options, logger);
       generator.init();
 
