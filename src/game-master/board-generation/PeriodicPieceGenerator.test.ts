@@ -5,6 +5,7 @@ import { Board } from '../models/Board';
 import { PeriodicPieceGenerator, PeriodicPieceGeneratorOptions } from './PeriodicPieceGenerator';
 
 import { LoggerFactory } from '../../common/logging/LoggerFactory';
+import { createDelay } from '../../common/createDelay';
 
 describe('[GM] PeriodicPieceGenerator', () => {
   let board: Board;
@@ -24,9 +25,9 @@ describe('[GM] PeriodicPieceGenerator', () => {
 
     board = new Board(
       {
-        goalArea: 10,
-        taskArea: 20,
-        x: 10
+        goalArea: 100,
+        taskArea: 200,
+        x: 100
       },
       20
     );
@@ -56,7 +57,7 @@ describe('[GM] PeriodicPieceGenerator', () => {
   });
 
   describe('init', () => {
-    it('should generate pieces on the board', () => {
+    it('should generate pieces on the board', async () => {
       const generator = new PeriodicPieceGenerator(board, options, logger);
       generator.init();
 
