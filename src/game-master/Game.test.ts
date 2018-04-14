@@ -1,3 +1,5 @@
+import { LoggerInstance } from 'winston';
+
 import { LoggerFactory } from '../common/logging/LoggerFactory';
 
 import { ActionDelays } from '../interfaces/ActionDelays';
@@ -7,11 +9,10 @@ import { DiscoveryRequest } from '../interfaces/requests/DiscoveryRequest';
 
 import { Game } from './Game';
 import { PlayersContainer } from './PlayersContainer';
-import { InvalidMessageResult, ProcessMessageResult } from './ProcessMessageResult';
+import { InvalidMessageResult } from './ProcessMessageResult';
 
 import { UIController } from './ui/UIController';
 
-import { LoggerInstance } from 'winston';
 import { Player } from './Player';
 
 function createMockUiController(): UIController {
@@ -38,7 +39,7 @@ describe('[GM] Game', () => {
     move: 4000,
     pick: 4000,
     test: 4000,
-    tryPiece: 4000
+    place: 4000
   };
 
   let player: Player;
@@ -63,30 +64,26 @@ describe('[GM] Game', () => {
     );
 
     player = new Player();
-    player.playerId = game.getNextPlayerId();
+    player.playerId = 'player';
     player.teamId = 1;
     player.isLeader = true;
     player.isBusy = false;
     player.isConnected = true;
   });
 
-  it('should generate player id starting from 1', () => {
-    expect(player.playerId).toEqual(1);
-  });
-
   describe('processMessage', () => {
     it('should reject message from non existing player', () => {
       const message: DiscoveryRequest = {
-        senderId: 3,
+        senderId: 'player1',
         type: 'DISCOVERY_REQUEST',
         payload: undefined
       };
-      const processedMessageResult: ProcessMessageResult<any> = game.processMessage(message);
-      expect(processedMessageResult.valid).toBeFalsy();
+      const processedMessageResult = game.processMessage(message);
+      expect(processedMessageResult.valid).toBe(false);
 
       const invalidResult = <InvalidMessageResult>processedMessageResult;
       expect(invalidResult).toBeDefined();
-      expect(invalidResult.reason).toBe('Sender ID is invalid');
+      expect(invalidResult.reason).toMatchSnapshot();
     });
 
     it('should reject message from busy player', () => {
@@ -99,16 +96,15 @@ describe('[GM] Game', () => {
         type: 'DISCOVERY_REQUEST',
         payload: undefined
       };
-      const processedMessageResult: ProcessMessageResult<any> = game.processMessage(message);
-      expect(processedMessageResult.valid).toBeFalsy();
+      const processedMessageResult = game.processMessage(message);
+      expect(processedMessageResult.valid).toBe(false);
 
       const invalidResult = <InvalidMessageResult>processedMessageResult;
       expect(invalidResult).toBeDefined();
-      expect(invalidResult.reason).toBe('Sender is busy');
+      expect(invalidResult.reason).toMatchSnapshot();
     });
 
     it('should process valid request', () => {
-      player.playerId = game.getNextPlayerId();
       game.addPlayer(player);
 
       const message: DiscoveryRequest = {
@@ -116,28 +112,30 @@ describe('[GM] Game', () => {
         type: 'DISCOVERY_REQUEST',
         payload: undefined
       };
-      const processedMessageResult: ProcessMessageResult<any> = game.processMessage(message);
-      expect(processedMessageResult.valid).toBeTruthy();
+      const processedMessageResult = game.processMessage(message);
+      expect(processedMessageResult.valid).toBe(true);
     });
   });
 
   it('should start the game', () => {
     game.start();
-    expect(game.hasStarted).toBeTruthy();
+    expect(game.hasStarted).toBe(true);
   });
 
   it('should stop the game', () => {
     game.stop();
-    expect(game.hasStarted).toBeFalsy();
+    expect(game.hasStarted).toBe(false);
   });
 
-  it('should reset the game, players should receive new positions', () => {
-    game.addPlayer(player);
+  describe('after resetting the game', () => {
+    it('players should receive new positions', () => {
+      game.addPlayer(player);
 
-    const oldPosition = player.position;
-    game.reset();
+      const oldPosition = player.position;
+      game.reset();
 
-    expect(player.position).not.toBe(oldPosition);
+      expect(player.position).not.toBe(oldPosition);
+    });
   });
 
   it('should add player to the game', () => {
