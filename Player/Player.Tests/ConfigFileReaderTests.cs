@@ -35,7 +35,7 @@ namespace Player.Tests
 }";
             File.WriteAllText(_validConfigFilePath, fileContent);
             File.Create(_invalidConfigFilePath).Close();
-            File.WriteAllText(fileContent, ConfigFileReader.DefaultConfigFilePath);
+            File.WriteAllText(ConfigFileReader.DefaultConfigFilePath, fileContent);
         }
 
         [OneTimeTearDown]
