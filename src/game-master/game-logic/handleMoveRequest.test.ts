@@ -119,59 +119,61 @@ describe('[GM] handleMoveRequest', () => {
       );
     });
 
-    it('should move player down', async () => {
-      const result = executeHandler(Direction.Down);
-      jest.advanceTimersByTime(actionDelays.move);
+    describe('should move player ', () => {
+      it('down', async () => {
+        const result = executeHandler(Direction.Down);
+        jest.advanceTimersByTime(actionDelays.move);
 
-      await result.responseMessage;
+        await result.responseMessage;
 
-      if (!player.position) {
-        throw new Error('Internal error, player position is not defined');
-      }
+        if (!player.position) {
+          throw new Error('Internal error, player position is not defined');
+        }
 
-      expect(player.position.x).toBe(5);
-      expect(player.position.y).toBe(16);
-    });
+        expect(player.position.x).toBe(5);
+        expect(player.position.y).toBe(16);
+      });
 
-    it('should move player up', async () => {
-      const result = executeHandler(Direction.Up);
-      jest.advanceTimersByTime(actionDelays.move);
+      it('up', async () => {
+        const result = executeHandler(Direction.Up);
+        jest.advanceTimersByTime(actionDelays.move);
 
-      await result.responseMessage;
+        await result.responseMessage;
 
-      if (!player.position) {
-        throw new Error('Internal error, player position is not defined');
-      }
-      expect(player.position.x).toBe(5);
-      expect(player.position.y).toBe(14);
-    });
+        if (!player.position) {
+          throw new Error('Internal error, player position is not defined');
+        }
+        expect(player.position.x).toBe(5);
+        expect(player.position.y).toBe(14);
+      });
 
-    it('should move player right', async () => {
-      const result = executeHandler(Direction.Right);
-      jest.advanceTimersByTime(actionDelays.move);
+      it('right', async () => {
+        const result = executeHandler(Direction.Right);
+        jest.advanceTimersByTime(actionDelays.move);
 
-      await result.responseMessage;
+        await result.responseMessage;
 
-      if (!player.position) {
-        throw new Error('Internal error, player position is not defined');
-      }
+        if (!player.position) {
+          throw new Error('Internal error, player position is not defined');
+        }
 
-      expect(player.position.x).toBe(6);
-      expect(player.position.y).toBe(15);
-    });
+        expect(player.position.x).toBe(6);
+        expect(player.position.y).toBe(15);
+      });
 
-    it('should move player left', async () => {
-      const result = executeHandler(Direction.Left);
-      jest.advanceTimersByTime(actionDelays.move);
+      it('left', async () => {
+        const result = executeHandler(Direction.Left);
+        jest.advanceTimersByTime(actionDelays.move);
 
-      await result.responseMessage;
+        await result.responseMessage;
 
-      if (!player.position) {
-        throw new Error('Internal error, player position is not defined');
-      }
+        if (!player.position) {
+          throw new Error('Internal error, player position is not defined');
+        }
 
-      expect(player.position.x).toBe(4);
-      expect(player.position.y).toBe(15);
+        expect(player.position.x).toBe(4);
+        expect(player.position.y).toBe(15);
+      });
     });
 
     it('should contain distance to closest piece', async () => {
