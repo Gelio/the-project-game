@@ -224,7 +224,7 @@ namespace Player.Tests
                             Y=20
                         }
                     }
-                }                
+                }
             };
             var queue = new Queue<string>(new[]
             {
@@ -353,6 +353,32 @@ namespace Player.Tests
 
 
             Assert.Throws<WrongPayloadException>(() => player.RefreshBoardState());
+        }
+
+        [Test]
+        public void RefreshBoardStateNoPayload()
+        {
+            var assignedPlayerId = 1;
+            var messageReceived = new Message
+            {
+                Type = Common.Consts.RefreshStateResponse,
+                SenderId = Common.Consts.GameMasterId,
+                RecipientId = assignedPlayerId
+            };
+            var queue = new Queue<string>(new[]
+            {
+                Consts.ACTION_VALID_RESPONSE,
+                JsonConvert.SerializeObject(messageReceived)
+            });
+            _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
+
+
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object)
+            {
+                Id = assignedPlayerId,
+            };
+
+            Assert.Throws<NoPayloadException>(() => player.RefreshBoardState());
         }
     }
 }

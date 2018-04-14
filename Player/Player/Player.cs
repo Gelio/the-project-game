@@ -224,7 +224,12 @@ namespace Player
                 throw new InvalidTypeReceivedException($"Expected: {Consts.RefreshStateResponse} Received: {receivedRaw.Type}");
 
             var received = JsonConvert.DeserializeObject<Message<RefreshStateResponsePayload>>(receivedSerialized);
+            if (received.Payload == null)
+                throw new NoPayloadException();
 
+            bool gotOwnInfo = false;
+            if (received.Payload.PlayerPositions == null)
+                throw new WrongPayloadException();
             foreach (var playerInfo in received.Payload.PlayerPositions)
             {
                 Board[playerInfo.X + Game.BoardSize.X * playerInfo.Y].PlayerId = playerInfo.PlayerId;
@@ -234,9 +239,12 @@ namespace Player
                     X = playerInfo.X;
                     Y = playerInfo.Y;
                     Board[X + Game.BoardSize.X * Y].DistanceToClosestPiece = received.Payload.CurrentPositionDistanceToClosestPiece;
+                    gotOwnInfo = true;
                 }
             }
 
+            if (!gotOwnInfo)
+                throw new InvalidOperationException("No info about player");
             return true;
         }
 
