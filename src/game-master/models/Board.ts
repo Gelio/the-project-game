@@ -72,7 +72,7 @@ export class Board {
       throw new Error('Old player position corrupted');
     }
 
-    if (newTile.player) {
+    if (newTile.player && newTile.player !== player) {
       throw new Error('Two players cannot stand on the same tile');
     }
 
