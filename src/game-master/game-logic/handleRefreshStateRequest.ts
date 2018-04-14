@@ -9,6 +9,8 @@ import { Player } from '../Player';
 import { ProcessMessageResult } from '../ProcessMessageResult';
 import { MessageHandlerDependencies } from './MessageHandlerDependencies';
 
+import { GAME_MASTER_ID } from '../../common/EntityIds';
+
 function getPlayerPosition(player: Player): PlayerPosition {
   if (!player.position) {
     throw new Error('Player position is not defined');
@@ -47,7 +49,7 @@ export function handleRefreshStateRequest(
     type: 'REFRESH_STATE_RESPONSE',
     payload,
     recipientId: sender.playerId,
-    senderId: -1
+    senderId: GAME_MASTER_ID
   };
 
   return {

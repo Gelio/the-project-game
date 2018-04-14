@@ -1,4 +1,5 @@
 import { createDelay } from '../../common/createDelay';
+import { GAME_MASTER_ID } from '../../common/EntityIds';
 import { Point } from '../../common/Point';
 
 import { DiscoveryRequest } from '../../interfaces/requests/DiscoveryRequest';
@@ -54,7 +55,7 @@ export function handleDiscoveryRequest(
       tiles: getSurroundingTiles(playerPosition, board)
     },
     recipientId: sender.playerId,
-    senderId: -1
+    senderId: GAME_MASTER_ID
   }));
 
   return {

@@ -1,5 +1,7 @@
+import { PlayerId } from '../common/EntityIds';
+
 export interface PlayerPosition {
-  playerId: number;
+  playerId: PlayerId;
   x: number;
   y: number;
 }

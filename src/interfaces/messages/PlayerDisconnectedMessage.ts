@@ -1,7 +1,14 @@
 import { MessageWithRecipient } from '../MessageWithRecipient';
 
-export interface PlayerDisconnectedMessage extends MessageWithRecipient<{ playerId: number }> {
+import { CommunicationServerId, GameMasterId } from '../../common/EntityIds';
+
+export interface PlayerDisconnectedMessagePayload {
+  playerId: string;
+}
+
+export interface PlayerDisconnectedMessage
+  extends MessageWithRecipient<PlayerDisconnectedMessagePayload> {
   type: 'PLAYER_DISCONNECTED';
-  senderId: -3;
-  recipientId: -1;
+  senderId: CommunicationServerId;
+  recipientId: GameMasterId;
 }

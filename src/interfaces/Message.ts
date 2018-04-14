@@ -1,5 +1,7 @@
+import { EntityId } from '../common/EntityIds';
+
 export interface Message<T> {
   type: string;
-  senderId: number;
+  senderId: EntityId;
   payload: T;
 }

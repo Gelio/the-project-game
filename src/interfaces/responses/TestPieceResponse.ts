@@ -1,6 +1,12 @@
 import { MessageWithRecipient } from '../MessageWithRecipient';
 
-export interface TestPieceResponse extends MessageWithRecipient<{ isSham: boolean }> {
+import { GameMasterId } from '../../common/EntityIds';
+
+export interface TestPieceResponsePayload {
+  isSham: boolean;
+}
+
+export interface TestPieceResponse extends MessageWithRecipient<TestPieceResponsePayload> {
   type: 'TEST_PIECE_RESPONSE';
-  senderId: -1;
+  senderId: GameMasterId;
 }

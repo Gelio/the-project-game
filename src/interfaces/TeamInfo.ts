@@ -1,11 +1,13 @@
+import { PlayerId } from '../common/EntityIds';
+
 export interface TeamInfo {
   /**
    * Player IDs
    */
-  players: number[];
+  players: PlayerId[];
 
   /**
    * Team Leader's ID
    */
-  leaderId: number;
+  leaderId: PlayerId;
 }

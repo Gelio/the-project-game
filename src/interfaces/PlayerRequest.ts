@@ -1,3 +1,7 @@
 import { Message } from './Message';
 
-export interface PlayerRequest<T> extends Message<T> {}
+import { PlayerId } from '../common/EntityIds';
+
+export interface PlayerRequest<T> extends Message<T> {
+  senderId: PlayerId;
+}

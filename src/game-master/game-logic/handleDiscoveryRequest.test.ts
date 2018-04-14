@@ -38,7 +38,7 @@ describe('[GM] handleDiscoveryRequest', () => {
 
     player = new Player();
     player.isBusy = true;
-    player.playerId = 1;
+    player.playerId = 'player1';
     player.position = new Point(0, 0);
 
     const loggerFactory = new LoggerFactory();
@@ -198,7 +198,7 @@ describe('[GM] handleDiscoveryRequest', () => {
       player.position = new Point(0, 0);
 
       const player2 = new Player();
-      player2.playerId = 2;
+      player2.playerId = 'test';
       board.addPlayer(player2);
       board.movePlayer(player2, new Point(1, 1));
 
@@ -208,7 +208,7 @@ describe('[GM] handleDiscoveryRequest', () => {
       const { payload } = await result.responseMessage;
       const foundTile = getTileInfo(payload.tiles, 1, 1);
 
-      expect(foundTile.playerId).toBe(2);
+      expect(foundTile.playerId).toBe('test');
     });
 
     it('should list pieces inside fields', async () => {

@@ -38,7 +38,7 @@ describe('[GM] handleRefreshStateRequest', () => {
 
     player = new Player();
     player.isBusy = true;
-    player.playerId = 1;
+    player.playerId = 'player1';
     player.position = new Point(0, 0);
 
     playersContainer = new PlayersContainer();
@@ -128,15 +128,15 @@ describe('[GM] handleRefreshStateRequest', () => {
 
     it('should contain other players positions', async () => {
       const player1 = new Player();
-      player1.playerId = 2;
+      player1.playerId = 'player2';
       player1.position = new Point(5, 5);
 
       const player2 = new Player();
-      player2.playerId = 3;
+      player2.playerId = 'player3';
       player2.position = new Point(3, 8);
 
       const player3 = new Player();
-      player3.playerId = 5;
+      player3.playerId = 'player4';
       player3.position = new Point(1, 9);
 
       playersContainer.addPlayer(player1);

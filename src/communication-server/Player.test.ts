@@ -39,7 +39,7 @@ describe('[CS] Player', () => {
     const logger = loggerFactory.createEmptyLogger();
     playerInfo = {
       gameName,
-      id: 1,
+      id: 'player1',
       isLeader: true,
       teamId: 1
     };
@@ -68,7 +68,7 @@ describe('[CS] Player', () => {
   it('should not send message when player ID is missing', () => {
     const message = {
       payload: {},
-      senderId: 0,
+      senderId: 'uuid',
       type: 'OTHER_MESSAGE'
     };
 

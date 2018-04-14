@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events';
 
 import { Communicator } from '../common/Communicator';
+import { COMMUNICATION_SERVER_ID, GAME_MASTER_ID } from '../common/EntityIds';
 import { LoggerFactory } from '../common/logging/LoggerFactory';
 
 import { UnregisterGameRequest } from '../interfaces/requests/UnregisterGameRequest';
@@ -114,8 +115,8 @@ describe('[CS] GameMaster', () => {
 
       const request: UnregisterGameRequest = {
         type: 'UNREGISTER_GAME_REQUEST',
-        senderId: -1,
-        recipientId: -3,
+        senderId: GAME_MASTER_ID,
+        recipientId: COMMUNICATION_SERVER_ID,
         payload: {
           gameName
         }

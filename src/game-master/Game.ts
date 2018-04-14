@@ -27,7 +27,6 @@ export class Game {
   private readonly actionDelays: ActionDelays;
   private readonly playerMessageHandler: PlayerMessageHandler;
   private readonly scoreboard: Scoreboard;
-  private nextPlayerId = 1;
 
   //TODO: Consider implementing board factory
   constructor(
@@ -52,10 +51,6 @@ export class Game {
       logger: this.logger,
       scoreboard: this.scoreboard
     });
-  }
-
-  public getNextPlayerId() {
-    return this.nextPlayerId++;
   }
 
   public processMessage(message: Message<any>): ProcessMessageResult<any> {

@@ -1,4 +1,5 @@
 import { createDelay } from '../../common/createDelay';
+import { GAME_MASTER_ID } from '../../common/EntityIds';
 
 import { DeletePieceRequest } from '../../interfaces/requests/DeletePieceRequest';
 import { DeletePieceResponse } from '../../interfaces/responses/DeletePieceResponse';
@@ -26,7 +27,7 @@ export function handleDeletePieceRequest(
     type: 'DELETE_PIECE_RESPONSE',
     payload: undefined,
     recipientId: sender.playerId,
-    senderId: -1
+    senderId: GAME_MASTER_ID
   };
 
   const responsePromise = createDelay(actionDelays.destroy).then(() => response);

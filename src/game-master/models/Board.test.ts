@@ -134,7 +134,7 @@ describe('[GM] Board', () => {
       player = new Player();
       player.isBusy = player.isConnected = player.isLeader = true;
       player.teamId = 1;
-      player.playerId = 1;
+      player.playerId = 'player1';
     });
 
     describe('addPlayer', () => {

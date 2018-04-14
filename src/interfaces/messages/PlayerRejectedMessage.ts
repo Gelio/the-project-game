@@ -1,6 +1,12 @@
 import { MessageWithRecipient } from '../MessageWithRecipient';
 
-export interface PlayerRejectedMessage extends MessageWithRecipient<{ reason: string }> {
+import { GameMasterId } from '../../common/EntityIds';
+
+export interface PlayerRejectedMessagePayload {
+  reason: string;
+}
+
+export interface PlayerRejectedMessage extends MessageWithRecipient<PlayerRejectedMessagePayload> {
   type: 'PLAYER_REJECTED';
-  senderId: -1;
+  senderId: GameMasterId;
 }

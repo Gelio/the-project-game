@@ -3,6 +3,7 @@ import { LoggerInstance } from 'winston';
 
 import { bindObjectMethods } from '../common/bindObjectMethods';
 import { Communicator } from '../common/Communicator';
+import { GAME_MASTER_ID } from '../common/EntityIds';
 import { LoggerFactory } from '../common/logging/LoggerFactory';
 import { UITransport } from '../common/logging/UITransport';
 
@@ -143,7 +144,7 @@ export class GameMaster implements Service {
       const actionInvalidMessage: ActionInvalidMessage = {
         type: 'ACTION_INVALID',
         recipientId: message.senderId,
-        senderId: -1,
+        senderId: GAME_MASTER_ID,
         payload: {
           reason: result.reason
         }
@@ -155,7 +156,7 @@ export class GameMaster implements Service {
     const actionValidMessage: ActionValidMessage = {
       type: 'ACTION_VALID',
       recipientId: message.senderId,
-      senderId: -1,
+      senderId: GAME_MASTER_ID,
       payload: {
         delay: result.delay
       }
@@ -166,18 +167,16 @@ export class GameMaster implements Service {
   }
 
   private handlePlayerHelloMessage(message: PlayerHelloMessage) {
-    this.logger.verbose(`Received player ${message.payload.temporaryId} hello message`);
+    this.logger.verbose(`Received player ${message.senderId} hello message`);
 
     try {
-      const assignedPlayerId = this.tryAcceptPlayer(message);
+      this.tryAcceptPlayer(message);
 
       const playerAcceptedMessage: PlayerAcceptedMessage = {
         type: 'PLAYER_ACCEPTED',
-        senderId: -1,
-        recipientId: message.payload.temporaryId,
-        payload: {
-          assignedPlayerId
-        }
+        senderId: GAME_MASTER_ID,
+        recipientId: message.senderId,
+        payload: undefined
       };
 
       this.communicator.sendMessage(playerAcceptedMessage);
@@ -185,12 +184,12 @@ export class GameMaster implements Service {
     } catch (e) {
       const error: Error = e;
 
-      this.logger.verbose(`Player ${message.payload.temporaryId} rejected. Reason: ${e.message}`);
+      this.logger.verbose(`Player ${message.senderId} rejected. Reason: ${e.message}`);
 
       const playerRejectedMessage: PlayerRejectedMessage = {
         type: 'PLAYER_REJECTED',
-        senderId: -1,
-        recipientId: message.payload.temporaryId,
+        senderId: GAME_MASTER_ID,
+        recipientId: message.senderId,
         payload: {
           reason: error.message
         }
@@ -211,7 +210,7 @@ export class GameMaster implements Service {
     };
     const registerGameMessage: RegisterGameRequest = {
       type: 'REGISTER_GAME_REQUEST',
-      senderId: -1,
+      senderId: GAME_MASTER_ID,
       payload: game
     };
 
@@ -285,15 +284,13 @@ export class GameMaster implements Service {
     }
 
     const newPlayer = new Player();
-    newPlayer.playerId = this.game.getNextPlayerId();
+    newPlayer.playerId = message.senderId;
     newPlayer.teamId = message.payload.teamId;
     newPlayer.isLeader = message.payload.isLeader;
     newPlayer.isBusy = false;
     newPlayer.isConnected = true;
 
     this.game.addPlayer(newPlayer);
-
-    return newPlayer.playerId;
   }
 
   private handlePlayerDisconnectedMessage(message: PlayerDisconnectedMessage) {
@@ -319,7 +316,7 @@ export class GameMaster implements Service {
     if (connectedPlayers.length === 0) {
       this.logger.info('All players disconnected, disconnecting from the server');
       this.destroy();
-      //TODO check if GM should try to start new game
+      // TODO: check if GM should try to start new game
     }
   }
 
@@ -393,7 +390,7 @@ export class GameMaster implements Service {
 
     this.playersContainer.players.forEach(player => {
       const message: GameStartedMessage = {
-        senderId: -1,
+        senderId: GAME_MASTER_ID,
         recipientId: player.playerId,
         type: 'GAME_STARTED',
         payload: gameStartedPayload

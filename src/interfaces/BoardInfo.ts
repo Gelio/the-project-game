@@ -1,3 +1,5 @@
+import { PlayerId } from '../common/EntityIds';
+
 export interface PieceInfo {
   isSham: boolean;
   wasTested: boolean;
@@ -12,7 +14,7 @@ export interface TileInfo {
    */
   hasCompletedGoal: boolean | undefined;
   piece: PieceInfo | null;
-  playerId: number | null;
+  playerId: PlayerId | null;
   timestamp: number;
 }
 
