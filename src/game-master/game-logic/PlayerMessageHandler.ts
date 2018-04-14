@@ -7,10 +7,12 @@ import { ProcessMessageResult } from '../ProcessMessageResult';
 
 import { handleDeletePieceRequest } from './handleDeletePieceRequest';
 import { handleDiscoveryRequest } from './handleDiscoveryRequest';
+import { handleMoveRequest } from './handleMoveRequest';
 import { handlePickUpPieceRequest } from './handlePickUpPieceRequest';
 import { handlePlaceDownPieceRequest } from './handlePlaceDownPieceRequest';
 import { handleRefreshStateRequest } from './handleRefreshStateRequest';
 import { handleTestPieceRequest } from './handleTestPieceRequest';
+
 import { MessageHandlerDependencies } from './MessageHandlerDependencies';
 
 export class PlayerMessageHandler {
@@ -20,6 +22,7 @@ export class PlayerMessageHandler {
     // [REQUEST_TYPE.COMMUNICATION_REQUEST]: handleCommunicationRequest,
     [REQUEST_TYPE.DELETE_PIECE_REQUEST]: handleDeletePieceRequest,
     [REQUEST_TYPE.DISCOVERY_REQUEST]: handleDiscoveryRequest,
+    [REQUEST_TYPE.MOVE_REQUEST]: handleMoveRequest,
     [REQUEST_TYPE.PICK_UP_PIECE_REQUEST]: handlePickUpPieceRequest,
     [REQUEST_TYPE.PLACE_DOWN_PIECE_REQUEST]: handlePlaceDownPieceRequest,
     [REQUEST_TYPE.REFRESH_STATE_REQUEST]: handleRefreshStateRequest,
