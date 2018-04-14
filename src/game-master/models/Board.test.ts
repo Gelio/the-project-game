@@ -50,6 +50,15 @@ describe('[GM] Board', () => {
           'Piece already exists at that position'
         );
       });
+
+      it('should not add a piece on the board when it is picked up', () => {
+        board.removePiece(piece);
+        piece.isPickedUp = true;
+
+        board.addPiece(piece);
+
+        expect(board.getTileAtPosition(piecePosition).piece).toBeNull();
+      });
     });
 
     describe('removePiece', () => {
