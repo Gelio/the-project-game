@@ -13,12 +13,14 @@ import { MessageHandlerDependencies } from './MessageHandlerDependencies';
 import { Direction } from '../../interfaces/Direction';
 
 export function handleMoveRequest(
-  { board, actionDelays }: MessageHandlerDependencies,
+  { board, actionDelays, logger }: MessageHandlerDependencies,
   sender: Player,
-  _moveRequest: MoveRequest
+  moveRequest: MoveRequest
 ): ProcessMessageResult<MoveResponse> {
   const playerPosition = sender.position;
   if (!playerPosition) {
+    logger.error('Player position is not defined');
+
     return {
       valid: false,
       reason: 'Invalid player position. Something is wrong with GM'
@@ -27,7 +29,7 @@ export function handleMoveRequest(
 
   let newPosition: Point = new Point(-1, -1);
 
-  switch (_moveRequest.payload.direction) {
+  switch (moveRequest.payload.direction) {
     case Direction.Down: {
       newPosition = new Point(playerPosition.x, playerPosition.y + 1);
       break;
@@ -46,14 +48,16 @@ export function handleMoveRequest(
     }
     default:
   }
+
   try {
     board.movePlayer(sender, newPosition);
   } catch (error) {
     return {
       valid: false,
-      reason: error
+      reason: error.message
     };
   }
+
   const responsePromise = createDelay(actionDelays.move).then((): MoveResponse => ({
     type: 'MOVE_RESPONSE',
     payload: {
