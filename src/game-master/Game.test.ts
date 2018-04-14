@@ -8,12 +8,11 @@ import { BoardSize } from '../interfaces/BoardSize';
 import { DiscoveryRequest } from '../interfaces/requests/DiscoveryRequest';
 
 import { Game } from './Game';
+import { Player } from './Player';
 import { PlayersContainer } from './PlayersContainer';
 import { InvalidMessageResult } from './ProcessMessageResult';
 
 import { UIController } from './ui/UIController';
-
-import { Player } from './Player';
 
 function createMockUiController(): UIController {
   return <any>{
@@ -44,13 +43,6 @@ describe('[GM] Game', () => {
 
   let player: Player;
 
-  beforeAll(() => {
-    const loggerFactory = new LoggerFactory();
-    loggerInstance = loggerFactory.createEmptyLogger();
-
-    uiController = createMockUiController();
-  });
-
   beforeEach(() => {
     const playersContainter = new PlayersContainer();
     const pointsLimit = 5;
@@ -69,6 +61,11 @@ describe('[GM] Game', () => {
     player.isLeader = true;
     player.isBusy = false;
     player.isConnected = true;
+
+    const loggerFactory = new LoggerFactory();
+    loggerInstance = loggerFactory.createEmptyLogger();
+
+    uiController = createMockUiController();
   });
 
   describe('processMessage', () => {
@@ -82,7 +79,7 @@ describe('[GM] Game', () => {
       expect(processedMessageResult.valid).toBe(false);
 
       const invalidResult = <InvalidMessageResult>processedMessageResult;
-      expect(invalidResult).toBeDefined();
+      expect(invalidResult.valid).toBe(false);
       expect(invalidResult.reason).toMatchSnapshot();
     });
 
@@ -100,7 +97,7 @@ describe('[GM] Game', () => {
       expect(processedMessageResult.valid).toBe(false);
 
       const invalidResult = <InvalidMessageResult>processedMessageResult;
-      expect(invalidResult).toBeDefined();
+      expect(invalidResult.valid).toBe(false);
       expect(invalidResult.reason).toMatchSnapshot();
     });
 
@@ -141,7 +138,7 @@ describe('[GM] Game', () => {
   it('should add player to the game', () => {
     game.addPlayer(player);
 
-    expect(game.playersContainer.getPlayerById(player.playerId)).toEqual(player);
+    expect(game.playersContainer.getPlayerById(player.playerId)).toBe(player);
   });
 
   it('should remove player from the game', () => {
