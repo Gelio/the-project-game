@@ -172,14 +172,20 @@ namespace Player
                 throw new InvalidTypeReceivedException($"Expected: {Consts.DiscoveryResponse} Received: {receivedRaw.Type}");
 
             var received = JsonConvert.DeserializeObject<Message<DiscoveryResponsePayload>>(receivedSerialized);
+
+            if (received.Payload == null)
+                throw new NoPayloadException();
+
+            if (received.Payload.Tiles == null)
+                throw new WrongPayloadException();
+
             foreach (var tileDTO in received.Payload.Tiles)
             {
-                var tile = Board[tileDTO.X + Game.BoardSize.X * tileDTO.Y];
-                tile = AutoMapper.Mapper.Map<Tile>(tileDTO);
-                tile.Timestamp = received.Payload.Timestamp;
+                Board[tileDTO.X + Game.BoardSize.X * tileDTO.Y] = AutoMapper.Mapper.Map<Tile>(tileDTO);
+                Board[tileDTO.X + Game.BoardSize.X * tileDTO.Y].Timestamp = received.Payload.Timestamp;
                 if (tileDTO.Piece)
                 {
-                    tile.Piece = new Piece();
+                    Board[tileDTO.X + Game.BoardSize.X * tileDTO.Y].Piece = new Piece();
                 }
             }
             return true;
