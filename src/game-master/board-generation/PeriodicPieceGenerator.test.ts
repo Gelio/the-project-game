@@ -5,7 +5,6 @@ import { Board } from '../models/Board';
 import { PeriodicPieceGenerator, PeriodicPieceGeneratorOptions } from './PeriodicPieceGenerator';
 
 import { LoggerFactory } from '../../common/logging/LoggerFactory';
-import { createDelay } from '../../common/createDelay';
 
 describe('[GM] PeriodicPieceGenerator', () => {
   let board: Board;
