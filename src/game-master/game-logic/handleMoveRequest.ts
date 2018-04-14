@@ -1,4 +1,5 @@
 import { createDelay } from '../../common/createDelay';
+import { GAME_MASTER_ID } from '../../common/EntityIds';
 import { Point } from '../../common/Point';
 
 import { MoveRequest } from '../../interfaces/requests/MoveRequest';
@@ -60,7 +61,7 @@ export function handleMoveRequest(
       distanceToPiece: board.getDistanceToClosestPiece(newPosition)
     },
     recipientId: sender.playerId,
-    senderId: -1
+    senderId: GAME_MASTER_ID
   }));
 
   return {

@@ -4,17 +4,17 @@ import { LoggerFactory } from '../../common/logging/LoggerFactory';
 import { Point } from '../../common/Point';
 
 import { ActionDelays } from '../../interfaces/ActionDelays';
+import { Direction } from '../../interfaces/Direction';
 import { MoveResponse } from '../../interfaces/responses/MoveResponse';
 
 import { Board } from '../models/Board';
 import { Piece } from '../models/Piece';
+import { Scoreboard } from '../models/Scoreboard';
 
 import { Player } from '../Player';
 import { ValidMessageResult } from '../ProcessMessageResult';
 
 import { handleMoveRequest } from './handleMoveRequest';
-import { MoveRequest } from '../../interfaces/requests/MoveRequest';
-import { Direction } from '../../interfaces/Direction';
 
 const TIMESTAMP_DIFFERENCE_THRESHOLD = 5;
 
@@ -23,6 +23,7 @@ describe('[GM] handleMoveRequest', () => {
   let actionDelays: ActionDelays;
   let player: Player;
   let logger: LoggerInstance;
+  let scoreBoard: Scoreboard;
 
   beforeEach(() => {
     board = new Board(
@@ -38,9 +39,11 @@ describe('[GM] handleMoveRequest', () => {
       move: 500
     };
 
+    scoreBoard = new Scoreboard(10);
+
     player = new Player();
     player.isBusy = true;
-    player.playerId = 1;
+    player.playerId = 'player1';
     board.addPlayer(player);
     if (player.position) {
       const oldPlayerPosition = player.position;
@@ -61,11 +64,12 @@ describe('[GM] handleMoveRequest', () => {
         board,
         playersContainer: <any>{},
         actionDelays: <any>actionDelays,
-        logger
+        logger,
+        scoreboard: scoreBoard
       },
       player,
       {
-        senderId: 1,
+        senderId: 'player1',
         payload: {
           direction: direction
         },
