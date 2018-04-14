@@ -7,6 +7,7 @@ import { ProcessMessageResult } from '../ProcessMessageResult';
 
 import { handleDeletePieceRequest } from './handleDeletePieceRequest';
 import { handleDiscoveryRequest } from './handleDiscoveryRequest';
+import { handlePlaceDownPieceRequest } from './handlePlaceDownPieceRequest';
 import { handleRefreshStateRequest } from './handleRefreshStateRequest';
 import { MessageHandlerDependencies } from './MessageHandlerDependencies';
 
@@ -17,6 +18,7 @@ export class PlayerMessageHandler {
     // [REQUEST_TYPE.COMMUNICATION_REQUEST]: handleCommunicationRequest,
     [REQUEST_TYPE.DELETE_PIECE_REQUEST]: handleDeletePieceRequest,
     [REQUEST_TYPE.DISCOVERY_REQUEST]: handleDiscoveryRequest,
+    [REQUEST_TYPE.PLACE_DOWN_PIECE_REQUEST]: handlePlaceDownPieceRequest,
     [REQUEST_TYPE.REFRESH_STATE_REQUEST]: handleRefreshStateRequest
   };
 
