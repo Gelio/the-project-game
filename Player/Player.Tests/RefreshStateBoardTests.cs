@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 using Player.Messages.Responses;
 using Player.Messages.DTO;
 using Player.GameObjects;
-
+using System.Linq;
 
 namespace Player.Tests
 {
@@ -221,5 +221,85 @@ namespace Player.Tests
 
             Assert.Throws<InvalidOperationException>(() => player.RefreshBoardState());
         }
+
+        [Test]
+        public void RefreshBoardStateSuccess()
+        {
+            var assignedPlayerId = 1;
+
+            var playerPos1 = new PlayerPositionDTO
+            {
+                PlayerId = assignedPlayerId,
+                X = 10,
+                Y = 10
+            };
+
+            var playerPos2 = new PlayerPositionDTO
+            {
+                PlayerId = assignedPlayerId +2,
+                X = 20,
+                Y = 20
+            };
+
+            var playerPositions = new List<PlayerPositionDTO>
+            {
+                playerPos1, playerPos2
+            };
+
+            var messageReceived = new Message<RefreshStateResponsePayload>
+            {
+                Type = Common.Consts.RefreshStateResponse,
+                SenderId = Common.Consts.GameMasterId,
+                RecipientId = assignedPlayerId,
+                Payload = new RefreshStateResponsePayload
+                {
+                    CurrentPositionDistanceToClosestPiece = 10,
+                    Team1Score = 5,
+                    Team2Score = 6,
+                    Timestamp = 123,
+                    PlayerPositions = playerPositions
+                }
+            };
+            var queue = new Queue<string>(new[]
+            {
+                Consts.ACTION_VALID_RESPONSE,
+                JsonConvert.SerializeObject(messageReceived)
+
+            });
+            _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
+
+            var game = new GameInfo()
+            {
+                BoardSize = new BoardSize
+                {
+                    GoalArea = 20,
+                    TaskArea = 20,
+                    X = 20
+                }
+            };
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object)
+            {
+                Id = assignedPlayerId,
+                Game = game
+            };
+            for (int i = 0; i < game.BoardSize.X * (game.BoardSize.GoalArea * 2 + game.BoardSize.TaskArea); i++)
+            {
+                player.Board.Add(new Tile());
+            }
+
+            var result = player.RefreshBoardState();
+
+            Assert.That(result, Is.True);
+            Assert.That(player.Board.FirstOrDefault(x => x.PlayerId == assignedPlayerId).DistanceToClosestPiece, Is.EqualTo(messageReceived.Payload.CurrentPositionDistanceToClosestPiece));
+            Assert.That(player.X, Is.EqualTo(playerPos1.X));
+            Assert.That(player.Y, Is.EqualTo(playerPos1.Y));
+
+            foreach (var p in playerPositions)
+            {
+                Assert.That(player.Board[p.X + game.BoardSize.X * p.Y].PlayerId, Is.EqualTo(p.PlayerId));
+                Assert.That(player.Board[p.X + game.BoardSize.X * p.Y].Timestamp, Is.EqualTo(messageReceived.Payload.Timestamp));
+            }            
+        }
+
     }
 }
