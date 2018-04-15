@@ -78,15 +78,36 @@ describe('[GM] handleTestPieceRequest', () => {
     );
   }
 
-  it('should correctly test piece', async () => {
+  it('should correctly test piece when piece is a sham', async () => {
     const result = executeTestPieceRequest();
     jest.advanceTimersByTime(actionDelays.test);
 
     const { payload } = await result.responseMessage;
 
-    expect(result.valid).toBe(true);
     expect(payload.isSham).toBe(true);
+  });
+
+  it('should correctly test piece when piece is not a sham', async () => {
+    piece.isSham = false;
+    const result = executeTestPieceRequest();
+    jest.advanceTimersByTime(actionDelays.test);
+
+    const { payload } = await result.responseMessage;
+
+    expect(payload.isSham).toBe(false);
+  });
+
+  it('should not remove piece from player', async () => {
+    executeTestPieceRequest();
+    jest.advanceTimersByTime(actionDelays.test);
+
     expect(player.heldPiece).toBe(piece);
+  });
+
+  it('should be valid', () => {
+    const result = executeTestPieceRequest();
+
+    expect(result.valid).toBe(true);
   });
 
   it('should mark action as invalid when player does not hold a piece', () => {
@@ -95,7 +116,6 @@ describe('[GM] handleTestPieceRequest', () => {
     board.getTileAtPosition(piece.position).piece = piece;
 
     const result = executeTestPieceRequest();
-    jest.advanceTimersByTime(actionDelays.test);
 
     expect(result.valid).toBe(false);
   });
@@ -111,12 +131,15 @@ describe('[GM] handleTestPieceRequest', () => {
     expect.assertions(1);
   });
 
-  it('should not resolve the response before action delay', done => {
-    const result: ValidMessageResult<TestPieceResponse> = <any>executeTestPieceRequest();
+  it('should not resolve the message before the delay', () => {
+    const result = executeTestPieceRequest();
+    let resolved = false;
 
-    result.responseMessage.then(() => done.fail('Response resolved before action delay'));
-
+    result.responseMessage.then(() => {
+      resolved = true;
+    });
     jest.advanceTimersByTime(actionDelays.test - 1);
-    done();
+
+    expect(resolved).toBe(false);
   });
 });
