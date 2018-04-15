@@ -46,7 +46,12 @@ export function handleMoveRequest(
       newPosition = new Point(playerPosition.x + 1, playerPosition.y);
       break;
     }
-    default:
+    default: {
+      return {
+        valid: false,
+        reason: 'Invalid direction.'
+      };
+    }
   }
 
   try {
