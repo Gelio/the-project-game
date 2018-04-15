@@ -78,16 +78,36 @@ describe('[GM] handlePickUpPieceRequest', () => {
     );
   }
 
-  it('should pick up piece from the board', () => {
+  it('should be valid', () => {
     const result: ValidMessageResult<PickUpPieceResponse> = <any>executePickUpPieceRequest();
 
     expect(result.valid).toBe(true);
+  });
+
+  it('should mark piece as picked up', () => {
+    executePickUpPieceRequest();
+
     expect(piece.isPickedUp).toBe(true);
+  });
+
+  it('should leave piece on the board', () => {
+    executePickUpPieceRequest();
+
+    expect(board.pieces).toContain(piece);
+  });
+
+  it('should make player held the piece', () => {
+    executePickUpPieceRequest();
+
     expect(player.heldPiece).toBe(piece);
-    expect(board.pieces.find(p => p === piece)).toBe(piece);
-    if (player.position) {
-      expect(board.getTileAtPosition(player.position).piece).toBe(null);
-    }
+  });
+
+  it('should make tile no to have the piece', () => {
+    const playerPosition = player.position;
+
+    executePickUpPieceRequest();
+
+    expect(board.getTileAtPosition(<Point>playerPosition).piece).toBe(null);
   });
 
   it('should mark action as invalid when player does hold a piece', () => {
@@ -127,12 +147,15 @@ describe('[GM] handlePickUpPieceRequest', () => {
     expect.assertions(1);
   });
 
-  it('should not resolve the response before action delay', done => {
-    const result: ValidMessageResult<PickUpPieceResponse> = <any>executePickUpPieceRequest();
+  it('should not resolve the response before action delay', () => {
+    const result = <any>executePickUpPieceRequest();
+    let resolved = false;
 
-    result.responseMessage.then(() => done.fail('response resolved before action delay'));
-
+    result.responseMessage.then(() => {
+      resolved = true;
+    });
     jest.advanceTimersByTime(actionDelays.pick - 1);
-    done();
+
+    expect(resolved).toBe(false);
   });
 });
