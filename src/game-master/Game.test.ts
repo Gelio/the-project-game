@@ -123,7 +123,7 @@ describe('[GM] Game', () => {
   });
 
   describe('after resetting the game', () => {
-    test('players should receive new positions', () => {
+    it('players should receive new positions', () => {
       game.addPlayer(player);
 
       const oldPosition = player.position;
