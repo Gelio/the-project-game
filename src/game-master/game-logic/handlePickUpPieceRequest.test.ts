@@ -82,8 +82,12 @@ describe('[GM] handlePickUpPieceRequest', () => {
     const result: ValidMessageResult<PickUpPieceResponse> = <any>executePickUpPieceRequest();
 
     expect(result.valid).toBe(true);
-    expect(player.heldPiece).toBe(piece);
     expect(piece.isPickedUp).toBe(true);
+    expect(player.heldPiece).toBe(piece);
+    expect(board.pieces.find(p => p === piece)).toBe(piece);
+    if (player.position) {
+      expect(board.getTileAtPosition(player.position).piece).toBe(null);
+    }
   });
 
   it('should mark action as invalid when player does hold a piece', () => {

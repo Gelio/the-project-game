@@ -28,9 +28,7 @@ export function handlePickUpPieceRequest(
     };
   }
 
-  const piece = board.pieces.find(
-    p => p.position.x === playerPosition.x && p.position.y === playerPosition.y
-  );
+  const piece = board.getTileAtPosition(playerPosition).piece;
   if (!piece) {
     return {
       valid: false,
@@ -40,6 +38,7 @@ export function handlePickUpPieceRequest(
 
   piece.isPickedUp = true;
   sender.heldPiece = piece;
+  board.getTileAtPosition(playerPosition).piece = null;
 
   const response: PickUpPieceResponse = {
     type: 'PICK_UP_PIECE_RESPONSE',
