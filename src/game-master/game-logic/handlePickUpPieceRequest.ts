@@ -2,6 +2,7 @@ import { Player } from '../Player';
 import { ProcessMessageResult } from '../ProcessMessageResult';
 
 import { createDelay } from '../../common/createDelay';
+import { GAME_MASTER_ID } from '../../common/EntityIds';
 
 import { PickUpPieceRequest } from '../../interfaces/requests/PickUpPieceRequest';
 import { PickUpPieceResponse } from '../../interfaces/responses/PickUpPieceResponse';
@@ -44,7 +45,7 @@ export function handlePickUpPieceRequest(
     type: 'PICK_UP_PIECE_RESPONSE',
     payload: undefined,
     recipientId: sender.playerId,
-    senderId: -1
+    senderId: GAME_MASTER_ID
   };
 
   const responsePromise = createDelay(actionDelays.pick).then(() => response);

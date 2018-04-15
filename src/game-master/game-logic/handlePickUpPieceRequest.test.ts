@@ -43,7 +43,7 @@ describe('[GM] handlePickUpPieceRequest', () => {
 
     player = new Player();
     player.isBusy = true;
-    player.playerId = 2;
+    player.playerId = 'player2';
     player.position = new Point(0, 0);
     player.heldPiece = null;
 
@@ -116,7 +116,7 @@ describe('[GM] handlePickUpPieceRequest', () => {
     const result: ValidMessageResult<PickUpPieceResponse> = <any>executePickUpPieceRequest();
 
     result.responseMessage.then(response => {
-      expect(response.recipientId).toBe(2);
+      expect(response.recipientId).toBe('player2');
     });
 
     jest.advanceTimersByTime(actionDelays.pick);
