@@ -2,6 +2,7 @@ import { Player } from '../Player';
 import { ProcessMessageResult } from '../ProcessMessageResult';
 
 import { createDelay } from '../../common/createDelay';
+import { GAME_MASTER_ID } from '../../common/EntityIds';
 
 import { TestPieceRequest } from '../../interfaces/requests/TestPieceRequest';
 import { TestPieceResponse } from '../../interfaces/responses/TestPieceResponse';
@@ -24,7 +25,7 @@ export function handleTestPieceRequest(
     type: 'TEST_PIECE_RESPONSE',
     payload: { isSham: sender.heldPiece.isSham },
     recipientId: sender.playerId,
-    senderId: -1
+    senderId: GAME_MASTER_ID
   };
 
   const responsePromise = createDelay(actionDelays.test).then(() => response);

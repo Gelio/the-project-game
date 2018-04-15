@@ -44,7 +44,7 @@ describe('[GM] handleTestPieceRequest', () => {
 
     player = new Player();
     player.isBusy = true;
-    player.playerId = 2;
+    player.playerId = 'player2';
     player.position = new Point(0, 0);
     player.heldPiece = piece;
 
@@ -104,7 +104,7 @@ describe('[GM] handleTestPieceRequest', () => {
     const result: ValidMessageResult<TestPieceResponse> = <any>executeTestPieceRequest();
 
     result.responseMessage.then(response => {
-      expect(response.recipientId).toBe(2);
+      expect(response.recipientId).toBe('player2');
     });
 
     jest.advanceTimersByTime(actionDelays.test);
