@@ -13,7 +13,11 @@ import { Scoreboard } from '../models/Scoreboard';
 
 import { config } from '../config';
 import { Player } from '../Player';
-import { ValidMessageResult } from '../ProcessMessageResult';
+import {
+  InvalidMessageResult,
+  ProcessMessageResult,
+  ValidMessageResult
+} from '../ProcessMessageResult';
 
 import { handleMoveRequest } from './handleMoveRequest';
 
@@ -58,7 +62,7 @@ describe('[GM] handleMoveRequest ', () => {
     jest.useRealTimers();
   });
 
-  function executeHandler(direction: Direction): ValidMessageResult<MoveResponse> {
+  function executeHandler(direction: Direction): ProcessMessageResult<MoveResponse> {
     return <any>handleMoveRequest(
       {
         board,
@@ -84,10 +88,16 @@ describe('[GM] handleMoveRequest ', () => {
     expect(result.valid).toBe(true);
   });
 
-  it('should return the response after delay if move is valid', () => {
-    jest.useFakeTimers();
+  it('should be reject request when move is invalid', async () => {
+    board.movePlayer(player, new Point(0, 0));
+    const result = executeHandler(Direction.Up);
 
-    const result = executeHandler(Direction.Down);
+    expect(result.valid).toBe(false);
+  });
+
+  it('should return the response after delay if move is valid', () => {
+    const result = <ValidMessageResult<MoveResponse>>executeHandler(Direction.Down);
+
     expect(result.delay).toBe(actionDelays.move);
 
     result.responseMessage.then(response => {
@@ -96,13 +106,10 @@ describe('[GM] handleMoveRequest ', () => {
 
     expect.assertions(2);
     jest.advanceTimersByTime(actionDelays.move);
-
-    jest.useRealTimers();
   });
 
   it('should move player down', async () => {
     executeHandler(Direction.Down);
-    jest.advanceTimersByTime(actionDelays.move);
 
     expect((<Point>player.position).x).toBe(5);
     expect((<Point>player.position).y).toBe(16);
@@ -110,7 +117,6 @@ describe('[GM] handleMoveRequest ', () => {
 
   it('should move player up', async () => {
     executeHandler(Direction.Up);
-    jest.advanceTimersByTime(actionDelays.move);
 
     expect((<Point>player.position).x).toBe(5);
     expect((<Point>player.position).y).toBe(14);
@@ -118,7 +124,6 @@ describe('[GM] handleMoveRequest ', () => {
 
   it('should move player right', async () => {
     executeHandler(Direction.Right);
-    jest.advanceTimersByTime(actionDelays.move);
 
     expect((<Point>player.position).x).toBe(6);
     expect((<Point>player.position).y).toBe(15);
@@ -126,15 +131,21 @@ describe('[GM] handleMoveRequest ', () => {
 
   it('should move player left', async () => {
     executeHandler(Direction.Left);
-    jest.advanceTimersByTime(actionDelays.move);
 
     expect((<Point>player.position).x).toBe(4);
     expect((<Point>player.position).y).toBe(15);
   });
 
+  it('should reject request when direction is invalid', () => {
+    const result = executeHandler(<any>'test');
+
+    expect(result.valid).toBe(false);
+    expect((<InvalidMessageResult>result).reason).toMatchSnapshot();
+  });
+
   describe('response', () => {
     it('should contain current timestamp', async () => {
-      const result = executeHandler(Direction.Down);
+      const result = <ValidMessageResult<MoveResponse>>executeHandler(Direction.Down);
       jest.advanceTimersByTime(actionDelays.move);
 
       const { payload } = await result.responseMessage;
@@ -149,7 +160,7 @@ describe('[GM] handleMoveRequest ', () => {
       piece.position = new Point((<Point>player.position).x, (<Point>player.position).y);
       board.addPiece(piece);
 
-      const result = executeHandler(Direction.Down);
+      const result = <ValidMessageResult<MoveResponse>>executeHandler(Direction.Down);
       jest.advanceTimersByTime(actionDelays.move);
 
       const { payload } = await result.responseMessage;
@@ -157,7 +168,7 @@ describe('[GM] handleMoveRequest ', () => {
     });
 
     it('should have distance to the closest piece set to -1 when there are no pieces on the board', async () => {
-      const result = executeHandler(Direction.Down);
+      const result = <ValidMessageResult<MoveResponse>>executeHandler(Direction.Down);
       jest.advanceTimersByTime(actionDelays.move);
 
       const { payload } = await result.responseMessage;
@@ -172,12 +183,12 @@ describe('[GM] handleMoveRequest ', () => {
       piece.position = new Point(5, 5);
       board.addPiece(piece);
 
-      const result = executeHandler(Direction.Down);
+      const result = <ValidMessageResult<MoveResponse>>executeHandler(Direction.Down);
       jest.advanceTimersByTime(actionDelays.move);
 
       const { payload } = await result.responseMessage;
 
-      expect(payload.distanceToPiece).toBe(board.getDistanceToClosestPiece(<Point>player.position));
+      expect(payload.distanceToPiece).toBe(11);
     });
   });
 });
