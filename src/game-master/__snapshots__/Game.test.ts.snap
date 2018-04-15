@@ -1,0 +1,5 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`[GM] Game processMessage should reject message from busy player 1`] = `"Sender is busy"`;
+
+exports[`[GM] Game processMessage should reject message from non existing player 1`] = `"Sender ID is invalid"`;

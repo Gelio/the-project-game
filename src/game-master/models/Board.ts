@@ -72,7 +72,7 @@ export class Board {
       throw new Error('Old player position corrupted');
     }
 
-    if (newTile.player) {
+    if (newTile.player && newTile.player !== player) {
       throw new Error('Two players cannot stand on the same tile');
     }
 
@@ -86,13 +86,14 @@ export class Board {
       throw new Error('Piece already added');
     }
 
-    // TODO: check if piece is picked up and if so, do not place it on the board
     const tile = this.getTileAtPosition(piece.position);
     if (tile.piece) {
       throw new Error('Piece already exists at that position');
     }
 
-    tile.piece = piece;
+    if (!piece.isPickedUp) {
+      tile.piece = piece;
+    }
     this.pieces.push(piece);
   }
 
@@ -139,11 +140,14 @@ export class Board {
     }
     if (player.position) {
       this.getTileAtPosition(player.position).player = null;
+      player.position = null;
     }
+    arrayShuffle(possiblePositions);
 
     for (const position of possiblePositions) {
       if (!this.getTileAtPosition(position).player) {
         player.position = position;
+        this.getTileAtPosition(position).player = player;
         break;
       }
     }

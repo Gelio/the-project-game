@@ -10,4 +10,12 @@ export class Point {
   public static manhattanDistance(point1: Point, point2: Point): number {
     return Math.abs(point1.x - point2.x) + Math.abs(point1.y - point2.y);
   }
+
+  public clone() {
+    return new Point(this.x, this.y);
+  }
+
+  public toString() {
+    return `(${this.x}, ${this.y})`;
+  }
 }

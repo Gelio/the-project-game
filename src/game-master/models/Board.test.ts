@@ -50,6 +50,15 @@ describe('[GM] Board', () => {
           'Piece already exists at that position'
         );
       });
+
+      it('should not add a piece on the board when it is picked up', () => {
+        board.removePiece(piece);
+        piece.isPickedUp = true;
+
+        board.addPiece(piece);
+
+        expect(board.getTileAtPosition(piecePosition).piece).toBeNull();
+      });
     });
 
     describe('removePiece', () => {
@@ -141,7 +150,7 @@ describe('[GM] Board', () => {
       it('should place player on the board', () => {
         board.addPlayer(player);
 
-        expect(player.position).toBeTruthy();
+        expect(player.position).toBeDefined();
         expect(board.getTileAtPosition(<Point>player.position).player).toBe(player);
       });
 
@@ -211,7 +220,7 @@ describe('[GM] Board', () => {
       board.addPlayer(player);
       board.setRandomPlayerPosition(player);
 
-      expect(player.position).toBeTruthy();
+      expect(player.position).toBeDefined();
     });
   });
 
@@ -231,7 +240,7 @@ describe('[GM] Board', () => {
     it('should return the tile if position is valid', () => {
       const point: Point = new Point(0, 0);
 
-      expect(board.getTileAtPosition.bind(board, point)).toBeTruthy();
+      expect(board.getTileAtPosition.bind(board, point)).toBeDefined();
     });
   });
 });
