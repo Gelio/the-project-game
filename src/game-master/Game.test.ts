@@ -79,7 +79,6 @@ describe('[GM] Game', () => {
       expect(processedMessageResult.valid).toBe(false);
 
       const invalidResult = <InvalidMessageResult>processedMessageResult;
-      expect(invalidResult.valid).toBe(false);
       expect(invalidResult.reason).toMatchSnapshot();
     });
 
@@ -97,7 +96,6 @@ describe('[GM] Game', () => {
       expect(processedMessageResult.valid).toBe(false);
 
       const invalidResult = <InvalidMessageResult>processedMessageResult;
-      expect(invalidResult.valid).toBe(false);
       expect(invalidResult.reason).toMatchSnapshot();
     });
 
@@ -125,7 +123,7 @@ describe('[GM] Game', () => {
   });
 
   describe('after resetting the game', () => {
-    it('players should receive new positions', () => {
+    test('players should receive new positions', () => {
       game.addPlayer(player);
 
       const oldPosition = player.position;
