@@ -35,8 +35,8 @@ function handlePlaceDownOnNeutralAreaTile(
   { actionDelays }: MessageHandlerDependencies
 ): ProcessMessageResult<PlaceDownPieceResponse> {
   tile.piece = piece;
-  tile.piece.isPickedUp = false;
-  tile.piece.position = playerPosition.clone();
+  piece.isPickedUp = false;
+  piece.position = playerPosition.clone();
   player.heldPiece = null;
 
   return {
