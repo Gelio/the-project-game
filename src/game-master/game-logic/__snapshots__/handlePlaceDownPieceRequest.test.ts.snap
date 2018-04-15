@@ -1,0 +1,5 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`[GM] handlePlaceDownPiece should mark action as invalid when player does not hold a piece 1`] = `"Player does not hold a piece"`;
+
+exports[`[GM] handlePlaceDownPiece should mark action as invalid when tile already has a piece 1`] = `"Tile under the player already has a piece"`;

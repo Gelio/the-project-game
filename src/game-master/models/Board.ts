@@ -86,13 +86,14 @@ export class Board {
       throw new Error('Piece already added');
     }
 
-    // TODO: check if piece is picked up and if so, do not place it on the board
     const tile = this.getTileAtPosition(piece.position);
     if (tile.piece) {
       throw new Error('Piece already exists at that position');
     }
 
-    tile.piece = piece;
+    if (!piece.isPickedUp) {
+      tile.piece = piece;
+    }
     this.pieces.push(piece);
   }
 
