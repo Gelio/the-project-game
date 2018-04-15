@@ -90,19 +90,19 @@ describe('[GM] handlePickUpPieceRequest', () => {
     expect(piece.isPickedUp).toBe(true);
   });
 
-  it('should leave piece on the board', () => {
+  it('should not delete the piece from the board', () => {
     executePickUpPieceRequest();
 
     expect(board.pieces).toContain(piece);
   });
 
-  it('should make player held the piece', () => {
+  it('should make the player hold the piece', () => {
     executePickUpPieceRequest();
 
     expect(player.heldPiece).toBe(piece);
   });
 
-  it('should make tile no to have the piece', () => {
+  it('should remove the piece from the tile', () => {
     const playerPosition = player.position;
 
     executePickUpPieceRequest();
