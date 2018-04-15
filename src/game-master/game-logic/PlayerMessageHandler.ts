@@ -9,6 +9,7 @@ import { handleDeletePieceRequest } from './handleDeletePieceRequest';
 import { handleDiscoveryRequest } from './handleDiscoveryRequest';
 import { handlePlaceDownPieceRequest } from './handlePlaceDownPieceRequest';
 import { handleRefreshStateRequest } from './handleRefreshStateRequest';
+import { handleTestPieceRequest } from './handleTestPieceRequest';
 import { MessageHandlerDependencies } from './MessageHandlerDependencies';
 
 export class PlayerMessageHandler {
@@ -19,7 +20,8 @@ export class PlayerMessageHandler {
     [REQUEST_TYPE.DELETE_PIECE_REQUEST]: handleDeletePieceRequest,
     [REQUEST_TYPE.DISCOVERY_REQUEST]: handleDiscoveryRequest,
     [REQUEST_TYPE.PLACE_DOWN_PIECE_REQUEST]: handlePlaceDownPieceRequest,
-    [REQUEST_TYPE.REFRESH_STATE_REQUEST]: handleRefreshStateRequest
+    [REQUEST_TYPE.REFRESH_STATE_REQUEST]: handleRefreshStateRequest,
+    [REQUEST_TYPE.TEST_PIECE_REQUEST]: handleTestPieceRequest
   };
 
   constructor(dependencies: MessageHandlerDependencies) {
