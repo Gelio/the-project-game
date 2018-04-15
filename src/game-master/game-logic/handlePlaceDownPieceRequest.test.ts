@@ -170,6 +170,13 @@ describe('[GM] handlePlaceDownPiece', () => {
 
       expect(resolved).toBe(false);
     });
+
+    it('should not modify team scores', () => {
+      executeHandler();
+
+      expect(scoreboard.team1Score).toBe(0);
+      expect(scoreboard.team2Score).toBe(0);
+    });
   });
 
   describe('on team area tile', () => {
