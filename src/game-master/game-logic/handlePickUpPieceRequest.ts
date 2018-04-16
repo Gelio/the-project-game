@@ -37,7 +37,6 @@ export function handlePickUpPieceRequest(
   }
 
   piece.isPickedUp = true;
-  piece.position = playerPosition;
   sender.heldPiece = piece;
   board.getTileAtPosition(playerPosition).piece = null;
 
