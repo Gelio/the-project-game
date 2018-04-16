@@ -43,6 +43,17 @@ export class Board {
     return tile;
   }
 
+  public getTileTeamId(teamTile: Tile) {
+    if (this.firstTeamPositions.find(tile => tile.x === teamTile.x && tile.y === teamTile.y)) {
+      return 1;
+    }
+    if (this.secondTeamPositions.find(tile => tile.x === teamTile.x && tile.y === teamTile.y)) {
+      return 2;
+    }
+
+    throw new Error('Checked tile is not team tile');
+  }
+
   public addPlayer(player: Player) {
     if (player.position) {
       throw new Error('Player is already added on board');
