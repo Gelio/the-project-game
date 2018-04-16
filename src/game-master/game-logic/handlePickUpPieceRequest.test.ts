@@ -79,7 +79,7 @@ describe('[GM] handlePickUpPieceRequest', () => {
   }
 
   it('should be valid', () => {
-    const result: ValidMessageResult<PickUpPieceResponse> = <any>executePickUpPieceRequest();
+    const result = executePickUpPieceRequest();
 
     expect(result.valid).toBe(true);
   });
@@ -113,7 +113,7 @@ describe('[GM] handlePickUpPieceRequest', () => {
   it('should mark action as invalid when player does hold a piece', () => {
     player.heldPiece = piece;
 
-    const result: ValidMessageResult<PickUpPieceResponse> = <any>executePickUpPieceRequest();
+    const result = executePickUpPieceRequest();
 
     expect(result.valid).toBe(false);
   });
@@ -123,7 +123,7 @@ describe('[GM] handlePickUpPieceRequest', () => {
     piece.position = new Point(0, 1);
     board.getTileAtPosition(piece.position).piece = piece;
 
-    const result: ValidMessageResult<PickUpPieceResponse> = <any>executePickUpPieceRequest();
+    const result = executePickUpPieceRequest();
 
     expect(result.valid).toBe(false);
   });
@@ -131,7 +131,7 @@ describe('[GM] handlePickUpPieceRequest', () => {
   it('should mark action as invalid when player has invalid position', () => {
     player.position = null;
 
-    const result: ValidMessageResult<PickUpPieceResponse> = <any>executePickUpPieceRequest();
+    const result = executePickUpPieceRequest();
 
     expect(result.valid).toBe(false);
   });
