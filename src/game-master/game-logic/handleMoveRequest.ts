@@ -5,12 +5,14 @@ import { Point } from '../../common/Point';
 import { MoveRequest } from '../../interfaces/requests/MoveRequest';
 import { MoveResponse } from '../../interfaces/responses/MoveResponse';
 
+import { Direction } from '../../interfaces/Direction';
+
+import { Tile } from '../models/tiles/Tile';
+
 import { Player } from '../Player';
 import { ProcessMessageResult } from '../ProcessMessageResult';
 
 import { MessageHandlerDependencies } from './MessageHandlerDependencies';
-
-import { Direction } from '../../interfaces/Direction';
 
 export function handleMoveRequest(
   { board, actionDelays, logger }: MessageHandlerDependencies,
@@ -54,13 +56,40 @@ export function handleMoveRequest(
     }
   }
 
+  let newTile: Tile;
+  try {
+    newTile = board.getTileAtPosition(newPosition);
+  } catch {
+    return {
+      valid: false,
+      reason: `Can't move player ${
+        moveRequest.payload.direction
+      }. Requested move exceeds map borders.`
+    };
+  }
+
+  if (newTile.type === 'TeamAreaTile') {
+    if (board.getTileTeamId(newTile) !== sender.teamId) {
+      return {
+        valid: false,
+        reason: `Can't move player ${
+          moveRequest.payload.direction
+        }. Only team members are allowed to enter team area.`
+      };
+    }
+  }
+
   try {
     board.movePlayer(sender, newPosition);
   } catch (error) {
     return {
       valid: false,
-      reason: error.message
+      reason: `Can't move player ${moveRequest.payload.direction}. Error: ${error.message}`
     };
+  }
+
+  if (sender.heldPiece) {
+    sender.heldPiece.position = newPosition;
   }
 
   const responsePromise = createDelay(actionDelays.move).then((): MoveResponse => ({
