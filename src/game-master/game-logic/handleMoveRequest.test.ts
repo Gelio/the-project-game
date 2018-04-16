@@ -140,7 +140,6 @@ describe('[GM] handleMoveRequest ', () => {
     const result = executeHandler(<any>'test');
 
     expect(result.valid).toBe(false);
-    console.log((<InvalidMessageResult>result).reason);
     expect((<InvalidMessageResult>result).reason).toMatchSnapshot();
   });
 
@@ -150,17 +149,15 @@ describe('[GM] handleMoveRequest ', () => {
     const result = executeHandler(Direction.Down);
 
     expect(result.valid).toBe(false);
-    console.log((<InvalidMessageResult>result).reason);
     expect((<InvalidMessageResult>result).reason).toMatchSnapshot();
   });
 
   it("should reject request when board can't move player to new position", () => {
-    player.position = null;
+    player.position = new Point(6, 6);
 
     const result = executeHandler(Direction.Down);
 
     expect(result.valid).toBe(false);
-    console.log((<InvalidMessageResult>result).reason);
     expect((<InvalidMessageResult>result).reason).toMatchSnapshot();
   });
 
