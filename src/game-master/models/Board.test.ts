@@ -260,7 +260,9 @@ describe('[GM] Board', () => {
     it('should throw error when checking teamId of non teamTile', () => {
       const tile = board.getTileAtPosition(new Point(0, board.size.goalArea + 1));
 
-      expect(board.getTileTeamId(tile)).toThrow();
+      expect(() => {
+        board.getTileTeamId(tile);
+      }).toThrowError();
     });
   });
 });
