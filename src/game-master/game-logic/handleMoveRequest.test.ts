@@ -31,7 +31,7 @@ describe('[GM] handleMoveRequest ', () => {
   beforeEach(() => {
     board = new Board(
       {
-        goalArea: 10,
+        goalArea: 5,
         taskArea: 20,
         x: 10
       },
@@ -88,7 +88,7 @@ describe('[GM] handleMoveRequest ', () => {
     expect(result.valid).toBe(true);
   });
 
-  it('should be reject request when move is invalid', async () => {
+  it('should reject request when move is invalid', async () => {
     board.movePlayer(player, new Point(0, 0));
     const result = executeHandler(Direction.Up);
 
@@ -140,6 +140,27 @@ describe('[GM] handleMoveRequest ', () => {
     const result = executeHandler(<any>'test');
 
     expect(result.valid).toBe(false);
+    console.log((<InvalidMessageResult>result).reason);
+    expect((<InvalidMessageResult>result).reason).toMatchSnapshot();
+  });
+
+  it("should reject request when player tries to move into other team's area", () => {
+    board.movePlayer(player, new Point(0, board.size.goalArea + board.size.taskArea));
+
+    const result = executeHandler(Direction.Down);
+
+    expect(result.valid).toBe(false);
+    console.log((<InvalidMessageResult>result).reason);
+    expect((<InvalidMessageResult>result).reason).toMatchSnapshot();
+  });
+
+  it("should reject request when board can't move player to new position", () => {
+    player.position = null;
+
+    const result = executeHandler(Direction.Down);
+
+    expect(result.valid).toBe(false);
+    console.log((<InvalidMessageResult>result).reason);
     expect((<InvalidMessageResult>result).reason).toMatchSnapshot();
   });
 
