@@ -54,7 +54,7 @@ export class Board {
       return 2;
     }
 
-    throw new Error('Checked tile is not team tile');
+    throw new Error('The tile is not a team tile');
   }
 
   public addPlayer(player: Player) {
