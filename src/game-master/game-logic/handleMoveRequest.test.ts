@@ -175,7 +175,7 @@ describe('[GM] handleMoveRequest ', () => {
     it('should contain distance to closest piece', async () => {
       const piece = new Piece();
 
-      piece.position = new Point((<Point>player.position).x, (<Point>player.position).y);
+      piece.position = (<Point>player.position).clone();
       board.addPiece(piece);
 
       const result = <ValidMessageResult<MoveResponse>>executeHandler(Direction.Down);
