@@ -1,4 +1,5 @@
 import { Direction } from '../interfaces/Direction';
+
 import { Point } from './Point';
 
 export function getPositionInDirection(oldPosition: Point, direction: Direction): Point {
