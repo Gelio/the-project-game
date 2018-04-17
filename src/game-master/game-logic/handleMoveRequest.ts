@@ -14,6 +14,34 @@ import { ProcessMessageResult } from '../ProcessMessageResult';
 
 import { MessageHandlerDependencies } from './MessageHandlerDependencies';
 
+function createNewPosition(oldPosition: Point, direction: Direction): Point {
+  let newPosition: Point = new Point(-1, -1);
+
+  switch (direction) {
+    case Direction.Down: {
+      newPosition = new Point(oldPosition.x, oldPosition.y + 1);
+      break;
+    }
+    case Direction.Up: {
+      newPosition = new Point(oldPosition.x, oldPosition.y - 1);
+      break;
+    }
+    case Direction.Left: {
+      newPosition = new Point(oldPosition.x - 1, oldPosition.y);
+      break;
+    }
+    case Direction.Right: {
+      newPosition = new Point(oldPosition.x + 1, oldPosition.y);
+      break;
+    }
+    default: {
+      throw new Error();
+    }
+  }
+
+  return newPosition;
+}
+
 export function handleMoveRequest(
   { board, actionDelays, logger }: MessageHandlerDependencies,
   sender: Player,
@@ -29,31 +57,15 @@ export function handleMoveRequest(
     };
   }
 
-  let newPosition: Point = new Point(-1, -1);
+  let newPosition: Point;
 
-  switch (moveRequest.payload.direction) {
-    case Direction.Down: {
-      newPosition = new Point(playerPosition.x, playerPosition.y + 1);
-      break;
-    }
-    case Direction.Up: {
-      newPosition = new Point(playerPosition.x, playerPosition.y - 1);
-      break;
-    }
-    case Direction.Left: {
-      newPosition = new Point(playerPosition.x - 1, playerPosition.y);
-      break;
-    }
-    case Direction.Right: {
-      newPosition = new Point(playerPosition.x + 1, playerPosition.y);
-      break;
-    }
-    default: {
-      return {
-        valid: false,
-        reason: 'Invalid direction.'
-      };
-    }
+  try {
+    newPosition = createNewPosition(<Point>sender.position, moveRequest.payload.direction);
+  } catch {
+    return {
+      valid: false,
+      reason: 'Invalid direction.'
+    };
   }
 
   let newTile: Tile;
@@ -68,15 +80,13 @@ export function handleMoveRequest(
     };
   }
 
-  if (newTile.type === 'TeamAreaTile') {
-    if (board.getTileTeamId(newTile) !== sender.teamId) {
-      return {
-        valid: false,
-        reason: `Can't move player ${
-          moveRequest.payload.direction
-        }. Only team members are allowed to enter team area.`
-      };
-    }
+  if (newTile.type === 'TeamAreaTile' && board.getTileTeamId(newTile) !== sender.teamId) {
+    return {
+      valid: false,
+      reason: `Can't move player ${
+        moveRequest.payload.direction
+      }. Only team members are allowed to enter team area.`
+    };
   }
 
   try {
@@ -89,7 +99,7 @@ export function handleMoveRequest(
   }
 
   if (sender.heldPiece) {
-    sender.heldPiece.position = newPosition;
+    sender.heldPiece.position = sender.heldPiece.position.clone();
   }
 
   const responsePromise = createDelay(actionDelays.move).then((): MoveResponse => ({
