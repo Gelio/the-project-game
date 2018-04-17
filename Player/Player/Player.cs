@@ -295,8 +295,13 @@ namespace Player
                 throw new InvalidTypeReceivedException($"Expected: {Consts.MoveResponse} Received: {receivedRaw.Type}");
 
             var received = JsonConvert.DeserializeObject<Message<MoveResponsePayload>>(receivedSerialized);
-
-
+            if (received.Payload == null)
+                throw new NoPayloadException();
+            // either that or change distanceToClosestPiece to nullable and check for its' existence
+            // in this case, the wrong payload with timestamp will not throw the exception and will go unnoticed
+            if (received.Payload.TimeStamp == 0)
+                throw new WrongPayloadException();
+            
             Board[X + Game.BoardSize.X * Y].PlayerId = 0;
             Board[index].PlayerId = Id;
             Board[index].DistanceToClosestPiece = received.Payload.DistanceToPiece;
