@@ -1,11 +1,10 @@
 import { createDelay } from '../../common/createDelay';
 import { GAME_MASTER_ID } from '../../common/EntityIds';
+import { getPositionInDirection } from '../../common/getPositionInDirection';
 import { Point } from '../../common/Point';
 
 import { MoveRequest } from '../../interfaces/requests/MoveRequest';
 import { MoveResponse } from '../../interfaces/responses/MoveResponse';
-
-import { Direction } from '../../interfaces/Direction';
 
 import { Tile } from '../models/tiles/Tile';
 
@@ -13,34 +12,6 @@ import { Player } from '../Player';
 import { ProcessMessageResult } from '../ProcessMessageResult';
 
 import { MessageHandlerDependencies } from './MessageHandlerDependencies';
-
-function createNewPosition(oldPosition: Point, direction: Direction): Point {
-  let newPosition: Point = new Point(-1, -1);
-
-  switch (direction) {
-    case Direction.Down: {
-      newPosition = new Point(oldPosition.x, oldPosition.y + 1);
-      break;
-    }
-    case Direction.Up: {
-      newPosition = new Point(oldPosition.x, oldPosition.y - 1);
-      break;
-    }
-    case Direction.Left: {
-      newPosition = new Point(oldPosition.x - 1, oldPosition.y);
-      break;
-    }
-    case Direction.Right: {
-      newPosition = new Point(oldPosition.x + 1, oldPosition.y);
-      break;
-    }
-    default: {
-      throw new Error();
-    }
-  }
-
-  return newPosition;
-}
 
 export function handleMoveRequest(
   { board, actionDelays, logger }: MessageHandlerDependencies,
@@ -60,11 +31,11 @@ export function handleMoveRequest(
   let newPosition: Point;
 
   try {
-    newPosition = createNewPosition(<Point>sender.position, moveRequest.payload.direction);
-  } catch {
+    newPosition = getPositionInDirection(playerPosition, moveRequest.payload.direction);
+  } catch (error) {
     return {
       valid: false,
-      reason: 'Invalid direction.'
+      reason: `${error.message}`
     };
   }
 
