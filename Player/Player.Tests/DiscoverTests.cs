@@ -21,13 +21,6 @@ namespace Player.Tests
         Mock<ICommunicator> _communicator;        
         Mock<IGameService> _gameService;
 
-        [OneTimeSetUp]
-        public void OneTimeSetup()
-        {
-            if(!MapperInitializer.isInitialized)
-                MapperInitializer.InitializeMapper();
-        }
-
         [SetUp]
         public void Setup()
         {
