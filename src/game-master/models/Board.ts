@@ -1,9 +1,12 @@
 import { arrayShuffle } from '../../common/arrayShuffle';
-
 import { Point } from '../../common/Point';
+import { TeamId } from '../../common/TeamId';
+
 import { BoardSize } from '../../interfaces/BoardSize';
+
 import { Player } from '../Player';
 import { Piece } from './Piece';
+
 import { Tile } from './tiles/Tile';
 
 import { GoalGenerator } from '../board-generation/GoalGenerator';
@@ -43,7 +46,7 @@ export class Board {
     return tile;
   }
 
-  public getTileTeamId(teamTile: Tile) {
+  public getTileTeamId(teamTile: Tile): TeamId {
     if (this.firstTeamPositions.find(tile => tile.x === teamTile.x && tile.y === teamTile.y)) {
       return 1;
     }
