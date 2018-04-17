@@ -262,7 +262,7 @@ describe('[GM] Board', () => {
 
       expect(() => {
         board.getTileTeamId(tile);
-      }).toThrowError();
+      }).toThrow();
     });
   });
 });
