@@ -13,7 +13,8 @@ namespace Player.Tests
         [OneTimeSetUp]
         public void Setup()
         {
-            MapperInitializer.InitializeMapper();
+            if (!MapperInitializer.isInitialized)
+                MapperInitializer.InitializeMapper();
         }
 
         [Test]

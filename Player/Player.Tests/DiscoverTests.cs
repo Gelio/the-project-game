@@ -24,7 +24,8 @@ namespace Player.Tests
         [OneTimeSetUp]
         public void OneTimeSetup()
         {
-            MapperInitializer.InitializeMapper();
+            if(!MapperInitializer.isInitialized)
+                MapperInitializer.InitializeMapper();
         }
 
         [SetUp]

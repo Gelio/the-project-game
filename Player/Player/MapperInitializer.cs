@@ -6,8 +6,11 @@ namespace Player
 {
     public static class MapperInitializer
     {
+        public static bool isInitialized;
+
         public static void InitializeMapper()
         {
+            isInitialized = true;
             AutoMapper.Mapper.Initialize(cfg =>
             {
                 cfg.CreateMap<GameInfoDTO, GameInfo>();
