@@ -1,0 +1,7 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`[GM] handleMoveRequest  should reject request when board can't move player to new position 1`] = `"Can't move player down. Error: Old player position corrupted"`;
+
+exports[`[GM] handleMoveRequest  should reject request when direction is invalid 1`] = `"Invalid direction: test"`;
+
+exports[`[GM] handleMoveRequest  should reject request when player tries to move into other team's area 1`] = `"Can't move player down. Only team members are allowed to enter team area."`;

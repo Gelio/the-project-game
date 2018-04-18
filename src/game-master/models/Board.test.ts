@@ -242,5 +242,27 @@ describe('[GM] Board', () => {
 
       expect(board.getTileAtPosition.bind(board, point)).toBeDefined();
     });
+
+    it('should return correct teamId of tile inside first team area', () => {
+      const tile = board.getTileAtPosition(new Point(0, 0));
+
+      expect(board.getTileTeamId(tile)).toBe(1);
+    });
+
+    it('should return correct teamId of tile inside second team area', () => {
+      const tile = board.getTileAtPosition(
+        new Point(0, board.size.taskArea + board.size.goalArea + 1)
+      );
+
+      expect(board.getTileTeamId(tile)).toBe(2);
+    });
+
+    it('should throw error when checking teamId of non teamTile', () => {
+      const tile = board.getTileAtPosition(new Point(0, board.size.goalArea + 1));
+
+      expect(() => {
+        board.getTileTeamId(tile);
+      }).toThrow();
+    });
   });
 });

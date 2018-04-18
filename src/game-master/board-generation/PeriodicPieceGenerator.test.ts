@@ -24,9 +24,9 @@ describe('[GM] PeriodicPieceGenerator', () => {
 
     board = new Board(
       {
-        goalArea: 10,
-        taskArea: 20,
-        x: 10
+        goalArea: 100,
+        taskArea: 200,
+        x: 100
       },
       20
     );
