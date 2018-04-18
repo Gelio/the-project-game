@@ -309,12 +309,81 @@ namespace Player
 
         public bool PickUpPiece()
         {
-            throw new NotImplementedException();
+
+            var message = new Message<PickUpPiecePayload>
+            {
+                Type = Consts.PickupPieceRequest,
+                SenderId = Id
+            };
+            var messageSerialized = JsonConvert.SerializeObject(message);
+            _communicator.Send(messageSerialized);
+
+            if (!GetActionStatus()) { return false; }
+
+            var receivedSerialized = _communicator.Receive();
+            var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
+            if (receivedRaw.Type != Consts.PickupPieceResponse)
+                throw new InvalidTypeReceivedException($"Expected: {Consts.PickupPieceResponse} Received: {receivedRaw.Type}");
+
+            var received = JsonConvert.DeserializeObject<Message<PickUpPieceResponsePayload>>(receivedSerialized);
+            if (received.Payload == null)
+                throw new NoPayloadException();
+
+            HeldPiece = Board[X + Game.BoardSize.X * Y].Piece;
+            Board[X + Game.BoardSize.X * Y].Piece = null;
+            return true;
+
+
         }
 
         public (bool, PlaceDownPieceResult) PlaceDownPiece()
         {
-            throw new NotImplementedException();
+            var message = new Message<PlaceDownPiecePayload>
+            {
+                Type = Consts.PlaceDownPieceRequest,
+                SenderId = Id
+            };
+            var messageSerialized = JsonConvert.SerializeObject(message);
+            _communicator.Send(messageSerialized);
+
+            if (!GetActionStatus()) { return (false, PlaceDownPieceResult.NoScore); }
+
+            var receivedSerialized = _communicator.Receive();
+            var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
+            if (receivedRaw.Type != Consts.PlaceDownPieceResponse)
+                throw new InvalidTypeReceivedException($"Expected: {Consts.PlaceDownPieceResponse} Received: {receivedRaw.Type}");
+
+            var received = JsonConvert.DeserializeObject<Message<PlaceDownPieceResponsePayload>>(receivedSerialized);
+            if (received.Payload == null)
+                throw new NoPayloadException();
+
+            Board[X + Game.BoardSize.X * Y].Piece = HeldPiece;
+            HeldPiece = null;
+            if (!received.Payload.DidCompleteGoal.HasValue
+                && Y < Game.BoardSize.GoalArea
+                && Y >= Game.BoardSize.GoalArea + Game.BoardSize.TaskArea)
+            {
+                Board[X + Game.BoardSize.X * Y].Piece.HasInfo = true;
+                Board[X + Game.BoardSize.X * Y].Piece.IsSham = true;
+                logger.Info("The piece was a sham!");
+                return (true, PlaceDownPieceResult.Sham);
+            }
+            else if (!received.Payload.DidCompleteGoal.HasValue)
+            {
+                logger.Info("Placed a piece in Task Area");
+                return (true, PlaceDownPieceResult.TaskArea);
+            }
+            else if (!received.Payload.DidCompleteGoal.Value)
+            {
+                logger.Info("This tile is not a goal tile");
+                return (true, PlaceDownPieceResult.NoScore);
+            }
+            else
+            {
+                logger.Info($"Got 1 point for placing a piece @ {X} {Y}!");
+                return (true, PlaceDownPieceResult.Score);
+            }
+
         }
         public enum PlaceDownPieceResult
         {
