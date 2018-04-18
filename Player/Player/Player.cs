@@ -360,8 +360,8 @@ namespace Player
             Board[X + Game.BoardSize.X * Y].Piece = HeldPiece;
             HeldPiece = null;
             if (!received.Payload.DidCompleteGoal.HasValue
-                && Y < Game.BoardSize.GoalArea
-                && Y >= Game.BoardSize.GoalArea + Game.BoardSize.TaskArea)
+                 && (Y < Game.BoardSize.GoalArea
+                || Y >= Game.BoardSize.GoalArea + Game.BoardSize.TaskArea))
             {
                 Board[X + Game.BoardSize.X * Y].Piece.HasInfo = true;
                 Board[X + Game.BoardSize.X * Y].Piece.IsSham = true;
