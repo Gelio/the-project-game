@@ -296,11 +296,7 @@ namespace Player
 
             var received = JsonConvert.DeserializeObject<Message<MoveResponsePayload>>(receivedSerialized);
             if (received.Payload == null)
-                throw new NoPayloadException();
-            // either that or change distanceToClosestPiece to nullable and check for its' existence
-            // in this case, the wrong payload with timestamp will not throw the exception and will go unnoticed
-            if (received.Payload.TimeStamp == 0)
-                throw new WrongPayloadException();
+                throw new NoPayloadException();          
             
             Board[X + Game.BoardSize.X * Y].PlayerId = 0;
             Board[index].PlayerId = Id;
