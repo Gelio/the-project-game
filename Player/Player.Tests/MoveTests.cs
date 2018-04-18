@@ -155,7 +155,7 @@ namespace Player.Tests
             };
             for (int i = 0; i < _game.BoardSize.X * (_game.BoardSize.GoalArea * 2 + _game.BoardSize.TaskArea); i++)
             {
-                if(i == assignedX + _game.BoardSize.X * assignedY)
+                if (i == assignedX + _game.BoardSize.X * assignedY)
                 {
                     player.Board.Add(new Tile
                     {

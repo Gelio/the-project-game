@@ -31,6 +31,7 @@ namespace Player
         public int LeaderId;
         public GameInfo Game;
         public List<Tile> Board = new List<Tile>();
+        public Piece HeldPiece;
         private ICommunicator _communicator;
         private IGameService _gameService;
 
@@ -296,14 +297,31 @@ namespace Player
 
             var received = JsonConvert.DeserializeObject<Message<MoveResponsePayload>>(receivedSerialized);
             if (received.Payload == null)
-                throw new NoPayloadException();          
-            
+                throw new NoPayloadException();
+
             Board[X + Game.BoardSize.X * Y].PlayerId = 0;
             Board[index].PlayerId = Id;
             Board[index].DistanceToClosestPiece = received.Payload.DistanceToPiece;
             Board[index].Timestamp = received.Payload.TimeStamp;
 
             return true;
+        }
+
+        public bool PickUpPiece()
+        {
+            throw new NotImplementedException();
+        }
+
+        public (bool, PlaceDownPieceResult) PlaceDownPiece()
+        {
+            throw new NotImplementedException();
+        }
+        public enum PlaceDownPieceResult
+        {
+            Sham = -1,
+            NoScore = 0,
+            Score = 1,
+            TaskArea = 2
         }
     }
 }
