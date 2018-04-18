@@ -103,12 +103,6 @@ namespace Player.Tests
         [TestCase("right")]
         public void MoveSuccess(string direction)
         {
-            //for (int i = 0; i < _game.BoardSize.X * (_game.BoardSize.GoalArea * 2 + _game.BoardSize.TaskArea); i++)
-            //{
-            //    player.Board.Add(new Tile());
-            //}
-
-
             var assignedPlayerId = 1;
             var assignedX = 1;
             var assignedY = 1;
@@ -161,6 +155,13 @@ namespace Player.Tests
             };
             for (int i = 0; i < _game.BoardSize.X * (_game.BoardSize.GoalArea * 2 + _game.BoardSize.TaskArea); i++)
             {
+                if(i == assignedX + _game.BoardSize.X * assignedY)
+                {
+                    player.Board.Add(new Tile
+                    {
+                        PlayerId = assignedPlayerId
+                    });
+                }
                 player.Board.Add(new Tile());
             }
 
@@ -199,49 +200,49 @@ namespace Player.Tests
             Assert.Throws<NoPayloadException>(() => player.Move(Up));
         }
 
-        [Test]
-        public void MoveWrongPayload()
-        {
-            var assignedPlayerId = 1;
-            var messageReceived = new Message<GameStartedPayload>
-            {
-                Type = Common.Consts.MoveResponse,
-                SenderId = Common.Consts.GameMasterId,
-                RecipientId = assignedPlayerId,
-                Payload = new GameStartedPayload
-                {
-                    TeamInfo = new Dictionary<int, TeamInfoDTO>()
-                    {
-                        {1, new TeamInfoDTO
-                        {
-                            LeaderId = 2,
-                            Players = new List<int>(){1, 2, 3, 4}
-                        }},
-                        {2, new TeamInfoDTO
-                        {
-                            LeaderId = 5,
-                            Players = new List<int>(){5,6,7,8}
-                        }}
-                    }
+        //[Test]
+        //public void MoveWrongPayload()
+        //{
+        //    var assignedPlayerId = 1;
+        //    var messageReceived = new Message<GameStartedPayload>
+        //    {
+        //        Type = Common.Consts.MoveResponse,
+        //        SenderId = Common.Consts.GameMasterId,
+        //        RecipientId = assignedPlayerId,
+        //        Payload = new GameStartedPayload
+        //        {
+        //            TeamInfo = new Dictionary<int, TeamInfoDTO>()
+        //            {
+        //                {1, new TeamInfoDTO
+        //                {
+        //                    LeaderId = 2,
+        //                    Players = new List<int>(){1, 2, 3, 4}
+        //                }},
+        //                {2, new TeamInfoDTO
+        //                {
+        //                    LeaderId = 5,
+        //                    Players = new List<int>(){5,6,7,8}
+        //                }}
+        //            }
 
-                }
-            };
-            var queue = new Queue<string>(new[]
-            {
-                Consts.ACTION_VALID_RESPONSE,
-                JsonConvert.SerializeObject(messageReceived)
-            });
-            _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
+        //        }
+        //    };
+        //    var queue = new Queue<string>(new[]
+        //    {
+        //        Consts.ACTION_VALID_RESPONSE,
+        //        JsonConvert.SerializeObject(messageReceived)
+        //    });
+        //    _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object)
-            {
-                Id = assignedPlayerId,
-                Game = _game
-            };
+        //    var player = new Player(_communicator.Object, _playerConfig, _gameService.Object)
+        //    {
+        //        Id = assignedPlayerId,
+        //        Game = _game
+        //    };
 
 
-            Assert.Throws<WrongPayloadException>(() => player.Move(Up));
-        }
+        //    Assert.Throws<WrongPayloadException>(() => player.Move(Up));
+        //}
 
         [Test]
         public void MoveWrongDirection()
