@@ -47,10 +47,18 @@ export class Board {
   }
 
   public getTileTeamId(teamTile: Tile): TeamId {
-    if (this.firstTeamPositions.find(tile => tile.x === teamTile.x && tile.y === teamTile.y)) {
+    if (
+      this.firstTeamPositions.find(
+        position => position.x === teamTile.x && position.y === teamTile.y
+      )
+    ) {
       return 1;
     }
-    if (this.secondTeamPositions.find(tile => tile.x === teamTile.x && tile.y === teamTile.y)) {
+    if (
+      this.secondTeamPositions.find(
+        position => position.x === teamTile.x && position.y === teamTile.y
+      )
+    ) {
       return 2;
     }
 
