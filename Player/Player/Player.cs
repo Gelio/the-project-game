@@ -149,12 +149,43 @@ namespace Player
         {
             while (true)
             {
-                Discover();
-                Move("down");
-                logger.Debug("Player's position: {} {}", X, Y);
+                RefreshBoardState();
+                if (HeldPiece != null)
+                {
+                    if (IsInGoalArea())
+                    {
+                        logger.Info("Trying to place down piece");
+                        (var result, var resultEnum) = PlaceDownPiece();
+                        string direction = PickMovementDirection();
+                        Move(direction);
+                    }
+                    else
+                        Move("up");
+                }
+                else
+                {
+                    if (Board[GetBoardIndex()].Piece != null)
+                    {
+                        logger.Info("Trying to pick up piece...");
+                        PickUpPiece();
+                    }
+
+                    string direction = PickMovementDirection();
+                    Move(direction);
+                    logger.Debug("Player's position: {} {}", X, Y);
+                }
+
             }
         }
 
+        private string PickMovementDirection()
+        {
+            string[] directions = { "up", "down", "left", "right" };
+            return directions[new Random().Next(0, 4)];
+        }
+
+        private int GetBoardIndex() => X + Game.BoardSize.X * Y;
+        private bool IsInGoalArea() => (Y < Game.BoardSize.GoalArea || Y >= Game.BoardSize.GoalArea + Game.BoardSize.TaskArea);
         public bool Discover()
         {
             var message = new Message<DiscoveryPayload>()
@@ -334,9 +365,9 @@ namespace Player
 
             HeldPiece = Board[X + Game.BoardSize.X * Y].Piece;
             Board[X + Game.BoardSize.X * Y].Piece = null;
+
+            logger.Info("Picked up piece @ ({}, {})", X, Y);
             return true;
-
-
         }
 
         public (bool, PlaceDownPieceResult) PlaceDownPiece()
