@@ -1,9 +1,5 @@
 import { createDelay } from '../../common/createDelay';
 import { GAME_MASTER_ID } from '../../common/EntityIds';
-import { getPositionInDirection } from '../../common/getPositionInDirection';
-import { Point } from '../../common/Point';
-
-import { Tile } from '../models/tiles/Tile';
 
 import { Player } from '../Player';
 import { ProcessMessageResult } from '../ProcessMessageResult';
@@ -14,55 +10,69 @@ import {
   AcceptedCommunicationResponseFromRecipient,
   AcceptedCommunicationResponseToSender,
   CommunicationResponseFromRecipient,
-  CommunicationResponseToSender,
-  RejectedCommunicationResponseFromRecipient,
   RejectedCommunicationResponseToSender
 } from '../../interfaces/responses/CommunicationResponse';
 
-import { ActionInvalidMessage } from '../../interfaces/messages/ActionInvalidMessage';
-import { ActionValidMessage } from '../../interfaces/messages/ActionValidMessage';
 import { ResponseSentMessage } from '../../interfaces/messages/ResponseSentMessage';
-import { MessageWithRecipient } from '../../interfaces/MessageWithRecipient';
+import { SendMessageFn } from '../SendMessageFn';
+
+import { ActionDelays } from '../../interfaces/ActionDelays';
+
+function handleAcceptedResponse(
+  communicationResponse: CommunicationResponseFromRecipient,
+  sendMessage: SendMessageFn,
+  actionDelays: ActionDelays
+): ProcessMessageResult<ResponseSentMessage> {
+  const acceptedResponse = <AcceptedCommunicationResponseFromRecipient>communicationResponse;
+  const responseToInformationSource: ResponseSentMessage = {
+    type: 'RESPONSE_SENT',
+    senderId: GAME_MASTER_ID,
+    recipientId: acceptedResponse.senderId,
+    payload: undefined
+  };
+  const responseToAskingPlayer: AcceptedCommunicationResponseToSender = {
+    type: 'COMMUNICATION_RESPONSE',
+    senderId: GAME_MASTER_ID,
+    recipientId: acceptedResponse.payload.targetPlayerId,
+    payload: {
+      accepted: true,
+      boardInfo: acceptedResponse.payload.board,
+      senderPlayerId: acceptedResponse.senderId
+    }
+  };
+  const responsePromise = createDelay(actionDelays.communicationAccept).then(() => {
+    sendMessage(responseToAskingPlayer);
+
+    return responseToInformationSource;
+  });
+
+  return {
+    valid: true,
+    delay: actionDelays.communicationAccept,
+    responseMessage: responsePromise
+  };
+}
 
 export function handleCommunicationResponse(
   state: any,
-  { board, actionDelays, logger }: MessageHandlerDependencies,
-  sender: Player,
+  { actionDelays, sendMessage }: MessageHandlerDependencies,
+  _sender: Player,
   communicationResponse: CommunicationResponseFromRecipient
-) {
+): ProcessMessageResult<ResponseSentMessage> {
   if (
     state[communicationResponse.payload.targetPlayerId][communicationResponse.senderId] ===
     undefined
   ) {
     return {
       valid: false,
-      reason: `No pending communication response for player ${
+      reason: `No pending communication request for player ${
         communicationResponse.payload.targetPlayerId
       }`
     };
   }
 
-  const acceptedCommunicationResponse = <AcceptedCommunicationResponseFromRecipient>communicationResponse;
-  if (acceptedCommunicationResponse) {
-    //promise.resolve
-
-    const responseToInformationSource: ResponseSentMessage = {
-      type: 'RESPONSE_SENT',
-      senderId: GAME_MASTER_ID,
-      recipientId: communicationResponse.senderId,
-      payload: undefined
-    };
-
-    const responseToAskingPlayer: AcceptedCommunicationResponseToSender = {
-      type: 'COMMUNICATION_RESPONSE',
-      senderId: GAME_MASTER_ID,
-      recipientId: communicationResponse.payload.targetPlayerId,
-      payload: {
-        accepted: true,
-        boardInfo: acceptedCommunicationResponse.payload.board,
-        senderPlayerId: communicationResponse.senderId
-      }
-    };
+  if (communicationResponse.payload.accepted) {
+    return handleAcceptedResponse(communicationResponse, sendMessage, actionDelays);
   } else {
     const responseToAskingPlayer: RejectedCommunicationResponseToSender = {
       type: 'COMMUNICATION_RESPONSE',
@@ -80,10 +90,15 @@ export function handleCommunicationResponse(
       recipientId: communicationResponse.senderId,
       payload: undefined
     };
-  }
 
-  return {
-    valid: true,
-    delay: actionDelays.communicationAccept
-  };
+    sendMessage(responseToAskingPlayer);
+
+    const responsePromise = Promise.resolve(responseToInformationSource);
+
+    return {
+      valid: true,
+      delay: 0,
+      responseMessage: responsePromise
+    };
+  }
 }
