@@ -163,6 +163,7 @@ export class GameMaster implements Service {
       }
     };
 
+    this.uiController.updateBoard(this.game.board);
     this.communicator.sendMessage(actionValidMessage);
     this.communicator.sendMessage(await result.responseMessage);
   }
