@@ -3,7 +3,7 @@
   "serverPort": 4200,
   "askLevel": 10,
   "respondLevel": 8,
-  "teamNumber": 2,
+  "teamNumber": 1,
   "isLeader": true,
   "timeout": 10000,
   "gameName": "Default"

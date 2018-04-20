@@ -56,7 +56,7 @@ namespace Player
             ConnectToServer();
             WaitForGameStart();
             RefreshBoardState(); // -- gives us info about all teammates' (+ ours) initial position
-            logger.Debug($"Player init position: {X} {Y}");
+            logger.Debug($"Player's init position: {X} {Y}");
             Play();
         }
 
@@ -150,6 +150,7 @@ namespace Player
             {
                 Discover();
                 Move("down");
+                logger.Debug("Player's position: {} {}", X, Y);
                 System.Threading.Thread.Sleep(10000);
             }
         }
