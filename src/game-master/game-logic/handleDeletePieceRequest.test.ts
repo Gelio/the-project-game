@@ -62,7 +62,8 @@ describe('[GM] handleDeletePieceRequest', () => {
         playersContainer: <any>{},
         actionDelays: <any>actionDelays,
         logger,
-        scoreboard: new Scoreboard(5)
+        scoreboard: new Scoreboard(5),
+        sendMessage: jest.fn()
       },
       player,
       <any>{}

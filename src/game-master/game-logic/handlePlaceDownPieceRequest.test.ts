@@ -84,7 +84,8 @@ describe('[GM] handlePlaceDownPiece', () => {
         playersContainer: <any>{},
         actionDelays,
         logger,
-        scoreboard
+        scoreboard,
+        sendMessage: jest.fn()
       },
       player,
       <any>{}

@@ -69,7 +69,8 @@ describe('[GM] handleMoveRequest ', () => {
         playersContainer: <any>{},
         actionDelays: <any>actionDelays,
         logger,
-        scoreboard
+        scoreboard,
+        sendMessage: jest.fn()
       },
       player,
       {
