@@ -71,7 +71,10 @@ namespace Player
 
             for (int i = 0; i < Game.BoardSize.X * (Game.BoardSize.GoalArea * 2 + Game.BoardSize.TaskArea); i++)
             {
-                Board.Add(new Tile());
+                Board.Add(new Tile()
+                {
+                    DistanceToClosestPiece = int.MaxValue
+                });
             }
         }
 
@@ -157,34 +160,61 @@ namespace Player
                     {
                         logger.Info("Trying to place down piece");
                         (var result, var resultEnum) = PlaceDownPiece();
-                        string direction = PickMovementDirection();
+                        string direction = PickRandomMovementDirection();
                         Move(direction);
                     }
                     else
                         Move("up");
                 }
+                else if (Board[GetCurrentBoardIndex()].DistanceToClosestPiece == 0)
+                {
+                    logger.Info("Trying to pick up piece...");
+                    PickUpPiece();
+                    continue;
+                }
                 else
                 {
-                    if (Board[GetBoardIndex()].DistanceToClosestPiece == 0)
-                    {
-                        logger.Info("Trying to pick up piece...");
-                        PickUpPiece();
-                        continue;
-                    }
-
-                    string direction = PickMovementDirection();
+                    Discover();
+                    string direction = PickClosestPieceDirection();
                     Move(direction);
                 }
             }
         }
 
-        private string PickMovementDirection()
+        private string PickClosestPieceDirection()
+        {
+            int bestDistance = int.MaxValue;
+            int bestDx = 0, bestDy = 0;
+            for (int dy = -1; dy <= 1; dy++)
+                for (int dx = -1; dx <= 1; dx++)
+                {
+                    if (X + dx < 0 || X + dx > Game.BoardSize.X || Y + dy < 0 || Y + dy > (Game.BoardSize.TaskArea + Game.BoardSize.GoalArea * 2))
+                        continue;
+                    int index = X + dx + Game.BoardSize.X * (Y + dy);
+                    if (Board[index].DistanceToClosestPiece < bestDistance)
+                    {
+                        bestDistance = Board[index].DistanceToClosestPiece;
+                        bestDx = dx;
+                        bestDy = dy;
+                    }
+                }
+            if (bestDy == -1)
+                return "up";
+            if (bestDy == 1)
+                return "down";
+            if (bestDx == -1)
+                return "left";
+            if (bestDx == 1)
+                return "right";
+            return "up";
+        }
+        private string PickRandomMovementDirection()
         {
             string[] directions = { "up", "down", "left", "right" };
             return directions[new Random().Next(0, 4)];
         }
 
-        private int GetBoardIndex() => X + Game.BoardSize.X * Y;
+        private int GetCurrentBoardIndex() => X + Game.BoardSize.X * Y;
         private bool IsInGoalArea() => (Y < Game.BoardSize.GoalArea || Y >= Game.BoardSize.GoalArea + Game.BoardSize.TaskArea);
         public bool Discover()
         {
@@ -288,10 +318,10 @@ namespace Player
                 {
                     X = playerInfo.X;
                     Y = playerInfo.Y;
-                    Board[GetBoardIndex()].DistanceToClosestPiece = received.Payload.CurrentPositionDistanceToClosestPiece;
+                    Board[GetCurrentBoardIndex()].DistanceToClosestPiece = received.Payload.CurrentPositionDistanceToClosestPiece;
                     gotOwnInfo = true;
-                    if (Board[GetBoardIndex()].Piece == null && Board[GetBoardIndex()].DistanceToClosestPiece == 0)
-                        Board[GetBoardIndex()].Piece = new Piece();
+                    if (Board[GetCurrentBoardIndex()].Piece == null && Board[GetCurrentBoardIndex()].DistanceToClosestPiece == 0)
+                        Board[GetCurrentBoardIndex()].Piece = new Piece();
                 }
             }
 
@@ -335,6 +365,8 @@ namespace Player
             _communicator.Send(messageSerialized);
 
             if (!GetActionStatus()) { return false; }
+
+            logger.Debug("Moving {}", direction);
 
             var receivedSerialized = _communicator.Receive();
             var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
