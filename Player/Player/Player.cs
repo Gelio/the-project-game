@@ -343,7 +343,6 @@ namespace Player
 
         public bool PickUpPiece()
         {
-
             var message = new Message<PickUpPiecePayload>
             {
                 Type = Consts.PickupPieceRequest,
@@ -360,8 +359,8 @@ namespace Player
                 throw new InvalidTypeReceivedException($"Expected: {Consts.PickupPieceResponse} Received: {receivedRaw.Type}");
 
             var received = JsonConvert.DeserializeObject<Message<PickUpPieceResponsePayload>>(receivedSerialized);
-            if (received.Payload == null)
-                throw new NoPayloadException();
+            // if (received.Payload == null)
+            //     throw new NoPayloadException();
 
             HeldPiece = Board[X + Game.BoardSize.X * Y].Piece;
             Board[X + Game.BoardSize.X * Y].Piece = null;
