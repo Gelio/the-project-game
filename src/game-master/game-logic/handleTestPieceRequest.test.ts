@@ -71,7 +71,8 @@ describe('[GM] handleTestPieceRequest', () => {
         playersContainer: <any>{},
         actionDelays: <any>actionDelays,
         logger,
-        scoreboard
+        scoreboard,
+        sendMessage: jest.fn()
       },
       player,
       <any>{}

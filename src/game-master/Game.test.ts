@@ -52,7 +52,8 @@ describe('[GM] Game', () => {
       loggerInstance,
       uiController,
       playersContainter,
-      actionDelays
+      actionDelays,
+      jest.fn()
     );
 
     player = new Player();
