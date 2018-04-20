@@ -142,6 +142,7 @@ namespace Player
 
             TeamMembersIds = message.Payload.TeamInfo[TeamId].Players;
             LeaderId = message.Payload.TeamInfo[TeamId].LeaderId;
+            logger.Info("The game has started!");
         }
 
         public void Play()
@@ -151,7 +152,6 @@ namespace Player
                 Discover();
                 Move("down");
                 logger.Debug("Player's position: {} {}", X, Y);
-                System.Threading.Thread.Sleep(10000);
             }
         }
 
