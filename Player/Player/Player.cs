@@ -164,24 +164,24 @@ namespace Player
                 }
                 else
                 {
-                    if (Board[GetBoardIndex()].Piece != null)
+                    if (Board[GetBoardIndex()].DistanceToClosestPiece == 0)
                     {
                         logger.Info("Trying to pick up piece...");
                         PickUpPiece();
+                        continue;
                     }
 
                     string direction = PickMovementDirection();
                     Move(direction);
                     logger.Debug("Player's position: {} {}", X, Y);
                 }
-
             }
         }
 
         private string PickMovementDirection()
         {
-            string[] directions = { "up", "down", "left", "right" };
-            return directions[new Random().Next(0, 4)];
+            string[] directions = { "up", "down", "down", "down", "down", "left", "right" };
+            return directions[new Random().Next(0, 6)];
         }
 
         private int GetBoardIndex() => X + Game.BoardSize.X * Y;
