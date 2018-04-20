@@ -90,6 +90,7 @@ export class GameMaster implements Service {
     bindObjectMethods(this.messageHandlers, this);
     this.destroy = this.destroy.bind(this);
     this.handleMessage = this.handleMessage.bind(this);
+    this.sendMessage = this.sendMessage.bind(this);
   }
 
   public init() {
@@ -329,7 +330,8 @@ export class GameMaster implements Service {
       this.logger,
       this.uiController,
       this.playersContainer,
-      this.options.actionDelays
+      this.options.actionDelays,
+      this.sendMessage
     );
     this.uiController.updateBoard(this.game.board);
 
@@ -427,5 +429,9 @@ export class GameMaster implements Service {
     this.logger = this.loggerFactory.createLogger([uiTransport]);
     registerUncaughtExceptionHandler(this.logger);
     this.logger.info('Logger initiated');
+  }
+
+  private sendMessage(message: Message<any>): void {
+    return this.communicator.sendMessage(message);
   }
 }

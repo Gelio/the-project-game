@@ -11,6 +11,7 @@ import { Board } from './models/Board';
 import { Scoreboard } from './models/Scoreboard';
 
 import { ProcessMessageResult } from './ProcessMessageResult';
+import { SendMessageFn } from './SendMessageFn';
 
 import { UIController } from './ui/UIController';
 
@@ -35,7 +36,8 @@ export class Game {
     logger: LoggerInstance,
     uiController: UIController,
     playersContainer: PlayersContainer,
-    actionDelays: ActionDelays
+    actionDelays: ActionDelays,
+    sendMessage: SendMessageFn
   ) {
     this.board = new Board(boardSize, pointsLimit);
     this.scoreboard = new Scoreboard(pointsLimit);
@@ -49,7 +51,8 @@ export class Game {
       playersContainer: this.playersContainer,
       actionDelays: this.actionDelays,
       logger: this.logger,
-      scoreboard: this.scoreboard
+      scoreboard: this.scoreboard,
+      sendMessage
     });
   }
 
