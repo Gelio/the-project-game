@@ -92,13 +92,13 @@ namespace Player.Tests
                     {
                         {1, new TeamInfoDTO
                         {
-                            LeaderId = 2,
-                            Players = new List<int>(){1, 2, 3, 4}
+                            LeaderId = assignedPlayerId,
+                            Players = new List<string> { assignedPlayerId, "b", "c", "d" }
                         }},
                         {2, new TeamInfoDTO
                         {
-                            LeaderId = 5,
-                            Players = new List<int>(){5,6,7,8}
+                            LeaderId = "h",
+                            Players = new List<string> { "e", "f", "g", "h" }
                         }}
                     }
                 }
@@ -178,13 +178,13 @@ namespace Player.Tests
                     {
                         new PlayerPositionDTO
                         {
-                            PlayerId=assignedPlayerId + 1,
+                            PlayerId="xxx",
                             X=10,
                             Y=10
                         },
                         new PlayerPositionDTO
                         {
-                            PlayerId=assignedPlayerId + 2,
+                            PlayerId="yyy",
                             X=20,
                             Y=20
                         }

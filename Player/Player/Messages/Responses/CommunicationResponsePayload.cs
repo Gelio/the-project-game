@@ -6,7 +6,7 @@ namespace Player.Messages.Responses
 {
     public class CommunicationResponsePayload : IPayload
     {
-        public int TargetPlayerId;
+        public string TargetPlayerId;
         public bool Accepted;
         public List<TileCommunicationDTO> Board;
     }

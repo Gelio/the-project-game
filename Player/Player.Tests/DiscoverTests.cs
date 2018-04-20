@@ -215,13 +215,13 @@ namespace Player.Tests
                     {
                         {1, new TeamInfoDTO
                         {
-                            LeaderId = 2,
-                            Players = new List<int>(){1, 2, 3, 4}
+                            LeaderId = _assignedPlayerId,
+                            Players = new List<string> { _assignedPlayerId, "b", "c", "d" }
                         }},
                         {2, new TeamInfoDTO
                         {
-                            LeaderId = 5,
-                            Players = new List<int>(){5,6,7,8}
+                            LeaderId = "h",
+                            Players = new List<string> { "e", "f", "g", "h" }
                         }}
                     }
                 }

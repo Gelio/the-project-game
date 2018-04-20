@@ -27,8 +27,8 @@ namespace Player
         public int Y;
         public string ServerHostName => _communicator.ServerHostName;
         public int ServerPort => _communicator.ServerPort;
-        public IList<int> TeamMembersIds;
-        public int LeaderId;
+        public IList<string> TeamMembersIds;
+        public string LeaderId;
         public GameInfo Game;
         public List<Tile> Board = new List<Tile>();
         public Piece HeldPiece;

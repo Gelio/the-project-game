@@ -6,10 +6,10 @@ namespace Player.Messages.Requests
     public class CommunicationPayload : IPayload
     {
         [JsonProperty("targetPlayerId")]
-        public int? TargetPlayerId;
+        public string TargetPlayerId;
 
         [JsonProperty("senderPlayerId")]
-        public int? SenderPlayerId;
+        public string SenderPlayerId;
 
     }
 }

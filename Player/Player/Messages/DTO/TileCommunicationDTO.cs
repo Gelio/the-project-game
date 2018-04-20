@@ -7,7 +7,7 @@ namespace Player.Messages.DTO
         public int DistanceToPiece;
         public bool HasCompletedGoal;
         public PieceDTO Piece;
-        public int? PlayerId;
+        public string PlayerId;
         public long TimeStamp;
     }
 

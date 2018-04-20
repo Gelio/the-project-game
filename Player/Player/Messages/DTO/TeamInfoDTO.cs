@@ -4,7 +4,7 @@ namespace Player.Messages.DTO
 {
     public class TeamInfoDTO
     {
-        public IList<int> Players;
-        public int LeaderId;
+        public IList<string> Players;
+        public string LeaderId;
     }
 }

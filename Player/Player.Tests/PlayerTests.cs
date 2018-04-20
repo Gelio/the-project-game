@@ -68,8 +68,8 @@ namespace Player.Tests
         public void WaitForGameStartSucceeds()
         {
             // Give
-            var expectedTeamMembersIds = new List<int> { 1, 2, 3, 4, 5, 6, 7, 8 };
-            var expectedLeaderId = 3;
+            var expectedTeamMembersIds = new List<string> { "a", "b", "c", "d" };
+            var expectedLeaderId = "c";
             var message = new Message<GameStartedPayload>
             {
                 Type = Common.Consts.GameStarted,
@@ -86,8 +86,8 @@ namespace Player.Tests
 
                         {2, new TeamInfoDTO
                             {
-                                LeaderId = 9,
-                                Players = new List<int> {9,10,11,12}
+                                LeaderId = "h",
+                                Players = new List<string> {"e", "f", "g", "h"}
                             }
                         }
                     }
