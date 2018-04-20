@@ -11,7 +11,5 @@ namespace Player.Messages.Requests
         public int TeamId;
         [JsonProperty("isLeader")]
         public bool IsLeader;
-        [JsonProperty("temporaryId")]
-        public int TemporaryId;
     }
 }

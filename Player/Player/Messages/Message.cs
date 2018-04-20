@@ -10,9 +10,9 @@ namespace Player.Interfaces
         [JsonProperty("type")]
         public string Type;
         [JsonProperty("senderId")]
-        public int SenderId;
+        public string SenderId;
         [JsonProperty("recipientId")]
-        public int? RecipientId;
+        public string RecipientId;
         [JsonProperty("payload")]
         public T Payload;
     }
@@ -22,8 +22,8 @@ namespace Player.Interfaces
         [JsonProperty("type")]
         public string Type;
         [JsonProperty("senderId")]
-        public int SenderId;
+        public string SenderId;
         [JsonProperty("recipientId")]
-        public int? RecipientId;
+        public string RecipientId;
     }
 }

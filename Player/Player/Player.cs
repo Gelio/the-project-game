@@ -16,7 +16,7 @@ namespace Player
     {
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        public int Id;
+        public string Id;
         public int TeamId;
         public bool IsLeader;
         public string GameName;
@@ -40,6 +40,7 @@ namespace Player
             _communicator = communicator;
             _gameService = gameService;
 
+            Id = Guid.NewGuid().ToString();
             TeamId = config.TeamNumber;
             IsLeader = config.IsLeader;
             AskLevel = config.AskLevel;
@@ -83,13 +84,12 @@ namespace Player
             var helloMessage = new Message<PlayerHelloPayload>
             {
                 Type = Consts.PlayerHelloRequest,
-                SenderId = Consts.GameMasterId,
+                SenderId = Id,
                 Payload = new PlayerHelloPayload
                 {
                     Game = GameName,
                     TeamId = TeamId,
                     IsLeader = IsLeader,
-                    TemporaryId = new Random().Next(1, 10000)
                 }
             };
             var helloMessageSerialized = JsonConvert.SerializeObject(helloMessage);
@@ -117,7 +117,6 @@ namespace Player
             }
 
             var acceptedMessage = JsonConvert.DeserializeObject<Message<PlayerAcceptedPayload>>(receivedMessageSerialized);
-            Id = acceptedMessage.Payload.AssignedPlayerId;
             logger.Info("Player connected to server");
         }
 
@@ -299,7 +298,7 @@ namespace Player
             if (received.Payload == null)
                 throw new NoPayloadException();
 
-            Board[X + Game.BoardSize.X * Y].PlayerId = 0;
+            Board[X + Game.BoardSize.X * Y].PlayerId = null;
             Board[index].PlayerId = Id;
             Board[index].DistanceToClosestPiece = received.Payload.DistanceToPiece;
             Board[index].Timestamp = received.Payload.TimeStamp;

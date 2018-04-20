@@ -28,7 +28,7 @@ namespace Player
             var message = new Message
             {
                 Type = Common.Consts.ListGamesRequest,
-                SenderId = Common.Consts.UnknownPlayerId
+                SenderId = Common.Consts.UnregisteredPlayerId
             };
 
             var msg_string = JsonConvert.SerializeObject(message);

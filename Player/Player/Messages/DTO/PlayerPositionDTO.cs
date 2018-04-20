@@ -2,7 +2,7 @@ namespace Player.Messages.DTO
 {
     public class PlayerPositionDTO
     {
-        public int PlayerId;
+        public string PlayerId;
         public int X;
         public int Y;
     }

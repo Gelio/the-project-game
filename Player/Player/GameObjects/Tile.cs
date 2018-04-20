@@ -4,7 +4,7 @@ namespace Player.GameObjects
 {
     public class Tile
     {
-        public int PlayerId;
+        public string PlayerId;
         public Piece Piece;
         public int DistanceToClosestPiece;
         public long? Timestamp;
