@@ -15,10 +15,10 @@ namespace Player.Tests
     [TestFixture]
     class DiscoverTests
     {
+        string _assignedPlayerId;
         PlayerConfig _playerConfig;
         GameInfo _game;
-
-        Mock<ICommunicator> _communicator;        
+        Mock<ICommunicator> _communicator;
         Mock<IGameService> _gameService;
 
         [SetUp]
@@ -44,6 +44,8 @@ namespace Player.Tests
                     X = 20
                 }
             };
+
+            _assignedPlayerId = Guid.NewGuid().ToString();
         }
 
         [Test]
@@ -52,7 +54,7 @@ namespace Player.Tests
             var messageReceived = new Message<DiscoveryResponsePayload>
             {
                 SenderId = Common.Consts.GameMasterId,
-                RecipientId = 1,
+                RecipientId = _assignedPlayerId,
                 Type = Consts.EMPTY_LIST_GAMES_RESPONSE
             };
             var queue = new Queue<string>(new[]
@@ -74,7 +76,7 @@ namespace Player.Tests
             {
                 Type = Common.Consts.ActionInvalid,
                 SenderId = Common.Consts.GameMasterId,
-                RecipientId = 1,
+                RecipientId = _assignedPlayerId,
                 Payload = new ActionInvalidPayload
                 {
                     Reason = "In order to hide take dis cover"
@@ -92,7 +94,6 @@ namespace Player.Tests
         [Test]
         public void DiscoverSuccess()
         {
-            var assignedPlayerId = 1;
             var assignedX = 0;
             var assignedY = 0;
             var tile1 = new TileDiscoveryDTO
@@ -128,7 +129,7 @@ namespace Player.Tests
             {
                 Type = Common.Consts.DiscoveryResponse,
                 SenderId = Common.Consts.GameMasterId,
-                RecipientId = assignedPlayerId,
+                RecipientId = _assignedPlayerId,
                 Payload = new DiscoveryResponsePayload
                 {
                     Timestamp = 69,
@@ -143,10 +144,10 @@ namespace Player.Tests
             });
             _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
 
-           
+
             var player = new Player(_communicator.Object, _playerConfig, _gameService.Object)
             {
-                Id = assignedPlayerId,
+                Id = _assignedPlayerId,
                 X = assignedX,
                 Y = assignedY,
                 Game = _game
@@ -159,11 +160,11 @@ namespace Player.Tests
             var result = player.Discover();
 
             Assert.That(result, Is.True);
-            foreach(var t in tiles)
+            foreach (var t in tiles)
             {
                 Assert.That(player.Board[t.X + _game.BoardSize.X * t.Y].DistanceToClosestPiece, Is.EqualTo(t.DistanceToClosestPiece));
                 Assert.That(player.Board[t.X + _game.BoardSize.X * t.Y].Timestamp, Is.EqualTo(messageReceived.Payload.Timestamp));
-                if(t.Piece)
+                if (t.Piece)
                 {
                     Assert.That(player.Board[t.X + _game.BoardSize.X * t.Y], Is.Not.Null);
                     Assert.That(player.Board[t.X + _game.BoardSize.X * t.Y].Piece.WasTested, Is.False);
@@ -178,12 +179,11 @@ namespace Player.Tests
         [Test]
         public void DiscoverNoPayload()
         {
-            var assignedPlayerId = 1;
             var messageReceived = new Message
             {
                 Type = Common.Consts.DiscoveryResponse,
                 SenderId = Common.Consts.GameMasterId,
-                RecipientId = assignedPlayerId
+                RecipientId = _assignedPlayerId
             };
             var queue = new Queue<string>(new[]
             {
@@ -195,7 +195,7 @@ namespace Player.Tests
 
             var player = new Player(_communicator.Object, _playerConfig, _gameService.Object)
             {
-                Id = assignedPlayerId,
+                Id = _assignedPlayerId,
             };
 
             Assert.Throws<NoPayloadException>(() => player.Discover());
@@ -204,12 +204,11 @@ namespace Player.Tests
         [Test]
         public void DiscoverWrongPayload()
         {
-            var assignedPlayerId = 1;
             var messageReceived = new Message<GameStartedPayload>
             {
                 Type = Common.Consts.DiscoveryResponse,
                 SenderId = Common.Consts.GameMasterId,
-                RecipientId = assignedPlayerId,
+                RecipientId = _assignedPlayerId,
                 Payload = new GameStartedPayload
                 {
                     TeamInfo = new Dictionary<int, TeamInfoDTO>()
@@ -236,7 +235,7 @@ namespace Player.Tests
 
             var player = new Player(_communicator.Object, _playerConfig, _gameService.Object)
             {
-                Id = assignedPlayerId,
+                Id = _assignedPlayerId,
                 Game = _game
             };
             for (int i = 0; i < _game.BoardSize.X * (_game.BoardSize.GoalArea * 2 + _game.BoardSize.TaskArea); i++)

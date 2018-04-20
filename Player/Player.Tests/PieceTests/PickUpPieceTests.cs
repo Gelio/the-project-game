@@ -15,7 +15,7 @@ namespace Player.Tests.PieceTests
     [TestFixture]
     class PickUpPieceTests
     {
-
+        static string _assignedPlayerId = Guid.NewGuid().ToString();
         PlayerConfig _playerConfig;
         GameInfo _game;
         Mock<ICommunicator> _communicator;
@@ -49,7 +49,6 @@ namespace Player.Tests.PieceTests
         [Test]
         public void PickUpPieceSuccess()
         {
-            var assignedPlayerId = 123;
             var assignedX = 12;
             var assignedY = 3;
 
@@ -57,7 +56,7 @@ namespace Player.Tests.PieceTests
             {
                 Type = Common.Consts.PickupPieceResponse,
                 SenderId = Common.Consts.GameMasterId,
-                RecipientId = assignedPlayerId,
+                RecipientId = _assignedPlayerId,
                 Payload = new PickUpPieceResponsePayload()
             };
 
@@ -72,7 +71,7 @@ namespace Player.Tests.PieceTests
 
             var player = new Player(_communicator.Object, _playerConfig, _gameService.Object)
             {
-                Id = assignedPlayerId,
+                Id = _assignedPlayerId,
                 X = assignedX,
                 Y = assignedY,
                 Game = _game
@@ -99,7 +98,7 @@ namespace Player.Tests.PieceTests
             {
                 Type = Common.Consts.ActionInvalid,
                 SenderId = Common.Consts.GameMasterId,
-                RecipientId = 1,
+                RecipientId = _assignedPlayerId,
                 Payload = new ActionInvalidPayload
                 {
                     Reason = "pick-up line too cheezy"
@@ -120,7 +119,7 @@ namespace Player.Tests.PieceTests
             var messageReceived = new Message<PickUpPieceResponsePayload>
             {
                 SenderId = Common.Consts.GameMasterId,
-                RecipientId = 1,
+                RecipientId = _assignedPlayerId,
                 Type = Consts.EMPTY_LIST_GAMES_RESPONSE
             };
             var queue = new Queue<string>(new[]

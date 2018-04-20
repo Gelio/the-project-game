@@ -54,7 +54,7 @@ namespace Player.Tests
             var messageReceived = new Message<MoveResponsePayload>
             {
                 SenderId = Common.Consts.GameMasterId,
-                RecipientId = 1,
+                RecipientId = Guid.NewGuid().ToString(),
                 Type = Consts.EMPTY_LIST_GAMES_RESPONSE
             };
             var queue = new Queue<string>(new[]
@@ -79,7 +79,7 @@ namespace Player.Tests
             {
                 Type = Common.Consts.ActionInvalid,
                 SenderId = Common.Consts.GameMasterId,
-                RecipientId = 1,
+                RecipientId = Guid.NewGuid().ToString(),
                 Payload = new ActionInvalidPayload
                 {
                     Reason = "You cannot move, noone in your family moves"
@@ -103,24 +103,24 @@ namespace Player.Tests
         [TestCase("right")]
         public void MoveSuccess(string direction)
         {
-            var assignedPlayerId = 1;
+            var assignedPlayerId = Guid.NewGuid().ToString();
             var assignedX = 1;
             var assignedY = 1;
-
-            int index = 0;
+            int indexBeforeMove = assignedX + _game.BoardSize.X * assignedY;
+            int indexAfterMove = 0;
             switch (direction)
             {
                 case "up":
-                    index = assignedX + _game.BoardSize.X * (assignedY - 1);
+                    indexAfterMove = assignedX + _game.BoardSize.X * (assignedY - 1);
                     break;
                 case "down":
-                    index = assignedX + _game.BoardSize.X * (assignedY + 1);
+                    indexAfterMove = assignedX + _game.BoardSize.X * (assignedY + 1);
                     break;
                 case "left":
-                    index = (assignedX + 1) + _game.BoardSize.X * assignedY;
+                    indexAfterMove = (assignedX + 1) + _game.BoardSize.X * assignedY;
                     break;
                 case "right":
-                    index = (assignedX - 1) + _game.BoardSize.X * assignedY;
+                    indexAfterMove = (assignedX - 1) + _game.BoardSize.X * assignedY;
                     break;
                 default:
                     break;
@@ -154,30 +154,23 @@ namespace Player.Tests
                 Game = _game
             };
             for (int i = 0; i < _game.BoardSize.X * (_game.BoardSize.GoalArea * 2 + _game.BoardSize.TaskArea); i++)
-            {
-                if (i == assignedX + _game.BoardSize.X * assignedY)
-                {
-                    player.Board.Add(new Tile
-                    {
-                        PlayerId = assignedPlayerId
-                    });
-                }
                 player.Board.Add(new Tile());
-            }
+            player.Board[indexBeforeMove].PlayerId = assignedPlayerId;
+
 
             var result = player.Move(direction);
 
             Assert.That(result, Is.True);
-            Assert.That(player.Board[assignedX + _game.BoardSize.X * assignedY].PlayerId, Is.EqualTo(0));
-            Assert.That(player.Board[index].PlayerId, Is.EqualTo(assignedPlayerId));
-            Assert.That(player.Board[index].DistanceToClosestPiece, Is.EqualTo(messageReceived.Payload.DistanceToPiece));
-            Assert.That(player.Board[index].Timestamp, Is.EqualTo(messageReceived.Payload.TimeStamp));
+            Assert.That(player.Board[indexBeforeMove].PlayerId, Is.Null);
+            Assert.That(player.Board[indexAfterMove].PlayerId, Is.EqualTo(assignedPlayerId));
+            Assert.That(player.Board[indexAfterMove].DistanceToClosestPiece, Is.EqualTo(messageReceived.Payload.DistanceToPiece));
+            Assert.That(player.Board[indexAfterMove].Timestamp, Is.EqualTo(messageReceived.Payload.TimeStamp));
         }
 
         [Test]
         public void MoveNoPayload()
         {
-            var assignedPlayerId = 1;
+            var assignedPlayerId = Guid.NewGuid().ToString();
             var messageReceived = new Message
             {
                 Type = Common.Consts.MoveResponse,

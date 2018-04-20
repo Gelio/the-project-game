@@ -40,7 +40,7 @@ namespace Player.Tests
             var messageReceived = new Message<RefreshStateResponsePayload>
             {
                 SenderId = Common.Consts.GameMasterId,
-                RecipientId = 1,
+                RecipientId = Guid.NewGuid().ToString(),
                 Type = Consts.EMPTY_LIST_GAMES_RESPONSE
             };
             var queue = new Queue<string>(new[]
@@ -62,7 +62,7 @@ namespace Player.Tests
             {
                 Type = Common.Consts.ActionInvalid,
                 SenderId = Common.Consts.GameMasterId,
-                RecipientId = 1,
+                RecipientId = Guid.NewGuid().ToString(),
                 Payload = new ActionInvalidPayload
                 {
                     Reason = "Drink fresh b4 you re-fresh"
@@ -80,7 +80,7 @@ namespace Player.Tests
         [Test]
         public void RefreshBoardStateWrongPayload()
         {
-            var assignedPlayerId = 1;
+            var assignedPlayerId = Guid.NewGuid().ToString();
             var messageReceived = new Message<GameStartedPayload>
             {
                 Type = Common.Consts.RefreshStateResponse,
@@ -136,7 +136,7 @@ namespace Player.Tests
         [Test]
         public void RefreshBoardStateNoPayload()
         {
-            var assignedPlayerId = 1;
+            var assignedPlayerId = Guid.NewGuid().ToString();
             var messageReceived = new Message
             {
                 Type = Common.Consts.RefreshStateResponse,
@@ -162,7 +162,7 @@ namespace Player.Tests
         [Test]
         public void RefreshBoardStateNoPlayerId()
         {
-            var assignedPlayerId = 1;
+            var assignedPlayerId = Guid.NewGuid().ToString();
             var messageReceived = new Message<RefreshStateResponsePayload>
             {
                 Type = Common.Consts.RefreshStateResponse,
@@ -224,7 +224,7 @@ namespace Player.Tests
         [Test]
         public void RefreshBoardStateSuccess()
         {
-            var assignedPlayerId = 1;
+            var assignedPlayerId = Guid.NewGuid().ToString();
 
             var playerPos1 = new PlayerPositionDTO
             {
@@ -235,7 +235,7 @@ namespace Player.Tests
 
             var playerPos2 = new PlayerPositionDTO
             {
-                PlayerId = assignedPlayerId +2,
+                PlayerId = Guid.NewGuid().ToString(),
                 X = 20,
                 Y = 20
             };
@@ -297,7 +297,7 @@ namespace Player.Tests
             {
                 Assert.That(player.Board[p.X + game.BoardSize.X * p.Y].PlayerId, Is.EqualTo(p.PlayerId));
                 Assert.That(player.Board[p.X + game.BoardSize.X * p.Y].Timestamp, Is.EqualTo(messageReceived.Payload.Timestamp));
-            }            
+            }
         }
     }
 }

@@ -34,6 +34,7 @@ namespace Player
         public Piece HeldPiece;
         private ICommunicator _communicator;
         private IGameService _gameService;
+        public bool IsConnected => _communicator.IsConnected;
 
         public Player(ICommunicator communicator, PlayerConfig config, IGameService gameService)
         {

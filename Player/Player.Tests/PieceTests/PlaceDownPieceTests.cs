@@ -15,7 +15,7 @@ namespace Player.Tests.PieceTests
     [TestFixture]
     class PlaceDownPieceTests
     {
-
+        static string _assignedPlayerId = Guid.NewGuid().ToString();
         PlayerConfig _playerConfig;
         GameInfo _game;
         Mock<ICommunicator> _communicator;
@@ -40,7 +40,7 @@ namespace Player.Tests.PieceTests
                 DidCompleteGoal = false
             }
         };
-        static Message<PlaceDownPieceResponsePayload> _shamMsg =  new Message<PlaceDownPieceResponsePayload>()
+        static Message<PlaceDownPieceResponsePayload> _shamMsg = new Message<PlaceDownPieceResponsePayload>()
         {
             Type = Common.Consts.PlaceDownPieceResponse,
             SenderId = Common.Consts.GameMasterId,
@@ -60,11 +60,9 @@ namespace Player.Tests.PieceTests
                 DidCompleteGoal = null
             }
         };
-        static int _assignedPlayerId = 1234;
         [SetUp]
         public void Setup()
         {
-            _assignedPlayerId = 1235;
             _communicator = new Mock<ICommunicator>();
             _playerConfig = new PlayerConfig
             {
@@ -90,7 +88,7 @@ namespace Player.Tests.PieceTests
         public static IEnumerable<TestCaseData> PlaceDownPieceSuccessTestCases
         {
             get
-            {                
+            {
                 yield return new TestCaseData(_scoreMsg, 2, 2, true, Player.PlaceDownPieceResult.Score).SetName("Score");
                 yield return new TestCaseData(_noScoreMsg, 2, 2, true, Player.PlaceDownPieceResult.NoScore).SetName("NoScore");
                 yield return new TestCaseData(_shamMsg, 2, 2, true, Player.PlaceDownPieceResult.Sham).SetName("Sham");
@@ -132,6 +130,6 @@ namespace Player.Tests.PieceTests
             Assert.That(boolResult, Is.EqualTo(expectedBoolResult));
             Assert.That(enumResult, Is.EqualTo(exceptedEnumResult));
         }
-        
+
     }
 }
