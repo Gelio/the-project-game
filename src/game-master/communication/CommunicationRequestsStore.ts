@@ -8,7 +8,7 @@ export class CommunicationRequestsStore {
       return false;
     }
 
-    const senderPendingRequests = this.requestMap.get(senderId);
+    const senderPendingRequests = <Set<PlayerId>>this.requestMap.get(senderId);
 
     return senderPendingRequests.has(receiverId);
   }
@@ -22,7 +22,7 @@ export class CommunicationRequestsStore {
       this.requestMap.set(senderId, new Set<PlayerId>());
     }
 
-    this.requestMap.get(senderId).add(receiverId);
+    (<Set<PlayerId>>this.requestMap.get(senderId)).add(receiverId);
   }
 
   public removePendingRequest(senderId: PlayerId, receiverId: PlayerId) {
@@ -30,6 +30,6 @@ export class CommunicationRequestsStore {
       throw new Error('Request is not pending');
     }
 
-    this.requestMap.get(senderId).delete(receiverId);
+    (<Set<PlayerId>>this.requestMap.get(senderId)).delete(receiverId);
   }
 }
