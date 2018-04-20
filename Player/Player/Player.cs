@@ -73,7 +73,8 @@ namespace Player
             {
                 Board.Add(new Tile()
                 {
-                    DistanceToClosestPiece = int.MaxValue
+                    DistanceToClosestPiece = int.MaxValue,
+                    GoalStatus = GoalStatusEnum.NoInfo
                 });
             }
         }
@@ -158,21 +159,28 @@ namespace Player
                 {
                     if (IsInGoalArea())
                     {
-                        logger.Info("Trying to place down piece");
-                        (var result, var resultEnum) = PlaceDownPiece();
+                        if (Board[GetCurrentBoardIndex()].GoalStatus == GoalStatusEnum.NoInfo)
+                        {
+                            logger.Info("Trying to place down piece");
+                            (var result, var resultEnum) = PlaceDownPiece();
+                        }
                         string direction = PickRandomMovementDirection();
                         Move(direction);
                     }
-                    else
-                        Move("up");
+                    else // Move to goal area
+                    {
+                        // TODO: Think of something more robust
+                        if (TeamId == 1) Move("up");
+                        else Move("down");
+                    }
                 }
-                else if (Board[GetCurrentBoardIndex()].DistanceToClosestPiece == 0)
+                else if (Board[GetCurrentBoardIndex()].DistanceToClosestPiece == 0) // We stand on a piece
                 {
                     logger.Info("Trying to pick up piece...");
                     PickUpPiece();
                     continue;
                 }
-                else
+                else // Find a piece
                 {
                     Discover();
                     string direction = PickClosestPieceDirection();
@@ -447,14 +455,14 @@ namespace Player
             if (received.Payload == null)
                 throw new NoPayloadException();
 
-            Board[X + Game.BoardSize.X * Y].Piece = HeldPiece;
+            Board[GetCurrentBoardIndex()].Piece = HeldPiece;
             HeldPiece = null;
             if (!received.Payload.DidCompleteGoal.HasValue
                  && (Y < Game.BoardSize.GoalArea
                 || Y >= Game.BoardSize.GoalArea + Game.BoardSize.TaskArea))
             {
-                Board[X + Game.BoardSize.X * Y].Piece.HasInfo = true;
-                Board[X + Game.BoardSize.X * Y].Piece.IsSham = true;
+                Board[GetCurrentBoardIndex()].Piece.HasInfo = true;
+                Board[GetCurrentBoardIndex()].Piece.IsSham = true;
                 logger.Info("The piece was a sham!");
                 return (true, PlaceDownPieceResult.Sham);
             }
@@ -466,11 +474,13 @@ namespace Player
             else if (!received.Payload.DidCompleteGoal.Value)
             {
                 logger.Info("This tile is not a goal tile");
+                Board[GetCurrentBoardIndex()].GoalStatus = GoalStatusEnum.NoGoal;
                 return (true, PlaceDownPieceResult.NoScore);
             }
             else
             {
                 logger.Info($"Got 1 point for placing a piece @ {X} {Y}!");
+                Board[GetCurrentBoardIndex()].GoalStatus = GoalStatusEnum.CompletedGoal;
                 return (true, PlaceDownPieceResult.Score);
             }
 
