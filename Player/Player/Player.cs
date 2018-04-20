@@ -150,6 +150,7 @@ namespace Player
             while (true)
             {
                 RefreshBoardState();
+                logger.Debug("Player's position: {} {}", X, Y);
                 if (HeldPiece != null)
                 {
                     if (IsInGoalArea())
@@ -173,7 +174,6 @@ namespace Player
 
                     string direction = PickMovementDirection();
                     Move(direction);
-                    logger.Debug("Player's position: {} {}", X, Y);
                 }
             }
         }
