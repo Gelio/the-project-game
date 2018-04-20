@@ -26,8 +26,8 @@ namespace Player.Common
         public static string MoveResponse = "MOVE_RESPONSE";
         public static string PickupPieceRequest = "PICK_UP_PIECE_REQUEST";
         public static string PickupPieceResponse = "PICK_UP_PIECE_RESPONSE";
-        public static string PlaceDownPieceRequest = "PLAC_DOWN_PIECE_REQUEST";
-        public static string PlaceDownPieceResponse = "PLAC_DOWN_PIECE_RESPONSE";
+        public static string PlaceDownPieceRequest = "PLACE_DOWN_PIECE_REQUEST";
+        public static string PlaceDownPieceResponse = "PLACE_DOWN_PIECE_RESPONSE";
     }
 }
 
