@@ -104,27 +104,29 @@ namespace Player.Tests
         public void MoveSuccess(string direction)
         {
             var assignedPlayerId = Guid.NewGuid().ToString();
+
             var assignedX = 1;
             var assignedY = 1;
             int indexBeforeMove = assignedX + _game.BoardSize.X * assignedY;
-            int indexAfterMove = 0;
+
+            int newX = assignedX;
+            int newY = assignedY;
             switch (direction)
             {
                 case "up":
-                    indexAfterMove = assignedX + _game.BoardSize.X * (assignedY - 1);
+                    newY -= 1;
                     break;
                 case "down":
-                    indexAfterMove = assignedX + _game.BoardSize.X * (assignedY + 1);
+                    newY += 1;
                     break;
                 case "left":
-                    indexAfterMove = (assignedX + 1) + _game.BoardSize.X * assignedY;
+                    newX += 1;
                     break;
                 case "right":
-                    indexAfterMove = (assignedX - 1) + _game.BoardSize.X * assignedY;
-                    break;
-                default:
+                    newX -= 1;
                     break;
             }
+            int indexAfterMove = newX + _game.BoardSize.X * newY;
 
             var messageReceived = new Message<MoveResponsePayload>
             {
@@ -145,7 +147,6 @@ namespace Player.Tests
             });
             _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
 
-
             var player = new Player(_communicator.Object, _playerConfig, _gameService.Object)
             {
                 Id = assignedPlayerId,
@@ -165,6 +166,8 @@ namespace Player.Tests
             Assert.That(player.Board[indexAfterMove].PlayerId, Is.EqualTo(assignedPlayerId));
             Assert.That(player.Board[indexAfterMove].DistanceToClosestPiece, Is.EqualTo(messageReceived.Payload.DistanceToPiece));
             Assert.That(player.Board[indexAfterMove].Timestamp, Is.EqualTo(messageReceived.Payload.TimeStamp));
+            Assert.That(player.X, Is.EqualTo(newX));
+            Assert.That(player.Y, Is.EqualTo(newY));
         }
 
         [Test]

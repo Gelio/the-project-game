@@ -258,25 +258,26 @@ namespace Player
 
         public bool Move(string direction)
         {
-            int index = 0;
+            int newX = X;
+            int newY = Y;
             switch (direction)
             {
                 case "up":
-                    index = X + Game.BoardSize.X * (Y - 1);
+                    newY -= 1;
                     break;
                 case "down":
-                    index = X + Game.BoardSize.X * (Y + 1);
+                    newY += 1;
                     break;
                 case "left":
-                    index = (X + 1) + Game.BoardSize.X * Y;
+                    newX += 1;
                     break;
                 case "right":
-                    index = (X - 1) + Game.BoardSize.X * Y;
+                    newX -= 1;
                     break;
                 default:
                     return false;
             }
-
+            int index = newX + Game.BoardSize.X * newY;
             var message = new Message<MovePayload>()
             {
                 Type = Consts.MoveRequest,
@@ -304,7 +305,8 @@ namespace Player
             Board[index].PlayerId = Id;
             Board[index].DistanceToClosestPiece = received.Payload.DistanceToPiece;
             Board[index].Timestamp = received.Payload.TimeStamp;
-
+            X = newX;
+            Y = newY;
             return true;
         }
 
