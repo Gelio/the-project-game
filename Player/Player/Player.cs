@@ -343,10 +343,10 @@ namespace Player
                     newY += 1;
                     break;
                 case "left":
-                    newX += 1;
+                    newX -= 1;
                     break;
                 case "right":
-                    newX -= 1;
+                    newX += 1;
                     break;
                 default:
                     return false;
