@@ -5,17 +5,16 @@ import { arrayShuffle } from '../../common/arrayShuffle';
 import { Point } from '../../common/Point';
 
 export function createPieceAtRandomPosition(board: Board, shamChance: number): Piece {
-  const minY = board.size.goalArea + 1;
+  const minY = board.size.goalArea;
   const maxY = board.size.goalArea + board.size.taskArea;
-  const yRange = maxY - minY + 1;
 
   const emptyPositions: Point[] = [];
-  for (let y = 0; y < yRange; ++y) {
+  for (let y = minY; y < maxY; ++y) {
     for (let x = 0; x < board.size.x; ++x) {
       const tile = board.tiles[x][y];
 
-      if (!tile.piece || !tile.piece.isPickedUp) {
-        emptyPositions.push(new Point(x, y));
+      if (!tile.piece) {
+        emptyPositions.push(new Point(tile.x, tile.y));
       }
     }
   }

@@ -3,6 +3,8 @@ import { Piece } from '../models/Piece';
 
 import { createPieceAtRandomPosition } from './createPieceAtRandomPosition';
 
+import { Point } from '../../common/Point';
+
 describe('[GM] createPieceAtRandomPosition', () => {
   let board: Board;
 
@@ -77,5 +79,28 @@ describe('[GM] createPieceAtRandomPosition', () => {
 
     expect(board.pieces).toHaveLength(1);
     expect(board.pieces).toContain(piece);
+  });
+
+  it('should not generate pieces in team area', () => {
+    const emptyPositions = board.size.x * board.size.taskArea;
+    for (let i = 0; i < emptyPositions; ++i) {
+      createPieceAtRandomPosition(board, 0.5);
+    }
+
+    for (let x = 0; x < board.size.x; ++x) {
+      for (let y = 0; y < board.size.goalArea; ++y) {
+        expect(board.getTileAtPosition(new Point(x, y)).piece).toBeNull();
+      }
+    }
+
+    for (let x = 0; x < board.size.x; ++x) {
+      for (
+        let y = board.size.taskArea + board.size.goalArea;
+        y < board.size.taskArea + board.size.goalArea * 2;
+        ++y
+      ) {
+        expect(board.getTileAtPosition(new Point(x, y)).piece).toBeNull();
+      }
+    }
   });
 });
