@@ -65,12 +65,14 @@ function handleAcceptedResponse(
   communicationRequestsStore: CommunicationRequestsStore
 ): ProcessMessageResult<ResponseSentMessage> {
   const acceptedResponse = <AcceptedCommunicationResponseFromRecipient>communicationResponse;
+
   const responseToInformationSource: ResponseSentMessage = {
     type: 'RESPONSE_SENT',
     senderId: GAME_MASTER_ID,
     recipientId: acceptedResponse.senderId,
     payload: undefined
   };
+
   const responseToAskingPlayer: AcceptedCommunicationResponseToSender = {
     type: 'COMMUNICATION_RESPONSE',
     senderId: GAME_MASTER_ID,
@@ -81,6 +83,7 @@ function handleAcceptedResponse(
       senderPlayerId: acceptedResponse.senderId
     }
   };
+
   const responsePromise = createDelay(actionDelays.communicationAccept).then(() => {
     sendMessage(responseToAskingPlayer);
     communicationRequestsStore.removePendingRequest(
