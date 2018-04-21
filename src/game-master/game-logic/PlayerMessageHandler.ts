@@ -5,6 +5,7 @@ import { Message } from '../../interfaces/Message';
 import { Player } from '../Player';
 import { ProcessMessageResult } from '../ProcessMessageResult';
 
+import { handleCommunicationResponse } from './handleCommunicationResponse';
 import { handleDeletePieceRequest } from './handleDeletePieceRequest';
 import { handleDiscoveryRequest } from './handleDiscoveryRequest';
 import { handleMoveRequest } from './handleMoveRequest';
@@ -15,11 +16,18 @@ import { handleTestPieceRequest } from './handleTestPieceRequest';
 
 import { MessageHandlerDependencies } from './MessageHandlerDependencies';
 
+import { CommunicationRequestsStore } from '../communication/CommunicationRequestsStore';
+
 export class PlayerMessageHandler {
   private readonly dependencies: MessageHandlerDependencies;
+  private readonly communicationRequestsStore: CommunicationRequestsStore;
 
   private readonly handlerMap: { [requestType: string]: Function } = {
     // [REQUEST_TYPE.COMMUNICATION_REQUEST]: handleCommunicationRequest,
+    [REQUEST_TYPE.COMMUNICATION_RESPONSE]: handleCommunicationResponse.bind(
+      null,
+      this.communicationRequestsStore
+    ),
     [REQUEST_TYPE.DELETE_PIECE_REQUEST]: handleDeletePieceRequest,
     [REQUEST_TYPE.DISCOVERY_REQUEST]: handleDiscoveryRequest,
     [REQUEST_TYPE.MOVE_REQUEST]: handleMoveRequest,
@@ -29,8 +37,12 @@ export class PlayerMessageHandler {
     [REQUEST_TYPE.TEST_PIECE_REQUEST]: handleTestPieceRequest
   };
 
-  constructor(dependencies: MessageHandlerDependencies) {
+  constructor(
+    dependencies: MessageHandlerDependencies,
+    communicationRequestsStore: CommunicationRequestsStore
+  ) {
     this.dependencies = dependencies;
+    this.communicationRequestsStore = communicationRequestsStore;
   }
 
   public handleMessage(sender: Player, message: Message<any>): ProcessMessageResult<any> {
