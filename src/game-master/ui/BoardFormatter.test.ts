@@ -1,9 +1,11 @@
 import { BoardFormatter } from './BoardFormatter';
 
 import { BoardSize } from '../../interfaces/BoardSize';
+
 import { Player } from '../Player';
-import { NeutralAreaTile } from '../models/tiles/NeutralAreaTile';
+
 import { Piece } from '../models/Piece';
+import { NeutralAreaTile } from '../models/tiles/NeutralAreaTile';
 import { TeamAreaTile } from '../models/tiles/TeamAreaTile';
 
 describe('[GM] BoardFormatter', () => {
