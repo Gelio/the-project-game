@@ -15,13 +15,14 @@ import {
   AcceptedCommunicationResponseFromRecipient,
   AcceptedCommunicationResponseToSender,
   CommunicationResponseFromRecipient,
+  RejectedCommunicationResponseFromRecipient,
   RejectedCommunicationResponseToSender
 } from '../../interfaces/responses/CommunicationResponse';
 
 import { CommunicationRequestsStore } from '../communication/CommunicationRequestsStore';
 
 function handleRejectedResponse(
-  communicationResponse: CommunicationResponseFromRecipient,
+  communicationResponse: RejectedCommunicationResponseFromRecipient,
   sendMessage: SendMessageFn,
   communicationRequestsStore: CommunicationRequestsStore
 ): ProcessMessageResult<ResponseSentMessage> {
@@ -49,38 +50,34 @@ function handleRejectedResponse(
     communicationResponse.senderId
   );
 
-  const responsePromise = Promise.resolve(responseToInformationSource);
-
   return {
     valid: true,
     delay: 0,
-    responseMessage: responsePromise
+    responseMessage: Promise.resolve(responseToInformationSource)
   };
 }
 
 function handleAcceptedResponse(
-  communicationResponse: CommunicationResponseFromRecipient,
+  communicationResponse: AcceptedCommunicationResponseFromRecipient,
   sendMessage: SendMessageFn,
   actionDelays: ActionDelays,
   communicationRequestsStore: CommunicationRequestsStore
 ): ProcessMessageResult<ResponseSentMessage> {
-  const acceptedResponse = <AcceptedCommunicationResponseFromRecipient>communicationResponse;
-
   const responseToInformationSource: ResponseSentMessage = {
     type: 'RESPONSE_SENT',
     senderId: GAME_MASTER_ID,
-    recipientId: acceptedResponse.senderId,
+    recipientId: communicationResponse.senderId,
     payload: undefined
   };
 
   const responseToAskingPlayer: AcceptedCommunicationResponseToSender = {
     type: 'COMMUNICATION_RESPONSE',
     senderId: GAME_MASTER_ID,
-    recipientId: acceptedResponse.payload.targetPlayerId,
+    recipientId: communicationResponse.payload.targetPlayerId,
     payload: {
       accepted: true,
-      boardInfo: acceptedResponse.payload.board,
-      senderPlayerId: acceptedResponse.senderId
+      boardInfo: communicationResponse.payload.board,
+      senderPlayerId: communicationResponse.senderId
     }
   };
 
@@ -108,10 +105,10 @@ export function handleCommunicationResponse(
   communicationResponse: CommunicationResponseFromRecipient
 ): ProcessMessageResult<ResponseSentMessage> {
   if (
-    communicationRequestsStore.isRequestPending(
+    !communicationRequestsStore.isRequestPending(
       communicationResponse.payload.targetPlayerId,
       communicationResponse.senderId
-    ) === false
+    )
   ) {
     return {
       valid: false,
@@ -123,12 +120,16 @@ export function handleCommunicationResponse(
 
   if (communicationResponse.payload.accepted) {
     return handleAcceptedResponse(
-      communicationResponse,
+      <AcceptedCommunicationResponseFromRecipient>communicationResponse,
       sendMessage,
       actionDelays,
       communicationRequestsStore
     );
   } else {
-    return handleRejectedResponse(communicationResponse, sendMessage, communicationRequestsStore);
+    return handleRejectedResponse(
+      <RejectedCommunicationResponseFromRecipient>communicationResponse,
+      sendMessage,
+      communicationRequestsStore
+    );
   }
 }

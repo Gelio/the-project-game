@@ -4,18 +4,20 @@ import { ActionDelays } from '../../interfaces/ActionDelays';
 import { BoardInfo } from '../../interfaces/BoardInfo';
 
 import { ResponseSentMessage } from '../../interfaces/messages/ResponseSentMessage';
-
-import { CommunicationResponseFromRecipient } from '../../interfaces/responses/CommunicationResponse';
+import {
+  AcceptedCommunicationResponseToSender,
+  CommunicationResponseFromRecipient
+} from '../../interfaces/responses/CommunicationResponse';
 
 import { ValidMessageResult } from '../ProcessMessageResult';
 
+import { GAME_MASTER_ID, PlayerId } from '../../common/EntityIds';
 import { LoggerFactory } from '../../common/logging/LoggerFactory';
-
-import { PlayerId } from '../../common/EntityIds';
 
 import { handleCommunicationResponse } from './handleCommunicationResponse';
 
 import { CommunicationRequestsStore } from '../communication/CommunicationRequestsStore';
+import { SendMessageFn } from '../SendMessageFn';
 
 function createResponseFromRecipient(
   requesterId: PlayerId,
@@ -50,6 +52,8 @@ describe('[GM] handleCommunicationResponse', () => {
   let logger: LoggerInstance;
   let communicationRequestsStore: CommunicationRequestsStore;
 
+  let sendMessage: SendMessageFn;
+
   beforeEach(() => {
     actionDelays = <any>{
       communicationAccept: 500
@@ -59,6 +63,8 @@ describe('[GM] handleCommunicationResponse', () => {
     loggerFactory.logLevel = 'error';
 
     logger = loggerFactory.createEmptyLogger();
+
+    sendMessage = jest.fn();
 
     communicationRequestsStore = new CommunicationRequestsStore();
   });
@@ -79,7 +85,7 @@ describe('[GM] handleCommunicationResponse', () => {
         actionDelays: <any>actionDelays,
         logger,
         scoreboard: <any>null,
-        sendMessage: jest.fn()
+        sendMessage
       },
       <any>null,
       message
@@ -88,9 +94,7 @@ describe('[GM] handleCommunicationResponse', () => {
 
   describe('when there is no pending communication request', () => {
     it('should reject communication response', () => {
-      const result: ValidMessageResult<
-        ResponseSentMessage
-      > = <any>executeHandleCommunicationResponse('p1', 'p2', true, <any>null);
+      const result = executeHandleCommunicationResponse('p1', 'p2', true, <any>null);
 
       expect(result.valid).toBe(false);
     });
@@ -109,13 +113,40 @@ describe('[GM] handleCommunicationResponse', () => {
       });
     });
 
-    it('should remove pending communication request  immediately', async () => {
+    it('should remove pending communication request immediately', () => {
       communicationRequestsStore.addPendingRequest('p1', 'p2');
 
       executeHandleCommunicationResponse('p1', 'p2', false, <any>null);
 
       expect(communicationRequestsStore.isRequestPending('p1', 'p2')).toBe(false);
     });
+  });
+
+  it('should send message to communication requester', async () => {
+    communicationRequestsStore.addPendingRequest('p1', 'p2');
+
+    const result: ValidMessageResult<ResponseSentMessage> = <any>executeHandleCommunicationResponse(
+      'p1',
+      'p2',
+      true,
+      <any>null
+    );
+
+    await result.responseMessage;
+
+    const responseToAskingPlayer: AcceptedCommunicationResponseToSender = {
+      type: 'COMMUNICATION_RESPONSE',
+      senderId: GAME_MASTER_ID,
+      recipientId: 'p1',
+      payload: {
+        accepted: true,
+        boardInfo: <any>null,
+        senderPlayerId: 'p2'
+      }
+    };
+
+    expect(sendMessage).toHaveBeenCalledTimes(1);
+    expect(sendMessage).toHaveBeenCalledWith(responseToAskingPlayer);
   });
 
   describe('accepted communication response', () => {
