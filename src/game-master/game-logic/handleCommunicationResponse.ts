@@ -3,8 +3,13 @@ import { GAME_MASTER_ID } from '../../common/EntityIds';
 
 import { Player } from '../Player';
 import { ProcessMessageResult } from '../ProcessMessageResult';
+import { SendMessageFn } from '../SendMessageFn';
 
 import { MessageHandlerDependencies } from './MessageHandlerDependencies';
+
+import { ActionDelays } from '../../interfaces/ActionDelays';
+
+import { ResponseSentMessage } from '../../interfaces/messages/ResponseSentMessage';
 
 import {
   AcceptedCommunicationResponseFromRecipient,
@@ -13,15 +18,51 @@ import {
   RejectedCommunicationResponseToSender
 } from '../../interfaces/responses/CommunicationResponse';
 
-import { ResponseSentMessage } from '../../interfaces/messages/ResponseSentMessage';
-import { SendMessageFn } from '../SendMessageFn';
+import { CommunicationRequestsStore } from '../communication/CommunicationRequestsStore';
 
-import { ActionDelays } from '../../interfaces/ActionDelays';
+function handleRejectedResponse(
+  communicationResponse: CommunicationResponseFromRecipient,
+  sendMessage: SendMessageFn,
+  communicationRequestsStore: CommunicationRequestsStore
+): ProcessMessageResult<ResponseSentMessage> {
+  const responseToAskingPlayer: RejectedCommunicationResponseToSender = {
+    type: 'COMMUNICATION_RESPONSE',
+    senderId: GAME_MASTER_ID,
+    recipientId: communicationResponse.payload.targetPlayerId,
+    payload: {
+      accepted: false,
+      senderPlayerId: communicationResponse.senderId
+    }
+  };
+
+  const responseToInformationSource: ResponseSentMessage = {
+    type: 'RESPONSE_SENT',
+    senderId: GAME_MASTER_ID,
+    recipientId: communicationResponse.senderId,
+    payload: undefined
+  };
+
+  sendMessage(responseToAskingPlayer);
+
+  communicationRequestsStore.removePendingRequest(
+    communicationResponse.payload.targetPlayerId,
+    communicationResponse.senderId
+  );
+
+  const responsePromise = Promise.resolve(responseToInformationSource);
+
+  return {
+    valid: true,
+    delay: 0,
+    responseMessage: responsePromise
+  };
+}
 
 function handleAcceptedResponse(
   communicationResponse: CommunicationResponseFromRecipient,
   sendMessage: SendMessageFn,
-  actionDelays: ActionDelays
+  actionDelays: ActionDelays,
+  communicationRequestsStore: CommunicationRequestsStore
 ): ProcessMessageResult<ResponseSentMessage> {
   const acceptedResponse = <AcceptedCommunicationResponseFromRecipient>communicationResponse;
   const responseToInformationSource: ResponseSentMessage = {
@@ -42,6 +83,10 @@ function handleAcceptedResponse(
   };
   const responsePromise = createDelay(actionDelays.communicationAccept).then(() => {
     sendMessage(responseToAskingPlayer);
+    communicationRequestsStore.removePendingRequest(
+      communicationResponse.payload.targetPlayerId,
+      communicationResponse.senderId
+    );
 
     return responseToInformationSource;
   });
@@ -54,51 +99,33 @@ function handleAcceptedResponse(
 }
 
 export function handleCommunicationResponse(
-  state: any,
+  communicationRequestsStore: CommunicationRequestsStore,
   { actionDelays, sendMessage }: MessageHandlerDependencies,
   _sender: Player,
   communicationResponse: CommunicationResponseFromRecipient
 ): ProcessMessageResult<ResponseSentMessage> {
   if (
-    state[communicationResponse.payload.targetPlayerId][communicationResponse.senderId] ===
-    undefined
+    communicationRequestsStore.isRequestPending(
+      communicationResponse.payload.targetPlayerId,
+      communicationResponse.senderId
+    ) === false
   ) {
     return {
       valid: false,
-      reason: `No pending communication request for player ${
+      reason: `No pending communication request from player ${
         communicationResponse.payload.targetPlayerId
       }`
     };
   }
 
   if (communicationResponse.payload.accepted) {
-    return handleAcceptedResponse(communicationResponse, sendMessage, actionDelays);
+    return handleAcceptedResponse(
+      communicationResponse,
+      sendMessage,
+      actionDelays,
+      communicationRequestsStore
+    );
   } else {
-    const responseToAskingPlayer: RejectedCommunicationResponseToSender = {
-      type: 'COMMUNICATION_RESPONSE',
-      senderId: GAME_MASTER_ID,
-      recipientId: communicationResponse.payload.targetPlayerId,
-      payload: {
-        accepted: false,
-        senderPlayerId: communicationResponse.senderId
-      }
-    };
-
-    const responseToInformationSource: ResponseSentMessage = {
-      type: 'RESPONSE_SENT',
-      senderId: GAME_MASTER_ID,
-      recipientId: communicationResponse.senderId,
-      payload: undefined
-    };
-
-    sendMessage(responseToAskingPlayer);
-
-    const responsePromise = Promise.resolve(responseToInformationSource);
-
-    return {
-      valid: true,
-      delay: 0,
-      responseMessage: responsePromise
-    };
+    return handleRejectedResponse(communicationResponse, sendMessage, communicationRequestsStore);
   }
 }
