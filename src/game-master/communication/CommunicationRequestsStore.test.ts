@@ -7,30 +7,23 @@ describe('[GM] CommunicationRequestsStore', () => {
     store = new CommunicationRequestsStore();
   });
 
+  it('should properly store pending requests', () => {
+    store.addPendingRequest('p1', 'p2');
+
+    const result = store.isRequestPending('p1', 'p2');
+
+    expect(result).toBe(true);
+  });
+
   describe('isRequestPending', () => {
     it('should return false when request is not pending', () => {
       const result = store.isRequestPending('p1', 'p2');
 
       expect(result).toBe(false);
     });
-
-    it('should return true when request is pending', () => {
-      store.addPendingRequest('p1', 'p2');
-
-      const result = store.isRequestPending('p1', 'p2');
-
-      expect(result).toBe(true);
-    });
   });
 
   describe('addPendingRequest', () => {
-    it('should add a pending request', () => {
-      store.addPendingRequest('p1', 'p2');
-
-      const result = store.isRequestPending('p1', 'p2');
-      expect(result).toBe(true);
-    });
-
     it('should throw an error when adding the same request twice', () => {
       store.addPendingRequest('p1', 'p2');
 
