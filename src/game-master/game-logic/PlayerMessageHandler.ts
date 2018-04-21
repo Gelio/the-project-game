@@ -24,10 +24,6 @@ export class PlayerMessageHandler {
 
   private readonly handlerMap: { [requestType: string]: Function } = {
     // [REQUEST_TYPE.COMMUNICATION_REQUEST]: handleCommunicationRequest,
-    [REQUEST_TYPE.COMMUNICATION_RESPONSE]: handleCommunicationResponse.bind(
-      null,
-      this.communicationRequestsStore
-    ),
     [REQUEST_TYPE.DELETE_PIECE_REQUEST]: handleDeletePieceRequest,
     [REQUEST_TYPE.DISCOVERY_REQUEST]: handleDiscoveryRequest,
     [REQUEST_TYPE.MOVE_REQUEST]: handleMoveRequest,
@@ -43,6 +39,11 @@ export class PlayerMessageHandler {
   ) {
     this.dependencies = dependencies;
     this.communicationRequestsStore = communicationRequestsStore;
+
+    this.handlerMap[REQUEST_TYPE.COMMUNICATION_RESPONSE] = handleCommunicationResponse.bind(
+      null,
+      this.communicationRequestsStore
+    );
   }
 
   public handleMessage(sender: Player, message: Message<any>): ProcessMessageResult<any> {
