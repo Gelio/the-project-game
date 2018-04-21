@@ -10,7 +10,7 @@
       "name": "Launch CS",
       "console": "externalTerminal",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "communication-server-debug"],
+      "runtimeArgs": ["run", "communication-server:debug"],
       "port": 9230
     },
     {
@@ -19,7 +19,7 @@
       "name": "Launch GM",
       "console": "externalTerminal",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "game-master-debug"],
+      "runtimeArgs": ["run", "game-master:debug"],
       "port": 9229
     }
   ]
