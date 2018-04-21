@@ -8,33 +8,18 @@
       "type": "node",
       "request": "launch",
       "name": "Launch CS",
+      "console": "externalTerminal",
       "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "communication-server"
-      ],
-      "port": 9229
+      "runtimeArgs": ["run", "communication-server-debug"],
+      "port": 9230
     },
     {
       "type": "node",
       "request": "launch",
       "name": "Launch GM",
+      "console": "externalTerminal",
       "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "game-master"
-      ],
-      "port": 9229
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Launch CS",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "player"
-      ],
+      "runtimeArgs": ["run", "game-master-debug"],
       "port": 9229
     }
   ]

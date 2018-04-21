@@ -27,6 +27,8 @@
     "tsnode": "ts-node",
     "game-master": "ts-node src/start-game-master.ts",
     "communication-server": "ts-node src/start-communication-server.ts",
+    "game-master-debug": "ts-node --inspect=9229 src/start-game-master.ts",
+    "communication-server-debug": "ts-node --inspect=9230 src/start-communication-server.ts",
     "precommit": "lint-staged",
     "test": "jest",
     "test:watch": "jest --watch",
