@@ -181,20 +181,25 @@ describe('[GM] handleCommunicationResponse', () => {
       jest.useRealTimers();
     });
 
-    it('should not resolve the response before action delay', done => {
+    it('should not resolve the response before action delay', () => {
       jest.useFakeTimers();
 
       communicationRequestsStore.addPendingRequest('p1', 'p2');
+      let resolved = false;
 
       const result: ValidMessageResult<
         ResponseSentMessage
       > = <any>executeHandleCommunicationResponse('p1', 'p2', true, <any>null);
 
-      result.responseMessage.then(() => done.fail('Response resolved before action delay'));
+      result.responseMessage.then(() => {
+        resolved = true;
+      });
 
       jest.advanceTimersByTime(actionDelays.communicationAccept - 1);
+
+      expect(resolved).toBe(false);
+
       jest.useRealTimers();
-      done();
     });
   });
 });

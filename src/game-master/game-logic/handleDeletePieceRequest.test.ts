@@ -104,15 +104,20 @@ describe('[GM] handleDeletePieceRequest', () => {
     jest.useRealTimers();
   });
 
-  it('should not resolve the response before action delay', done => {
+  it('should not resolve the response before action delay', () => {
     jest.useFakeTimers();
 
     const result: ValidMessageResult<DeletePieceResponse> = <any>executeDeletePieceRequest();
+    let resolved = false;
 
-    result.responseMessage.then(() => done.fail('Response resolved before action delay'));
+    result.responseMessage.then(() => {
+      resolved = true;
+    });
 
     jest.advanceTimersByTime(actionDelays.destroy - 1);
+
+    expect(resolved).toBe(false);
+
     jest.useRealTimers();
-    done();
   });
 });
