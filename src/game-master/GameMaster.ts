@@ -13,12 +13,6 @@ import { GameDefinition, TeamSizes } from '../interfaces/GameDefinition';
 import { Message } from '../interfaces/Message';
 import { Service } from '../interfaces/Service';
 
-import { ActionInvalidMessage } from '../interfaces/messages/ActionInvalidMessage';
-import { ActionValidMessage } from '../interfaces/messages/ActionValidMessage';
-import {
-  GameStartedMessage,
-  GameStartedMessagePayload
-} from '../interfaces/messages/GameStartedMessage';
 import { PlayerAcceptedMessage } from '../interfaces/messages/PlayerAcceptedMessage';
 import { PlayerDisconnectedMessage } from '../interfaces/messages/PlayerDisconnectedMessage';
 import { PlayerHelloMessage } from '../interfaces/messages/PlayerHelloMessage';
@@ -136,36 +130,7 @@ export class GameMaster implements Service {
       return handler(message);
     }
 
-    /**
-     * REFACTOR: move the logic below to `Game` since it should be able to handle all messages, not
-     * only Player requests
-     */
-    const result = this.game.processMessage(message);
-    if (!result.valid) {
-      const actionInvalidMessage: ActionInvalidMessage = {
-        type: 'ACTION_INVALID',
-        recipientId: message.senderId,
-        senderId: GAME_MASTER_ID,
-        payload: {
-          reason: result.reason
-        }
-      };
-
-      return this.communicator.sendMessage(actionInvalidMessage);
-    }
-
-    const actionValidMessage: ActionValidMessage = {
-      type: 'ACTION_VALID',
-      recipientId: message.senderId,
-      senderId: GAME_MASTER_ID,
-      payload: {
-        delay: result.delay
-      }
-    };
-
-    this.uiController.updateBoard(this.game.board);
-    this.communicator.sendMessage(actionValidMessage);
-    this.communicator.sendMessage(await result.responseMessage);
+    this.game.handleMessage(message);
   }
 
   private handlePlayerHelloMessage(message: PlayerHelloMessage) {
@@ -361,43 +326,7 @@ export class GameMaster implements Service {
 
   private startGame() {
     this.logger.info('Game is starting...');
-
-    // REFACTOR: move the logic below to Game
-    const team1Players = this.game.playersContainer.getPlayersFromTeam(1);
-    const team2Players = this.game.playersContainer.getPlayersFromTeam(2);
-    const team1Leader = team1Players.find(player => player.isLeader);
-    const team2Leader = team2Players.find(player => player.isLeader);
-
-    if (!team1Leader || !team2Leader) {
-      throw new Error('Game cannot start without both leaders');
-    }
-
-    this.game.setPlayersPositions();
-    const gameStartedPayload: GameStartedMessagePayload = {
-      teamInfo: {
-        1: {
-          players: team1Players.map(player => player.playerId),
-          leaderId: team1Leader.playerId
-        },
-        2: {
-          players: team2Players.map(player => player.playerId),
-          leaderId: team2Leader.playerId
-        }
-      }
-    };
     this.game.start();
-
-    this.game.playersContainer.players.forEach(player => {
-      const message: GameStartedMessage = {
-        senderId: GAME_MASTER_ID,
-        recipientId: player.playerId,
-        type: 'GAME_STARTED',
-        payload: gameStartedPayload
-      };
-
-      this.communicator.sendMessage(message);
-    });
-
     this.logger.info('Game started');
   }
 

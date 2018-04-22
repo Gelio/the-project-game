@@ -52,6 +52,7 @@ describe('[GM] Game', () => {
   };
 
   let player: Player;
+  let otherPlayer: Player;
 
   beforeEach(() => {
     const pointsLimit = 5;
@@ -74,6 +75,14 @@ describe('[GM] Game', () => {
     player.isBusy = false;
     player.isConnected = true;
 
+    otherPlayer = new Player();
+    otherPlayer.playerId = 'otherPlayer';
+    otherPlayer.teamId = 2;
+    otherPlayer.isLeader = true;
+    otherPlayer.isBusy = false;
+    otherPlayer.isConnected = true;
+    game.addPlayer(otherPlayer);
+
     const loggerFactory = new LoggerFactory();
     loggerInstance = loggerFactory.createEmptyLogger();
 
@@ -92,7 +101,7 @@ describe('[GM] Game', () => {
           type: 'DISCOVERY_REQUEST',
           payload: undefined
         };
-        const processedMessageResult = game.processMessage(message);
+        const processedMessageResult = game.handlePlayerMessage(message);
         expect(processedMessageResult.valid).toBe(false);
 
         const invalidResult = <InvalidMessageResult>processedMessageResult;
@@ -109,7 +118,7 @@ describe('[GM] Game', () => {
           type: 'DISCOVERY_REQUEST',
           payload: undefined
         };
-        const processedMessageResult = game.processMessage(message);
+        const processedMessageResult = game.handlePlayerMessage(message);
         expect(processedMessageResult.valid).toBe(false);
 
         const invalidResult = <InvalidMessageResult>processedMessageResult;
@@ -124,7 +133,7 @@ describe('[GM] Game', () => {
           type: 'DISCOVERY_REQUEST',
           payload: undefined
         };
-        const processedMessageResult = game.processMessage(message);
+        const processedMessageResult = game.handlePlayerMessage(message);
         expect(processedMessageResult.valid).toBe(true);
       });
     });
@@ -137,7 +146,7 @@ describe('[GM] Game', () => {
         type: 'DISCOVERY_REQUEST',
         payload: undefined
       };
-      const processedMessageResult = game.processMessage(message);
+      const processedMessageResult = game.handlePlayerMessage(message);
       expect(processedMessageResult.valid).toBe(false);
 
       const invalidResult = <InvalidMessageResult>processedMessageResult;

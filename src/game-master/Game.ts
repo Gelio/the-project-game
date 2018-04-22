@@ -7,6 +7,10 @@ import { ActionDelays } from '../interfaces/ActionDelays';
 import { BoardSize } from '../interfaces/BoardSize';
 import { Message } from '../interfaces/Message';
 
+import { ActionInvalidMessage } from '../interfaces/messages/ActionInvalidMessage';
+import { ActionValidMessage } from '../interfaces/messages/ActionValidMessage';
+import { GameStartedMessage } from '../interfaces/messages/GameStartedMessage';
+
 import { Board } from './models/Board';
 import { Scoreboard } from './models/Scoreboard';
 
@@ -17,6 +21,9 @@ import { SendMessageFn } from './SendMessageFn';
 import { UIController } from './ui/UIController';
 
 import { PlayerMessageHandler } from './game-logic/PlayerMessageHandler';
+
+import { GAME_MASTER_ID } from '../common/EntityIds';
+import { getGameStartedMessagePayload } from '../common/getGameStartedMessagePayload';
 
 import { PeriodicPieceGeneratorFactory } from './board-generation/createPeriodicPieceGenerator';
 import { PeriodicPieceGenerator } from './board-generation/PeriodicPieceGenerator';
@@ -73,6 +80,7 @@ export class Game {
 
     this._state = GameState.InProgress;
     this.periodicPieceGenerator.init();
+    this.sendGameStartedMessageToPlayers();
   }
 
   public stop() {
@@ -83,7 +91,44 @@ export class Game {
     this._state = GameState.Finished;
   }
 
-  public processMessage(message: Message<any>): ProcessMessageResult<any> {
+  public async handleMessage(message: Message<any>) {
+    // TODO: add unit tests
+    // TODO: possibly handle player disconnected message
+
+    const result = this.handlePlayerMessage(message);
+    if (!result.valid) {
+      const actionInvalidMessage: ActionInvalidMessage = {
+        type: 'ACTION_INVALID',
+        recipientId: message.senderId,
+        senderId: GAME_MASTER_ID,
+        payload: {
+          reason: result.reason
+        }
+      };
+
+      return this.sendIngameMessage(actionInvalidMessage);
+    }
+
+    const actionValidMessage: ActionValidMessage = {
+      type: 'ACTION_VALID',
+      recipientId: message.senderId,
+      senderId: GAME_MASTER_ID,
+      payload: {
+        delay: result.delay
+      }
+    };
+
+    this.uiController.updateBoard(this.board);
+    this.sendIngameMessage(actionValidMessage);
+    this.sendIngameMessage(await result.responseMessage);
+  }
+
+  /**
+   * This method is called internally by `handleMessage`.
+   *
+   * Left public only in order not to modify the tests by much.
+   */
+  public handlePlayerMessage(message: Message<any>): ProcessMessageResult<any> {
     const sender = this.playersContainer.getPlayerById(message.senderId);
     if (!sender) {
       return {
@@ -123,16 +168,6 @@ export class Game {
     this.playersContainer.removePlayer(disconnectedPlayer);
   }
 
-  public setPlayersPositions() {
-    /**
-     * NOTE: this method is probably useless because all players already have a random position set
-     * when they are added to the game
-     *
-     * TODO: check if the note above is correct and remove this method
-     */
-    this.playersContainer.players.forEach(x => this.board.setRandomPlayerPosition(x));
-  }
-
   public addPlayer(player: Player) {
     if (player.position === undefined) {
       this.board.setRandomPlayerPosition(player);
@@ -156,5 +191,21 @@ export class Game {
     }
 
     return this.sendMessage(message);
+  }
+
+  private sendGameStartedMessageToPlayers() {
+    // TODO: add test to check if this message is sent to all players
+
+    const gameStartedMessagePayload = getGameStartedMessagePayload(this.playersContainer);
+    this.playersContainer.players.forEach(player => {
+      const message: GameStartedMessage = {
+        senderId: GAME_MASTER_ID,
+        recipientId: player.playerId,
+        type: 'GAME_STARTED',
+        payload: gameStartedMessagePayload
+      };
+
+      this.sendMessage(message);
+    });
   }
 }
