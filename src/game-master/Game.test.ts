@@ -15,9 +15,18 @@ import { InvalidMessageResult } from './ProcessMessageResult';
 
 import { UIController } from './ui/UIController';
 
+import { PeriodicPieceGenerator } from './board-generation/PeriodicPieceGenerator';
+
 function createMockUiController(): UIController {
   return <any>{
     updateBoard: jest.fn()
+  };
+}
+
+function createMockPeriodicPieceGenerator() {
+  return {
+    init: jest.fn(),
+    destroy: jest.fn()
   };
 }
 
@@ -30,6 +39,7 @@ describe('[GM] Game', () => {
   let game: Game;
   let uiController: UIController;
   let loggerInstance: LoggerInstance;
+  let periodicPieceGenerator: PeriodicPieceGenerator;
 
   const actionDelays: ActionDelays = {
     communicationAccept: 4000,
@@ -47,6 +57,8 @@ describe('[GM] Game', () => {
   beforeEach(() => {
     const playersContainter = new PlayersContainer();
     const pointsLimit = 5;
+    periodicPieceGenerator = <any>createMockPeriodicPieceGenerator();
+
     game = new Game(
       boardSize,
       pointsLimit,
@@ -54,7 +66,8 @@ describe('[GM] Game', () => {
       uiController,
       playersContainter,
       actionDelays,
-      jest.fn()
+      jest.fn(),
+      () => periodicPieceGenerator
     );
     game.state = GameState.InProgress;
 
@@ -131,14 +144,41 @@ describe('[GM] Game', () => {
     });
   });
 
-  describe('after resetting the game', () => {
-    it('players should receive new positions', () => {
-      game.addPlayer(player);
+  describe('start', () => {
+    beforeEach(() => {
+      game.state = GameState.Registered;
+    });
 
-      const oldPosition = player.position;
-      game.reset();
+    it('should set game state to InProgress', () => {
+      game.start();
 
-      expect(player.position).not.toBe(oldPosition);
+      expect(game.state).toBe(GameState.InProgress);
+    });
+
+    it('should init PeriodicPieceGenerator', () => {
+      game.start();
+
+      expect(periodicPieceGenerator.init).toHaveBeenCalled();
+    });
+
+    it('should throw an error when invoked twice', () => {
+      game.start();
+
+      expect(() => game.start()).toThrow();
+    });
+  });
+
+  describe('stop', () => {
+    it('should set game state to Finished', () => {
+      game.stop();
+
+      expect(game.state).toBe(GameState.Finished);
+    });
+
+    it('should init PeriodicPieceGenerator', () => {
+      game.stop();
+
+      expect(periodicPieceGenerator.destroy).toHaveBeenCalled();
     });
   });
 
