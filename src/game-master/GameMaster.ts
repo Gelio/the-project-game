@@ -63,7 +63,9 @@ export class GameMaster implements Service {
   private readonly options: GameMasterOptions;
   private communicator: Communicator;
   private game: Game;
+  // REFACTOR: move PlayersContainer to `Game
   private playersContainer: PlayersContainer;
+  // REFACTOR: remove GameMasterState
   private state: GameMasterState;
 
   private readonly uiController: UIController;
@@ -141,6 +143,10 @@ export class GameMaster implements Service {
       return handler(message);
     }
 
+    /**
+     * REFACTOR: move the logic below to `Game` since it should be able to handle all messages, not
+     * only Player requests
+     */
     const result = this.game.processMessage(message);
     if (!result.valid) {
       const actionInvalidMessage: ActionInvalidMessage = {
@@ -299,6 +305,7 @@ export class GameMaster implements Service {
   }
 
   private handlePlayerDisconnectedMessage(message: PlayerDisconnectedMessage) {
+    // REFACTOR: move this method into `Game` and handle it there
     this.logger.verbose('Received player disconnected message');
     const disconnectedPlayer = this.playersContainer.getPlayerById(message.payload.playerId);
 
@@ -324,6 +331,7 @@ export class GameMaster implements Service {
       // TODO: check if GM should try to start new game
     }
   }
+  // TODO: add `onGameFinished` method that should possibly restart the game
 
   private initGame() {
     this.playersContainer = new PlayersContainer();

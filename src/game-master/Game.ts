@@ -121,6 +121,12 @@ export class Game {
   }
 
   public setPlayersPositions() {
+    /**
+     * NOTE: this method is probably useless because all players already have a random position set
+     * when they are added to the game
+     *
+     * TODO: check if the note above is correct and remove this method
+     */
     this.playersContainer.players.forEach(x => this.board.setRandomPlayerPosition(x));
   }
 

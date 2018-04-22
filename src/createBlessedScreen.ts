@@ -17,6 +17,7 @@ export function createBlessedScreen() {
   }
 
   const screen = blessed.screen(screenOptions);
+  // TODO: enable hooking up a custom exit handler (the `destoy` method of GM)
   screen.key(['escape', 'q', 'C-c'], () => process.exit(0));
 
   return screen;
