@@ -33,6 +33,7 @@ import { PeriodicPieceGenerator } from './board-generation/PeriodicPieceGenerato
 
 import { Game } from './Game';
 import { GameMasterState } from './GameMasterState';
+import { GameState } from './GameState';
 import { Player } from './Player';
 import { PlayersContainer } from './PlayersContainer';
 
@@ -119,7 +120,7 @@ export class GameMaster implements Service {
   }
 
   public destroy() {
-    if (this.game.hasStarted) {
+    if (this.game.state === GameState.InProgress) {
       this.stopGame();
     }
 
@@ -182,7 +183,9 @@ export class GameMaster implements Service {
       };
 
       this.communicator.sendMessage(playerAcceptedMessage);
-      this.tryStartGame();
+      if (this.game.state === GameState.Registered) {
+        this.tryStartGame();
+      }
     } catch (e) {
       const error: Error = e;
 
@@ -256,7 +259,7 @@ export class GameMaster implements Service {
   private tryAcceptPlayer(message: PlayerHelloMessage) {
     const teamPlayers = this.game.playersContainer.getPlayersFromTeam(message.payload.teamId);
 
-    if (this.game.hasStarted) {
+    if (this.game.state === GameState.InProgress) {
       const disconnectedPlayer = teamPlayers.find(
         player => !player.isConnected && player.isLeader === message.payload.isLeader
       );
@@ -267,7 +270,7 @@ export class GameMaster implements Service {
 
       disconnectedPlayer.isConnected = true;
 
-      return disconnectedPlayer.playerId;
+      return;
     }
 
     if (teamPlayers.length >= this.options.teamSizes[message.payload.teamId]) {
@@ -299,7 +302,7 @@ export class GameMaster implements Service {
     this.logger.verbose('Received player disconnected message');
     const disconnectedPlayer = this.playersContainer.getPlayerById(message.payload.playerId);
 
-    if (!this.game.hasStarted) {
+    if (this.game.state === GameState.Registered) {
       if (disconnectedPlayer) {
         this.game.removePlayer(disconnectedPlayer);
         this.uiController.updateBoard(this.game.board);
@@ -388,7 +391,7 @@ export class GameMaster implements Service {
         }
       }
     };
-    this.game.start();
+    this.game.state = GameState.InProgress;
     this.updateState(GameMasterState.InGame);
 
     this.playersContainer.players.forEach(player => {
@@ -407,7 +410,7 @@ export class GameMaster implements Service {
 
   private stopGame() {
     this.periodicPieceGenerator.destroy();
-    this.game.stop();
+    this.game.state = GameState.Finished;
     this.updateState(GameMasterState.Finished);
   }
 

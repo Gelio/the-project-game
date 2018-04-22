@@ -3,3 +3,5 @@
 exports[`[GM] Game processMessage should reject message from busy player 1`] = `"Sender is busy"`;
 
 exports[`[GM] Game processMessage should reject message from non existing player 1`] = `"Sender ID is invalid"`;
+
+exports[`[GM] Game processMessage should reject message when the game is not in progress 1`] = `"Game is not in progress"`;
