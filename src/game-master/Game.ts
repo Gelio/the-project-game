@@ -23,23 +23,26 @@ import { PeriodicPieceGenerator } from './board-generation/PeriodicPieceGenerato
 
 export class Game {
   public board: Board;
-  public playersContainer: PlayersContainer;
-  public state = GameState.Registered;
+  public readonly playersContainer: PlayersContainer;
 
-  private readonly logger: LoggerInstance;
-  private readonly uiController: UIController;
   private readonly actionDelays: ActionDelays;
+  private readonly logger: LoggerInstance;
+  private readonly periodicPieceGenerator: PeriodicPieceGenerator;
   private readonly playerMessageHandler: PlayerMessageHandler;
   private readonly scoreboard: Scoreboard;
   private readonly sendMessage: SendMessageFn;
-  private readonly periodicPieceGenerator: PeriodicPieceGenerator;
+  private readonly uiController: UIController;
+  private _state = GameState.Registered;
+
+  public get state() {
+    return this._state;
+  }
 
   constructor(
     boardSize: BoardSize,
     pointsLimit: number,
     logger: LoggerInstance,
     uiController: UIController,
-    playersContainer: PlayersContainer,
     actionDelays: ActionDelays,
     sendMessage: SendMessageFn,
     periodicPieceGeneratorFactory: PeriodicPieceGeneratorFactory
@@ -48,7 +51,7 @@ export class Game {
     this.scoreboard = new Scoreboard(pointsLimit);
     this.logger = logger;
     this.uiController = uiController;
-    this.playersContainer = playersContainer;
+    this.playersContainer = new PlayersContainer();
     this.actionDelays = actionDelays;
     this.sendMessage = sendMessage;
     this.periodicPieceGenerator = periodicPieceGeneratorFactory(this.board);
@@ -68,7 +71,7 @@ export class Game {
       throw new Error('Game is already in progress');
     }
 
-    this.state = GameState.InProgress;
+    this._state = GameState.InProgress;
     this.periodicPieceGenerator.init();
   }
 
@@ -77,7 +80,7 @@ export class Game {
       this.periodicPieceGenerator.destroy();
     }
 
-    this.state = GameState.Finished;
+    this._state = GameState.Finished;
   }
 
   public processMessage(message: Message<any>): ProcessMessageResult<any> {

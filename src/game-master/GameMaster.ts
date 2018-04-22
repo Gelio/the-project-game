@@ -33,10 +33,8 @@ import { createPeriodicPieceGenerator } from './board-generation/createPeriodicP
 import { PeriodicPieceGeneratorOptions } from './board-generation/PeriodicPieceGenerator';
 
 import { Game } from './Game';
-import { GameMasterState } from './GameMasterState';
 import { GameState } from './GameState';
 import { Player } from './Player';
-import { PlayersContainer } from './PlayersContainer';
 
 import { UIController } from './ui/UIController';
 
@@ -63,10 +61,6 @@ export class GameMaster implements Service {
   private readonly options: GameMasterOptions;
   private communicator: Communicator;
   private game: Game;
-  // REFACTOR: move PlayersContainer to `Game
-  private playersContainer: PlayersContainer;
-  // REFACTOR: remove GameMasterState
-  private state: GameMasterState;
 
   private readonly uiController: UIController;
   private readonly loggerFactory: LoggerFactory;
@@ -86,7 +80,6 @@ export class GameMaster implements Service {
     this.options = options;
     this.uiController = uiController;
     this.loggerFactory = loggerFactory;
-    this.state = GameMasterState.Connecting;
 
     this.failedRegistrations = 0;
 
@@ -238,7 +231,6 @@ export class GameMaster implements Service {
     if (message.payload.registered) {
       this.logger.verbose(`Game \`${this.options.gameName}\` has been registered`);
 
-      this.updateState(GameMasterState.WaitingForPlayers);
       this.failedRegistrations = 0;
 
       this.communicator.on('message', this.handleMessage);
@@ -307,7 +299,7 @@ export class GameMaster implements Service {
   private handlePlayerDisconnectedMessage(message: PlayerDisconnectedMessage) {
     // REFACTOR: move this method into `Game` and handle it there
     this.logger.verbose('Received player disconnected message');
-    const disconnectedPlayer = this.playersContainer.getPlayerById(message.payload.playerId);
+    const disconnectedPlayer = this.game.playersContainer.getPlayerById(message.payload.playerId);
 
     if (this.game.state === GameState.Registered) {
       if (disconnectedPlayer) {
@@ -334,8 +326,6 @@ export class GameMaster implements Service {
   // TODO: add `onGameFinished` method that should possibly restart the game
 
   private initGame() {
-    this.playersContainer = new PlayersContainer();
-
     const periodicPieceGeneratorOptions: PeriodicPieceGeneratorOptions = {
       checkInterval: this.options.generatePiecesInterval,
       piecesLimit: this.options.piecesLimit,
@@ -347,7 +337,6 @@ export class GameMaster implements Service {
       this.options.pointsLimit,
       this.logger,
       this.uiController,
-      this.playersContainer,
       this.options.actionDelays,
       this.sendMessage,
       createPeriodicPieceGenerator(periodicPieceGeneratorOptions, this.logger)
@@ -356,7 +345,7 @@ export class GameMaster implements Service {
   }
 
   private tryStartGame() {
-    const connectedPlayersCount = this.playersContainer.players.length;
+    const connectedPlayersCount = this.game.playersContainer.players.length;
     const requiredPlayersCount = this.options.teamSizes['1'] + this.options.teamSizes['2'];
 
     if (connectedPlayersCount < requiredPlayersCount) {
@@ -373,6 +362,7 @@ export class GameMaster implements Service {
   private startGame() {
     this.logger.info('Game is starting...');
 
+    // REFACTOR: move the logic below to Game
     const team1Players = this.game.playersContainer.getPlayersFromTeam(1);
     const team2Players = this.game.playersContainer.getPlayersFromTeam(2);
     const team1Leader = team1Players.find(player => player.isLeader);
@@ -396,9 +386,8 @@ export class GameMaster implements Service {
       }
     };
     this.game.start();
-    this.updateState(GameMasterState.InGame);
 
-    this.playersContainer.players.forEach(player => {
+    this.game.playersContainer.players.forEach(player => {
       const message: GameStartedMessage = {
         senderId: GAME_MASTER_ID,
         recipientId: player.playerId,
@@ -414,18 +403,11 @@ export class GameMaster implements Service {
 
   private stopGame() {
     this.game.stop();
-    this.updateState(GameMasterState.Finished);
     // TODO: unregister game
-  }
-
-  private updateState(state: GameMasterState) {
-    this.state = state;
-    this.uiController.render();
   }
 
   private initUI() {
     this.uiController.init();
-    this.updateState(this.state);
   }
 
   private initLogger() {

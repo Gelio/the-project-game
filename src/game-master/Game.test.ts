@@ -10,7 +10,6 @@ import { DiscoveryRequest } from '../interfaces/requests/DiscoveryRequest';
 import { Game } from './Game';
 import { GameState } from './GameState';
 import { Player } from './Player';
-import { PlayersContainer } from './PlayersContainer';
 import { InvalidMessageResult } from './ProcessMessageResult';
 
 import { UIController } from './ui/UIController';
@@ -55,7 +54,6 @@ describe('[GM] Game', () => {
   let player: Player;
 
   beforeEach(() => {
-    const playersContainter = new PlayersContainer();
     const pointsLimit = 5;
     periodicPieceGenerator = <any>createMockPeriodicPieceGenerator();
 
@@ -64,12 +62,10 @@ describe('[GM] Game', () => {
       pointsLimit,
       loggerInstance,
       uiController,
-      playersContainter,
       actionDelays,
       jest.fn(),
       () => periodicPieceGenerator
     );
-    game.state = GameState.InProgress;
 
     player = new Player();
     player.playerId = 'player';
@@ -85,39 +81,56 @@ describe('[GM] Game', () => {
   });
 
   describe('processMessage', () => {
-    it('should reject message from non existing player', () => {
-      const message: DiscoveryRequest = {
-        senderId: 'player1',
-        type: 'DISCOVERY_REQUEST',
-        payload: undefined
-      };
-      const processedMessageResult = game.processMessage(message);
-      expect(processedMessageResult.valid).toBe(false);
+    describe('after game started', () => {
+      beforeEach(() => {
+        game.start();
+      });
 
-      const invalidResult = <InvalidMessageResult>processedMessageResult;
-      expect(invalidResult.reason).toMatchSnapshot();
-    });
+      it('should reject message from non existing player', () => {
+        const message: DiscoveryRequest = {
+          senderId: 'player1',
+          type: 'DISCOVERY_REQUEST',
+          payload: undefined
+        };
+        const processedMessageResult = game.processMessage(message);
+        expect(processedMessageResult.valid).toBe(false);
 
-    it('should reject message from busy player', () => {
-      game.addPlayer(player);
+        const invalidResult = <InvalidMessageResult>processedMessageResult;
+        expect(invalidResult.reason).toMatchSnapshot();
+      });
 
-      player.isBusy = true;
+      it('should reject message from busy player', () => {
+        game.addPlayer(player);
 
-      const message: DiscoveryRequest = {
-        senderId: player.playerId,
-        type: 'DISCOVERY_REQUEST',
-        payload: undefined
-      };
-      const processedMessageResult = game.processMessage(message);
-      expect(processedMessageResult.valid).toBe(false);
+        player.isBusy = true;
 
-      const invalidResult = <InvalidMessageResult>processedMessageResult;
-      expect(invalidResult.reason).toMatchSnapshot();
+        const message: DiscoveryRequest = {
+          senderId: player.playerId,
+          type: 'DISCOVERY_REQUEST',
+          payload: undefined
+        };
+        const processedMessageResult = game.processMessage(message);
+        expect(processedMessageResult.valid).toBe(false);
+
+        const invalidResult = <InvalidMessageResult>processedMessageResult;
+        expect(invalidResult.reason).toMatchSnapshot();
+      });
+
+      it('should process valid request', () => {
+        game.addPlayer(player);
+
+        const message: DiscoveryRequest = {
+          senderId: player.playerId,
+          type: 'DISCOVERY_REQUEST',
+          payload: undefined
+        };
+        const processedMessageResult = game.processMessage(message);
+        expect(processedMessageResult.valid).toBe(true);
+      });
     });
 
     it('should reject message when the game is not in progress', () => {
       game.addPlayer(player);
-      game.state = GameState.Registered;
 
       const message: DiscoveryRequest = {
         senderId: player.playerId,
@@ -130,25 +143,9 @@ describe('[GM] Game', () => {
       const invalidResult = <InvalidMessageResult>processedMessageResult;
       expect(invalidResult.reason).toMatchSnapshot();
     });
-
-    it('should process valid request', () => {
-      game.addPlayer(player);
-
-      const message: DiscoveryRequest = {
-        senderId: player.playerId,
-        type: 'DISCOVERY_REQUEST',
-        payload: undefined
-      };
-      const processedMessageResult = game.processMessage(message);
-      expect(processedMessageResult.valid).toBe(true);
-    });
   });
 
   describe('start', () => {
-    beforeEach(() => {
-      game.state = GameState.Registered;
-    });
-
     it('should set game state to InProgress', () => {
       game.start();
 
@@ -175,7 +172,8 @@ describe('[GM] Game', () => {
       expect(game.state).toBe(GameState.Finished);
     });
 
-    it('should init PeriodicPieceGenerator', () => {
+    it('should stop PeriodicPieceGenerator', () => {
+      game.start();
       game.stop();
 
       expect(periodicPieceGenerator.destroy).toHaveBeenCalled();
