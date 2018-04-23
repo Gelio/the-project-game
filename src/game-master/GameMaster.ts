@@ -262,30 +262,14 @@ export class GameMaster implements Service {
   }
 
   private handlePlayerDisconnectedMessage(message: PlayerDisconnectedMessage) {
-    // REFACTOR: move this method into `Game` and handle it there
-    this.logger.verbose('Received player disconnected message');
-    const disconnectedPlayer = this.game.playersContainer.getPlayerById(message.payload.playerId);
-
-    if (this.game.state === GameState.Registered) {
-      if (disconnectedPlayer) {
-        this.game.removePlayer(disconnectedPlayer);
-        this.uiController.updateBoard(this.game.board);
-      }
-
-      return;
-    }
-
-    if (!disconnectedPlayer) {
-      return;
-    }
-
-    disconnectedPlayer.isConnected = false;
+    this.logger.info(`Player ${message.payload.playerId} disconnected`);
+    this.game.handlePlayerDisconnectedMessage(message);
 
     const connectedPlayers = this.game.playersContainer.getConnectedPlayers();
     if (connectedPlayers.length === 0) {
       this.logger.info('All players disconnected, disconnecting from the server');
-      this.destroy();
-      // TODO: check if GM should try to start new game
+      this.game.stop();
+      // TODO: check if GM should try to start new game (or call onGameFinished)
     }
   }
   // TODO: add `onGameFinished` method that should possibly restart the game

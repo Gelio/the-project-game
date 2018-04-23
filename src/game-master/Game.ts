@@ -27,6 +27,7 @@ import { getGameStartedMessagePayload } from '../common/getGameStartedMessagePay
 
 import { PeriodicPieceGeneratorFactory } from './board-generation/createPeriodicPieceGenerator';
 import { PeriodicPieceGenerator } from './board-generation/PeriodicPieceGenerator';
+import { PlayerDisconnectedMessage } from '../interfaces/messages/PlayerDisconnectedMessage';
 
 export class Game {
   public board: Board;
@@ -161,6 +162,26 @@ export class Game {
     }
 
     return processMessageResult;
+  }
+
+  public handlePlayerDisconnectedMessage(message: PlayerDisconnectedMessage) {
+    // TODO: add unit tests for this method
+    const disconnectedPlayer = this.playersContainer.getPlayerById(message.payload.playerId);
+
+    if (this.state === GameState.Registered) {
+      if (disconnectedPlayer) {
+        this.removePlayer(disconnectedPlayer);
+        this.uiController.updateBoard(this.board);
+      }
+
+      return;
+    }
+
+    if (!disconnectedPlayer) {
+      return;
+    }
+
+    disconnectedPlayer.isConnected = false;
   }
 
   public removePlayer(disconnectedPlayer: Player) {
