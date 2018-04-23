@@ -3,13 +3,14 @@ import { LoggerInstance } from 'winston';
 
 import { bindObjectMethods } from '../common/bindObjectMethods';
 import { Communicator } from '../common/Communicator';
+import { createDelay } from '../common/createDelay';
 import { GAME_MASTER_ID } from '../common/EntityIds';
 import { LoggerFactory } from '../common/logging/LoggerFactory';
 import { UITransport } from '../common/logging/UITransport';
 
 import { ActionDelays } from '../interfaces/ActionDelays';
 import { BoardSize } from '../interfaces/BoardSize';
-import { GameDefinition, TeamSizes } from '../interfaces/GameDefinition';
+import { TeamSizes } from '../interfaces/GameDefinition';
 import { Message } from '../interfaces/Message';
 import { Service } from '../interfaces/Service';
 
@@ -17,9 +18,6 @@ import { PlayerAcceptedMessage } from '../interfaces/messages/PlayerAcceptedMess
 import { PlayerDisconnectedMessage } from '../interfaces/messages/PlayerDisconnectedMessage';
 import { PlayerHelloMessage } from '../interfaces/messages/PlayerHelloMessage';
 import { PlayerRejectedMessage } from '../interfaces/messages/PlayerRejectedMessage';
-import { MessageWithRecipient } from '../interfaces/MessageWithRecipient';
-import { RegisterGameRequest } from '../interfaces/requests/RegisterGameRequest';
-import { RegisterGameResponse } from '../interfaces/responses/RegisterGameResponse';
 
 import { registerUncaughtExceptionHandler } from '../registerUncaughtExceptionHandler';
 
@@ -28,7 +26,7 @@ import { PeriodicPieceGeneratorOptions } from './board-generation/PeriodicPieceG
 
 import { Game } from './Game';
 import { GameState } from './GameState';
-import { Player } from './Player';
+import { mapOptionsToGameDefinition } from './mapOptionsToGameDefinition';
 
 import { UIController } from './ui/UIController';
 
@@ -59,7 +57,9 @@ export class GameMaster implements Service {
   private readonly uiController: UIController;
   private readonly loggerFactory: LoggerFactory;
   private logger: LoggerInstance;
-  private failedRegistrations: number;
+
+  private failedRegistrations = 0;
+  private roundsPlayed = 0;
 
   private readonly messageHandlers: { [type: string]: Function } = {
     PLAYER_HELLO: this.handlePlayerHelloMessage,
@@ -75,21 +75,18 @@ export class GameMaster implements Service {
     this.uiController = uiController;
     this.loggerFactory = loggerFactory;
 
-    this.failedRegistrations = 0;
-
     bindObjectMethods(this.messageHandlers, this);
     this.destroy = this.destroy.bind(this);
     this.handleMessage = this.handleMessage.bind(this);
-    this.sendMessage = this.sendMessage.bind(this);
   }
 
-  public init() {
+  public async init() {
     this.initUI();
     this.initLogger();
-    this.initGame();
 
     const { serverHostname, serverPort } = this.options;
 
+    this.logger.verbose('Connecting to the server');
     const socket = createConnection(
       {
         host: serverHostname,
@@ -97,6 +94,7 @@ export class GameMaster implements Service {
       },
       () => {
         this.logger.info(`Connected to the server at ${serverHostname}:${serverPort}`);
+        this.registerGame();
       }
     );
 
@@ -105,22 +103,41 @@ export class GameMaster implements Service {
 
     this.communicator.once('close', this.handleServerDisconnection.bind(this));
 
-    this.registerGame();
+    this.createNewGame();
   }
 
-  public destroy() {
+  public async destroy() {
+    this.logger.verbose('Destroying GM');
+
     if (this.game.state === GameState.InProgress) {
-      this.stopGame();
+      this.logger.verbose('Stopping and unregistering the game');
+      this.game.stop();
+      await this.game.unregister();
     }
 
     this.communicator.destroy();
     this.uiController.destroy();
   }
 
-  private handleServerDisconnection() {
-    this.logger.warn('Disconnected from the server. Closing...');
+  private initUI() {
+    this.uiController.init();
+  }
 
-    this.destroy();
+  private initLogger() {
+    if (!this.uiController) {
+      throw new Error('Cannot create logger without UI controller');
+    }
+
+    const uiTransport = new UITransport(this.uiController.log.bind(this.uiController));
+    this.logger = this.loggerFactory.createLogger([uiTransport]);
+    registerUncaughtExceptionHandler(this.logger);
+    this.logger.info('Logger initialized');
+  }
+
+  private handleServerDisconnection() {
+    this.logger.warn('Disconnected from the server');
+
+    return this.destroy();
   }
 
   private async handleMessage(message: Message<any>) {
@@ -134,10 +151,10 @@ export class GameMaster implements Service {
   }
 
   private handlePlayerHelloMessage(message: PlayerHelloMessage) {
-    this.logger.verbose(`Received player ${message.senderId} hello message`);
+    this.logger.verbose(`Received hello message from ${message.senderId}`);
 
     try {
-      this.tryAcceptPlayer(message);
+      this.game.tryAcceptPlayer(message);
 
       const playerAcceptedMessage: PlayerAcceptedMessage = {
         type: 'PLAYER_ACCEPTED',
@@ -168,129 +185,52 @@ export class GameMaster implements Service {
     }
   }
 
-  private async registerGame() {
-    const game: GameDefinition = {
-      name: this.options.gameName,
-      description: this.options.gameDescription,
-      teamSizes: this.options.teamSizes,
-      boardSize: this.options.boardSize,
-      goalLimit: this.options.pointsLimit,
-      delays: this.options.actionDelays
-    };
-    const registerGameMessage: RegisterGameRequest = {
-      type: 'REGISTER_GAME_REQUEST',
-      senderId: GAME_MASTER_ID,
-      payload: game
-    };
-
-    this.communicator.sendMessage(registerGameMessage);
-
-    const listGamesResponse = <RegisterGameResponse>await this.communicator.waitForSpecificMessage(
-      (msg: MessageWithRecipient<RegisterGameResponse>) => msg.type === 'REGISTER_GAME_RESPONSE'
-    );
-
-    this.handleRegisterGameResponse(listGamesResponse);
-  }
-
-  private handleRegisterGameResponse(message: RegisterGameResponse) {
-    if (message.payload.registered) {
-      this.logger.verbose(`Game \`${this.options.gameName}\` has been registered`);
-
-      this.failedRegistrations = 0;
-
-      this.communicator.on('message', this.handleMessage);
-
-      return;
-    }
-
-    this.failedRegistrations++;
-
-    if (this.options.registrationTriesLimit === this.failedRegistrations) {
-      throw new Error('Failed to register new game, limit of tries reached');
-    }
-
-    const registrationsTriesLeft = this.options.registrationTriesLimit - this.failedRegistrations;
-    this.logger.error(
-      `Failed to register new game! Next attempt will be made in ${
-        this.options.registerGameInterval
-      } miliseconds. Attempts left: ${registrationsTriesLeft}`
-    );
-
-    setTimeout(() => this.registerGame(), this.options.registerGameInterval);
-  }
-
-  private tryAcceptPlayer(message: PlayerHelloMessage) {
-    const teamPlayers = this.game.playersContainer.getPlayersFromTeam(message.payload.teamId);
-
-    if (this.game.state === GameState.InProgress) {
-      const disconnectedPlayer = teamPlayers.find(
-        player => !player.isConnected && player.isLeader === message.payload.isLeader
-      );
-
-      if (!disconnectedPlayer) {
-        throw new Error('Game already started and no more slots free');
-      }
-
-      disconnectedPlayer.isConnected = true;
-
-      return;
-    }
-
-    if (teamPlayers.length >= this.options.teamSizes[message.payload.teamId]) {
-      throw new Error('Team is full');
-    }
-
-    if (message.payload.isLeader && teamPlayers.find(player => player.isLeader)) {
-      throw new Error('Team already has a leader');
-    }
-
-    if (
-      !message.payload.isLeader &&
-      teamPlayers.length + 1 === this.options.teamSizes[message.payload.teamId]
-    ) {
-      throw new Error('Team does not have a leader');
-    }
-
-    const newPlayer = new Player();
-    newPlayer.playerId = message.senderId;
-    newPlayer.teamId = message.payload.teamId;
-    newPlayer.isLeader = message.payload.isLeader;
-    newPlayer.isBusy = false;
-    newPlayer.isConnected = true;
-
-    this.game.addPlayer(newPlayer);
-  }
-
   private handlePlayerDisconnectedMessage(message: PlayerDisconnectedMessage) {
     this.logger.info(`Player ${message.payload.playerId} disconnected`);
     this.game.handlePlayerDisconnectedMessage(message);
 
     const connectedPlayers = this.game.playersContainer.getConnectedPlayers();
     if (connectedPlayers.length === 0) {
-      this.logger.info('All players disconnected, disconnecting from the server');
-      this.game.stop();
-      // TODO: check if GM should try to start new game (or call onGameFinished)
+      this.logger.info('All players disconnected');
+      this.onPointsLimitReached();
     }
   }
-  // TODO: add `onGameFinished` method that should possibly restart the game
 
-  private initGame() {
+  private async onPointsLimitReached() {
+    this.game.stop();
+    await this.unregisterGame();
+
+    this.roundsPlayed++;
+    this.logger.info(`Round ${this.roundsPlayed} finished`);
+    this.logger.info(
+      `Score (team1:team2): ${this.game.scoreboard.team1Score}:${this.game.scoreboard.team2Score}`
+    );
+
+    if (this.roundsPlayed < this.options.gamesLimit) {
+      this.createNewGame();
+      await this.registerGame();
+    }
+  }
+
+  private createNewGame() {
     const periodicPieceGeneratorOptions: PeriodicPieceGeneratorOptions = {
       checkInterval: this.options.generatePiecesInterval,
       piecesLimit: this.options.piecesLimit,
       shamChance: this.options.shamChance
     };
 
+    const gameDefinition = mapOptionsToGameDefinition(this.options);
+
     this.game = new Game(
-      this.options.boardSize,
-      this.options.pointsLimit,
+      gameDefinition,
       this.logger,
       this.uiController,
-      this.options.actionDelays,
-      this.sendMessage,
-      createPeriodicPieceGenerator(periodicPieceGeneratorOptions, this.logger)
+      this.communicator,
+      createPeriodicPieceGenerator(periodicPieceGeneratorOptions, this.logger),
+      this.onPointsLimitReached.bind(this)
     );
     this.uiController.updateBoard(this.game.board);
+    this.logger.verbose('New game created');
   }
 
   private tryStartGame() {
@@ -302,39 +242,53 @@ export class GameMaster implements Service {
     }
 
     try {
-      this.startGame();
+      this.logger.info('Game is starting...');
+      this.game.start();
+      this.logger.info('Game started');
     } catch (error) {
-      this.logger.error(`Cannot start game - ${error.message}`);
+      this.logger.error(`Cannot start the game - ${error.message}`);
     }
   }
 
-  private startGame() {
-    this.logger.info('Game is starting...');
-    this.game.start();
-    this.logger.info('Game started');
-  }
+  private async registerGame(): Promise<void> {
+    try {
+      this.game.register();
+      this.logger.info(`Game "${this.options.gameName}" has been registered`);
 
-  private stopGame() {
-    this.game.stop();
-    // TODO: unregister game
-  }
+      this.failedRegistrations = 0;
 
-  private initUI() {
-    this.uiController.init();
-  }
+      this.communicator.on('message', this.handleMessage);
+    } catch (error) {
+      this.failedRegistrations++;
 
-  private initLogger() {
-    if (!this.uiController) {
-      throw new Error('Cannot create logger without UI controller');
+      if (this.options.registrationTriesLimit === this.failedRegistrations) {
+        this.logger.error('Failed to register new game, limit of tries reached');
+
+        return this.destroy();
+      }
+
+      const registrationsTriesLeft = this.options.registrationTriesLimit - this.failedRegistrations;
+      this.logger.error(
+        `Failed to register new game! Next attempt will be made in ${
+          this.options.registerGameInterval
+        } miliseconds. Attempts left: ${registrationsTriesLeft}`
+      );
+
+      await createDelay(this.options.registerGameInterval);
+
+      return this.registerGame();
     }
-
-    const uiTransport = new UITransport(this.uiController.log.bind(this.uiController));
-    this.logger = this.loggerFactory.createLogger([uiTransport]);
-    registerUncaughtExceptionHandler(this.logger);
-    this.logger.info('Logger initiated');
   }
 
-  private sendMessage(message: Message<any>): void {
-    return this.communicator.sendMessage(message);
+  private async unregisterGame() {
+    this.logger.verbose('Unregistering the game');
+
+    try {
+      await this.game.unregister();
+      this.communicator.removeListener('message', this.handleMessage);
+    } catch (error) {
+      this.logger.error(error.message);
+      await this.destroy();
+    }
   }
 }

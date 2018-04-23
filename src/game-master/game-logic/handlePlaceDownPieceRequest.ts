@@ -53,7 +53,7 @@ function handlePlaceDownOnTeamAreaTile(
   player: Player,
   piece: Piece,
   playerPosition: Point,
-  { actionDelays, board, scoreboard, logger }: MessageHandlerDependencies
+  { actionDelays, board, scoreboard, logger, onPointsLimitReached }: MessageHandlerDependencies
 ): ProcessMessageResult<PlaceDownPieceResponse> {
   board.removePiece(piece);
   player.heldPiece = null;
@@ -89,10 +89,14 @@ function handlePlaceDownOnTeamAreaTile(
 
     if (player.teamId === 1) {
       scoreboard.team1Score++;
-      // TODO: check win condition
+      if (scoreboard.team1Score === scoreboard.scoreLimit) {
+        onPointsLimitReached();
+      }
     } else if (player.teamId === 2) {
       scoreboard.team2Score++;
-      // TODO: check win condition
+      if (scoreboard.team2Score === scoreboard.scoreLimit) {
+        onPointsLimitReached();
+      }
     }
 
     return {
@@ -117,6 +121,7 @@ function handlePlaceDownOnTeamAreaTile(
   };
 }
 
+// TODO: test if `onPointsLimitReached` is called
 export function handlePlaceDownPieceRequest(
   dependencies: MessageHandlerDependencies,
   sender: Player,

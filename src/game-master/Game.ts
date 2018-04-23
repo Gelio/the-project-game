@@ -3,42 +3,51 @@ import { LoggerInstance } from 'winston';
 import { Player } from './Player';
 import { PlayersContainer } from './PlayersContainer';
 
-import { ActionDelays } from '../interfaces/ActionDelays';
-import { BoardSize } from '../interfaces/BoardSize';
+import { GameDefinition } from '../interfaces/GameDefinition';
 import { Message } from '../interfaces/Message';
 
 import { ActionInvalidMessage } from '../interfaces/messages/ActionInvalidMessage';
 import { ActionValidMessage } from '../interfaces/messages/ActionValidMessage';
+import {
+  GameFinishedMessage,
+  GameFinishedMessagePayload
+} from '../interfaces/messages/GameFinishedMessage';
 import { GameStartedMessage } from '../interfaces/messages/GameStartedMessage';
+import { PlayerDisconnectedMessage } from '../interfaces/messages/PlayerDisconnectedMessage';
+import { PlayerHelloMessage } from '../interfaces/messages/PlayerHelloMessage';
+
+import { RegisterGameRequest } from '../interfaces/requests/RegisterGameRequest';
+import { UnregisterGameRequest } from '../interfaces/requests/UnregisterGameRequest';
+import { RegisterGameResponse } from '../interfaces/responses/RegisterGameResponse';
+import { UnregisterGameResponse } from '../interfaces/responses/UnregisterGameResponse';
 
 import { Board } from './models/Board';
 import { Scoreboard } from './models/Scoreboard';
 
 import { GameState } from './GameState';
 import { ProcessMessageResult } from './ProcessMessageResult';
-import { SendMessageFn } from './SendMessageFn';
 
 import { UIController } from './ui/UIController';
 
 import { PlayerMessageHandler } from './game-logic/PlayerMessageHandler';
 
+import { Communicator } from '../common/Communicator';
 import { GAME_MASTER_ID } from '../common/EntityIds';
 import { getGameStartedMessagePayload } from '../common/getGameStartedMessagePayload';
 
 import { PeriodicPieceGeneratorFactory } from './board-generation/createPeriodicPieceGenerator';
 import { PeriodicPieceGenerator } from './board-generation/PeriodicPieceGenerator';
-import { PlayerDisconnectedMessage } from '../interfaces/messages/PlayerDisconnectedMessage';
 
 export class Game {
   public board: Board;
   public readonly playersContainer: PlayersContainer;
+  public readonly definition: GameDefinition;
+  public readonly scoreboard: Scoreboard;
 
-  private readonly actionDelays: ActionDelays;
   private readonly logger: LoggerInstance;
   private readonly periodicPieceGenerator: PeriodicPieceGenerator;
   private readonly playerMessageHandler: PlayerMessageHandler;
-  private readonly scoreboard: Scoreboard;
-  private readonly sendMessage: SendMessageFn;
+  private readonly communicator: Communicator;
   private readonly uiController: UIController;
   private _state = GameState.Registered;
 
@@ -47,30 +56,30 @@ export class Game {
   }
 
   constructor(
-    boardSize: BoardSize,
-    pointsLimit: number,
+    gameDefinition: GameDefinition,
     logger: LoggerInstance,
     uiController: UIController,
-    actionDelays: ActionDelays,
-    sendMessage: SendMessageFn,
-    periodicPieceGeneratorFactory: PeriodicPieceGeneratorFactory
+    communicator: Communicator,
+    periodicPieceGeneratorFactory: PeriodicPieceGeneratorFactory,
+    onPointsLimitReached: Function
   ) {
-    this.board = new Board(boardSize, pointsLimit);
-    this.scoreboard = new Scoreboard(pointsLimit);
+    this.definition = gameDefinition;
+    this.board = new Board(this.definition.boardSize, this.definition.goalLimit);
+    this.scoreboard = new Scoreboard(this.definition.goalLimit);
     this.logger = logger;
     this.uiController = uiController;
     this.playersContainer = new PlayersContainer();
-    this.actionDelays = actionDelays;
-    this.sendMessage = sendMessage;
+    this.communicator = communicator;
     this.periodicPieceGenerator = periodicPieceGeneratorFactory(this.board);
 
     this.playerMessageHandler = new PlayerMessageHandler({
       board: this.board,
       playersContainer: this.playersContainer,
-      actionDelays: this.actionDelays,
+      actionDelays: this.definition.delays,
       logger: this.logger,
       scoreboard: this.scoreboard,
-      sendMessage: this.sendIngameMessage.bind(this)
+      sendMessage: this.sendIngameMessage.bind(this),
+      onPointsLimitReached
     });
   }
 
@@ -90,11 +99,11 @@ export class Game {
     }
 
     this._state = GameState.Finished;
+    this.sendGameFinishedMessageToPlayers();
   }
 
   public async handleMessage(message: Message<any>) {
     // TODO: add unit tests
-    // TODO: possibly handle player disconnected message
 
     const result = this.handlePlayerMessage(message);
     if (!result.valid) {
@@ -166,6 +175,7 @@ export class Game {
 
   public handlePlayerDisconnectedMessage(message: PlayerDisconnectedMessage) {
     // TODO: add unit tests for this method
+    // NOTE: it is possible that the player should be removed from the board
     const disconnectedPlayer = this.playersContainer.getPlayerById(message.payload.playerId);
 
     if (this.state === GameState.Registered) {
@@ -198,6 +208,96 @@ export class Game {
     this.updateBoard();
   }
 
+  public async register() {
+    // TODO: unit tests
+    const registerGameMessage: RegisterGameRequest = {
+      type: 'REGISTER_GAME_REQUEST',
+      senderId: GAME_MASTER_ID,
+      payload: this.definition
+    };
+
+    this.logger.info('Registering the game');
+    this.communicator.sendMessage(registerGameMessage);
+
+    const response = <RegisterGameResponse>await this.communicator.waitForSpecificMessage(
+      msg => msg.type === 'REGISTER_GAME_RESPONSE'
+    );
+
+    if (!response.payload.registered) {
+      throw new Error('Cannot register the game');
+    }
+  }
+
+  public async unregister() {
+    // TODO: unit tests
+    const unregisterGameRequest: UnregisterGameRequest = {
+      senderId: 'GAME_MASTER',
+      recipientId: 'COMMUNICATION_SERVER',
+      type: 'UNREGISTER_GAME_REQUEST',
+      payload: {
+        gameName: this.definition.name
+      }
+    };
+
+    this.communicator.sendMessage(unregisterGameRequest);
+
+    const response = <UnregisterGameResponse>await this.communicator.waitForSpecificMessage(
+      msg => msg.type === 'UNREGISTER_GAME_RESPONSE'
+    );
+
+    if (!response.payload.unregistered) {
+      throw new Error('Cannot unregister the game');
+    }
+  }
+
+  public tryAcceptPlayer(message: PlayerHelloMessage) {
+    // TODO: add unit tests
+    const teamPlayers = this.playersContainer.getPlayersFromTeam(message.payload.teamId);
+
+    if (this.state === GameState.InProgress) {
+      /**
+       * NOTE: possibly when game is in progress no player should be able to join
+       * See https://trello.com/c/62WrxI35
+       */
+
+      const disconnectedPlayer = teamPlayers.find(
+        player => !player.isConnected && player.isLeader === message.payload.isLeader
+      );
+
+      if (!disconnectedPlayer) {
+        throw new Error('Game already started and no more slots free');
+      }
+
+      disconnectedPlayer.isConnected = true;
+
+      return;
+    }
+
+    if (teamPlayers.length >= this.definition.teamSizes[message.payload.teamId]) {
+      throw new Error('Team is full');
+    }
+
+    if (message.payload.isLeader && teamPlayers.find(player => player.isLeader)) {
+      throw new Error('Team already has a leader');
+    }
+
+    if (
+      !message.payload.isLeader &&
+      teamPlayers.length + 1 === this.definition.teamSizes[message.payload.teamId]
+    ) {
+      throw new Error('Team does not have a leader');
+    }
+
+    const newPlayer = new Player();
+    newPlayer.playerId = message.senderId;
+    newPlayer.teamId = message.payload.teamId;
+    newPlayer.isLeader = message.payload.isLeader;
+    newPlayer.isBusy = false;
+    newPlayer.isConnected = true;
+
+    this.addPlayer(newPlayer);
+  }
+
   private updateBoard() {
     this.uiController.updateBoard(this.board);
   }
@@ -211,14 +311,14 @@ export class Game {
       return;
     }
 
-    return this.sendMessage(message);
+    return this.communicator.sendMessage(message);
   }
 
   private sendGameStartedMessageToPlayers() {
     // TODO: add test to check if this message is sent to all players
 
     const gameStartedMessagePayload = getGameStartedMessagePayload(this.playersContainer);
-    this.playersContainer.players.forEach(player => {
+    this.playersContainer.getConnectedPlayers().forEach(player => {
       const message: GameStartedMessage = {
         senderId: GAME_MASTER_ID,
         recipientId: player.playerId,
@@ -226,7 +326,27 @@ export class Game {
         payload: gameStartedMessagePayload
       };
 
-      this.sendMessage(message);
+      this.communicator.sendMessage(message);
+    });
+  }
+
+  private sendGameFinishedMessageToPlayers() {
+    // TODO: add test to check if this message is sent to all players
+
+    const gameFinishedMessagePayload: GameFinishedMessagePayload = {
+      team1Score: this.scoreboard.team1Score,
+      team2Score: this.scoreboard.team2Score
+    };
+
+    this.playersContainer.getConnectedPlayers().forEach(player => {
+      const gameFinishedMessage: GameFinishedMessage = {
+        type: 'GAME_FINISHED',
+        senderId: GAME_MASTER_ID,
+        recipientId: player.playerId,
+        payload: gameFinishedMessagePayload
+      };
+
+      this.communicator.sendMessage(gameFinishedMessage);
     });
   }
 }
