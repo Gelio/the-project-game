@@ -304,7 +304,7 @@ export class Game {
 
   private sendIngameMessage(message: Message<any>): void {
     if (this.state !== GameState.InProgress) {
-      this.logger.notice(
+      this.logger.verbose(
         `Message ${message.type} will not be sent because the game is not in progress`
       );
 

@@ -252,7 +252,7 @@ export class GameMaster implements Service {
 
   private async registerGame(): Promise<void> {
     try {
-      this.game.register();
+      await this.game.register();
       this.logger.info(`Game "${this.options.gameName}" has been registered`);
 
       this.failedRegistrations = 0;
