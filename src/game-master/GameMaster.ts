@@ -209,6 +209,9 @@ export class GameMaster implements Service {
     if (this.roundsPlayed < this.options.gamesLimit) {
       this.createNewGame();
       await this.registerGame();
+    } else {
+      this.logger.info('Rounds limit reached');
+      this.destroy();
     }
   }
 
