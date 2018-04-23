@@ -105,7 +105,7 @@ export class Game {
   public async handleMessage(message: Message<any>) {
     // TODO: add unit tests
 
-    const result = this.handlePlayerMessage(message);
+    const result = this.processPlayerMessage(message);
     if (!result.valid) {
       const actionInvalidMessage: ActionInvalidMessage = {
         type: 'ACTION_INVALID',
@@ -138,7 +138,7 @@ export class Game {
    *
    * Left public only in order not to modify the tests by much.
    */
-  public handlePlayerMessage(message: Message<any>): ProcessMessageResult<any> {
+  public processPlayerMessage(message: Message<any>): ProcessMessageResult<any> {
     const sender = this.playersContainer.getPlayerById(message.senderId);
     if (!sender) {
       return {

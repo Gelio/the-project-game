@@ -48,13 +48,6 @@ describe('[GM] Game', () => {
     test: 4000,
     place: 4000
   };
-
-  let game: Game;
-  let uiController: UIController;
-  let loggerInstance: LoggerInstance;
-  let periodicPieceGenerator: PeriodicPieceGenerator;
-  let communicator: Communicator;
-
   const gameDefinition: GameDefinition = {
     boardSize,
     name: 'test name',
@@ -67,20 +60,29 @@ describe('[GM] Game', () => {
     goalLimit: 5
   };
 
+  let game: Game;
+  let uiController: UIController;
+  let loggerInstance: LoggerInstance;
+  let periodicPieceGenerator: PeriodicPieceGenerator;
+  let communicator: Communicator;
   let player: Player;
   let otherPlayer: Player;
 
   beforeEach(() => {
     periodicPieceGenerator = <any>createMockPeriodicPieceGenerator();
     communicator = createMockCommunicator();
+    uiController = createMockUiController();
+
+    const loggerFactory = new LoggerFactory();
+    loggerInstance = loggerFactory.createEmptyLogger();
 
     game = new Game(
       gameDefinition,
       loggerInstance,
       uiController,
       communicator,
-      jest.fn(),
-      () => periodicPieceGenerator
+      () => periodicPieceGenerator,
+      jest.fn()
     );
 
     player = new Player();
@@ -89,6 +91,7 @@ describe('[GM] Game', () => {
     player.isLeader = true;
     player.isBusy = false;
     player.isConnected = true;
+    game.addPlayer(player);
 
     otherPlayer = new Player();
     otherPlayer.playerId = 'otherPlayer';
@@ -97,11 +100,6 @@ describe('[GM] Game', () => {
     otherPlayer.isBusy = false;
     otherPlayer.isConnected = true;
     game.addPlayer(otherPlayer);
-
-    const loggerFactory = new LoggerFactory();
-    loggerInstance = loggerFactory.createEmptyLogger();
-
-    uiController = createMockUiController();
   });
 
   describe('processMessage', () => {
@@ -112,11 +110,11 @@ describe('[GM] Game', () => {
 
       it('should reject message from non existing player', () => {
         const message: DiscoveryRequest = {
-          senderId: 'player1',
+          senderId: 'non existing player',
           type: 'DISCOVERY_REQUEST',
           payload: undefined
         };
-        const processedMessageResult = game.handlePlayerMessage(message);
+        const processedMessageResult = game.processPlayerMessage(message);
         expect(processedMessageResult.valid).toBe(false);
 
         const invalidResult = <InvalidMessageResult>processedMessageResult;
@@ -124,8 +122,6 @@ describe('[GM] Game', () => {
       });
 
       it('should reject message from busy player', () => {
-        game.addPlayer(player);
-
         player.isBusy = true;
 
         const message: DiscoveryRequest = {
@@ -133,7 +129,7 @@ describe('[GM] Game', () => {
           type: 'DISCOVERY_REQUEST',
           payload: undefined
         };
-        const processedMessageResult = game.handlePlayerMessage(message);
+        const processedMessageResult = game.processPlayerMessage(message);
         expect(processedMessageResult.valid).toBe(false);
 
         const invalidResult = <InvalidMessageResult>processedMessageResult;
@@ -141,27 +137,23 @@ describe('[GM] Game', () => {
       });
 
       it('should process valid request', () => {
-        game.addPlayer(player);
-
         const message: DiscoveryRequest = {
           senderId: player.playerId,
           type: 'DISCOVERY_REQUEST',
           payload: undefined
         };
-        const processedMessageResult = game.handlePlayerMessage(message);
+        const processedMessageResult = game.processPlayerMessage(message);
         expect(processedMessageResult.valid).toBe(true);
       });
     });
 
     it('should reject message when the game is not in progress', () => {
-      game.addPlayer(player);
-
       const message: DiscoveryRequest = {
         senderId: player.playerId,
         type: 'DISCOVERY_REQUEST',
         payload: undefined
       };
-      const processedMessageResult = game.handlePlayerMessage(message);
+      const processedMessageResult = game.processPlayerMessage(message);
       expect(processedMessageResult.valid).toBe(false);
 
       const invalidResult = <InvalidMessageResult>processedMessageResult;
@@ -205,14 +197,19 @@ describe('[GM] Game', () => {
   });
 
   it('should add player to the game', () => {
-    game.addPlayer(player);
+    const anotherPlayer = new Player();
+    anotherPlayer.playerId = 'anotherPlayer';
+    anotherPlayer.teamId = 2;
+    anotherPlayer.isLeader = true;
+    anotherPlayer.isBusy = false;
+    anotherPlayer.isConnected = true;
+
+    game.addPlayer(anotherPlayer);
 
     expect(game.playersContainer.getPlayerById(player.playerId)).toBe(player);
   });
 
   it('should remove player from the game', () => {
-    game.addPlayer(player);
-
     game.removePlayer(player);
 
     expect(game.playersContainer.getPlayerById(player.playerId)).toBeUndefined();
