@@ -6,7 +6,8 @@ import { BoardInfo } from '../../interfaces/BoardInfo';
 import { ResponseSentMessage } from '../../interfaces/messages/ResponseSentMessage';
 import {
   AcceptedCommunicationResponseToSender,
-  CommunicationResponseFromRecipient
+  CommunicationResponseFromRecipient,
+  RejectedCommunicationResponseToSender
 } from '../../interfaces/responses/CommunicationResponse';
 
 import { ValidMessageResult } from '../ProcessMessageResult';
@@ -120,33 +121,29 @@ describe('[GM] handleCommunicationResponse', () => {
 
       expect(communicationRequestsStore.isRequestPending('p1', 'p2')).toBe(false);
     });
-  });
 
-  it('should send message to communication requester', async () => {
-    communicationRequestsStore.addPendingRequest('p1', 'p2');
+    it('should send message to communication requester', async () => {
+      communicationRequestsStore.addPendingRequest('p1', 'p2');
 
-    const result: ValidMessageResult<ResponseSentMessage> = <any>executeHandleCommunicationResponse(
-      'p1',
-      'p2',
-      true,
-      <any>null
-    );
+      const result: ValidMessageResult<
+        ResponseSentMessage
+      > = <any>executeHandleCommunicationResponse('p1', 'p2', false, <any>null);
 
-    await result.responseMessage;
+      await result.responseMessage;
 
-    const responseToAskingPlayer: AcceptedCommunicationResponseToSender = {
-      type: 'COMMUNICATION_RESPONSE',
-      senderId: GAME_MASTER_ID,
-      recipientId: 'p1',
-      payload: {
-        accepted: true,
-        boardInfo: <any>null,
-        senderPlayerId: 'p2'
-      }
-    };
+      const responseToAskingPlayer: RejectedCommunicationResponseToSender = {
+        type: 'COMMUNICATION_RESPONSE',
+        senderId: GAME_MASTER_ID,
+        recipientId: 'p1',
+        payload: {
+          accepted: false,
+          senderPlayerId: 'p2'
+        }
+      };
 
-    expect(sendMessage).toHaveBeenCalledTimes(1);
-    expect(sendMessage).toHaveBeenCalledWith(responseToAskingPlayer);
+      expect(sendMessage).toHaveBeenCalledTimes(1);
+      expect(sendMessage).toHaveBeenCalledWith(responseToAskingPlayer);
+    });
   });
 
   describe('accepted communication response', () => {
@@ -160,6 +157,44 @@ describe('[GM] handleCommunicationResponse', () => {
       await result.responseMessage;
 
       expect(communicationRequestsStore.isRequestPending('p1', 'p2')).toBe(false);
+    });
+
+    it('should send message to communication requester', async () => {
+      communicationRequestsStore.addPendingRequest('p1', 'p2');
+
+      const result: ValidMessageResult<
+        ResponseSentMessage
+      > = <any>executeHandleCommunicationResponse('p1', 'p2', true, <any>null);
+
+      await result.responseMessage;
+
+      const responseToAskingPlayer: AcceptedCommunicationResponseToSender = {
+        type: 'COMMUNICATION_RESPONSE',
+        senderId: GAME_MASTER_ID,
+        recipientId: 'p1',
+        payload: {
+          accepted: true,
+          boardInfo: <any>null,
+          senderPlayerId: 'p2'
+        }
+      };
+
+      expect(sendMessage).toHaveBeenCalledTimes(1);
+      expect(sendMessage).toHaveBeenCalledWith(responseToAskingPlayer);
+    });
+
+    it('should not send the response to asker before action delay', () => {
+      jest.useFakeTimers();
+
+      communicationRequestsStore.addPendingRequest('p1', 'p2');
+
+      executeHandleCommunicationResponse('p1', 'p2', true, <any>null);
+
+      jest.advanceTimersByTime(actionDelays.communicationAccept - 1);
+
+      expect(sendMessage).toHaveBeenCalledTimes(0);
+
+      jest.useRealTimers();
     });
 
     it('should resolve the response after action delay', () => {
