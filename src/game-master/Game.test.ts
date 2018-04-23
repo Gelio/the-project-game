@@ -1,9 +1,12 @@
 import { LoggerInstance } from 'winston';
 
+import { Communicator } from '../common/Communicator';
+import { createMockCommunicator } from '../common/createMockCommunicator';
 import { LoggerFactory } from '../common/logging/LoggerFactory';
 
 import { ActionDelays } from '../interfaces/ActionDelays';
 import { BoardSize } from '../interfaces/BoardSize';
+import { GameDefinition } from '../interfaces/GameDefinition';
 
 import { DiscoveryRequest } from '../interfaces/requests/DiscoveryRequest';
 
@@ -35,11 +38,6 @@ describe('[GM] Game', () => {
     goalArea: 50,
     taskArea: 300
   };
-  let game: Game;
-  let uiController: UIController;
-  let loggerInstance: LoggerInstance;
-  let periodicPieceGenerator: PeriodicPieceGenerator;
-
   const actionDelays: ActionDelays = {
     communicationAccept: 4000,
     communicationRequest: 4000,
@@ -51,19 +49,36 @@ describe('[GM] Game', () => {
     place: 4000
   };
 
+  let game: Game;
+  let uiController: UIController;
+  let loggerInstance: LoggerInstance;
+  let periodicPieceGenerator: PeriodicPieceGenerator;
+  let communicator: Communicator;
+
+  const gameDefinition: GameDefinition = {
+    boardSize,
+    name: 'test name',
+    teamSizes: {
+      1: 10,
+      2: 10
+    },
+    delays: actionDelays,
+    description: 'test description',
+    goalLimit: 5
+  };
+
   let player: Player;
   let otherPlayer: Player;
 
   beforeEach(() => {
-    const pointsLimit = 5;
     periodicPieceGenerator = <any>createMockPeriodicPieceGenerator();
+    communicator = createMockCommunicator();
 
     game = new Game(
-      boardSize,
-      pointsLimit,
+      gameDefinition,
       loggerInstance,
       uiController,
-      actionDelays,
+      communicator,
       jest.fn(),
       () => periodicPieceGenerator
     );

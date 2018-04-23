@@ -70,7 +70,8 @@ describe('[GM] handleMoveRequest ', () => {
         actionDelays: <any>actionDelays,
         logger,
         scoreboard,
-        sendMessage: jest.fn()
+        sendMessage: jest.fn(),
+        onPointsLimitReached: jest.fn()
       },
       player,
       {

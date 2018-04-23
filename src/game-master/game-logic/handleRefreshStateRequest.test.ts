@@ -58,7 +58,8 @@ describe('[GM] handleRefreshStateRequest', () => {
         actionDelays: <any>actionDelays,
         logger,
         scoreboard: new Scoreboard(5),
-        sendMessage: jest.fn()
+        sendMessage: jest.fn(),
+        onPointsLimitReached: jest.fn()
       },
       player,
       <any>{}

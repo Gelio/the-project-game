@@ -1,11 +1,6 @@
-import { Communicator } from '../common/Communicator';
-import { MessageRouter } from './MessageRouter';
+import { createMockCommunicator } from '../common/createMockCommunicator';
 
-function createMockCommunicator(): Communicator {
-  return <any>{
-    sendMessage: jest.fn()
-  };
-}
+import { MessageRouter } from './MessageRouter';
 
 describe('[CS] MessageRouter', () => {
   let messageRouter: MessageRouter;

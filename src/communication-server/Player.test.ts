@@ -1,6 +1,5 @@
-import { EventEmitter } from 'events';
-
 import { Communicator } from '../common/Communicator';
+import { createMockCommunicator } from '../common/createMockCommunicator';
 import { LoggerFactory } from '../common/logging/LoggerFactory';
 
 import { Message } from '../interfaces/Message';
@@ -8,16 +7,6 @@ import { Message } from '../interfaces/Message';
 import { MessageRouter } from './MessageRouter';
 import { Player } from './Player';
 import { PlayerInfo } from './PlayerInfo';
-
-function createMockCommunicator(): Communicator {
-  const communicator: Communicator = <any>new EventEmitter();
-
-  communicator.bindListeners = jest.fn();
-  communicator.destroy = jest.fn();
-  communicator.sendMessage = jest.fn();
-
-  return communicator;
-}
 
 describe('[CS] Player', () => {
   let playerCommunicator: Communicator;
