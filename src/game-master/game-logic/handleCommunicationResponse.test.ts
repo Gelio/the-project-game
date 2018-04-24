@@ -11,6 +11,7 @@ import {
 } from '../../interfaces/responses/CommunicationResponse';
 
 import { ValidMessageResult } from '../ProcessMessageResult';
+import { SendMessageFn } from '../SendMessageFn';
 
 import { GAME_MASTER_ID, PlayerId } from '../../common/EntityIds';
 import { LoggerFactory } from '../../common/logging/LoggerFactory';
@@ -18,7 +19,6 @@ import { LoggerFactory } from '../../common/logging/LoggerFactory';
 import { handleCommunicationResponse } from './handleCommunicationResponse';
 
 import { CommunicationRequestsStore } from '../communication/CommunicationRequestsStore';
-import { SendMessageFn } from '../SendMessageFn';
 
 function createResponseFromRecipient(
   requesterId: PlayerId,
