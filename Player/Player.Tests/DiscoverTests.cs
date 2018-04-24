@@ -246,5 +246,34 @@ namespace Player.Tests
 
             Assert.Throws<WrongPayloadException>(() => player.Discover());
         }
+
+        [Test]
+        public void DiscoverGameAlreadyFinishedBeforeGettingActionStatus()
+        {
+            _communicator.Setup(x => x.Receive()).Returns(Consts.GAME_FINISHED_RESPONSE);
+
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object)
+            {
+                Game = _game
+            };
+
+            Assert.Throws<GameAlreadyFinishedException>(() => player.Discover());
+        }
+
+        [Test]
+        public void DiscoverGameAlreadyFinishedAfterGettingActionStatus()
+        {
+            var queue = new Queue<string>(new[]
+            {
+                Consts.ACTION_VALID_RESPONSE,
+                Consts.GAME_FINISHED_RESPONSE
+            });
+            _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object)
+            {
+            };
+
+            Assert.Throws<GameAlreadyFinishedException>(() => player.Discover());
+        }
     }
 }
