@@ -143,6 +143,12 @@ namespace Player
                 player.Disconnect();
                 return;
             }
+            catch (GameAlreadyFinishedException e)
+            {
+                logger.Info(e.Message);
+                player.Disconnect();
+                return;
+            }
         }
     }
 }

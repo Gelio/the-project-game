@@ -455,9 +455,9 @@ namespace Player
         public void GameAlreadyFinished(string receivedMessageSerialized)
         {
             var received = JsonConvert.DeserializeObject<Message<GameFinishedPayload>>(receivedMessageSerialized);
-            var winnerTeam = (received.Payload.Team1Score > received.Payload.Team2Score) ? received.Payload.Team1Score : received.Payload.Team2Score;
+            var winnerTeam = (received.Payload.Team1Score > received.Payload.Team2Score) ? "Team 1" : "Team 2";
             string message = $"Cannot perform the planned action. Game has already finished.\n" +
-                $"Scores:\n\tTeam1: {received.Payload.Team1Score}\n\tTeam2: {received.Payload.Team2Score}\n" +
+                $"Scores:\n\tTeam 1: {received.Payload.Team1Score}\n\tTeam 2: {received.Payload.Team2Score}\n" +
                 $"Congratulations {winnerTeam}! WOOP WOOP!\n";
 
             throw new GameAlreadyFinishedException(message);
