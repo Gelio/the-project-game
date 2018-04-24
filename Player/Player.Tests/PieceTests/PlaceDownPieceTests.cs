@@ -9,6 +9,7 @@ using Player.Messages.Responses;
 using Player.Messages.DTO;
 using Player.GameObjects;
 using System.Linq;
+using static Player.Player;
 
 namespace Player.Tests.PieceTests
 {
@@ -20,6 +21,7 @@ namespace Player.Tests.PieceTests
         GameInfo _game;
         Mock<ICommunicator> _communicator;
         Mock<IGameService> _gameService;
+
         static Message<PlaceDownPieceResponsePayload> _scoreMsg = new Message<PlaceDownPieceResponsePayload>()
         {
             Type = Common.Consts.PlaceDownPieceResponse,
@@ -60,6 +62,7 @@ namespace Player.Tests.PieceTests
                 DidCompleteGoal = null
             }
         };
+
         [SetUp]
         public void Setup()
         {
@@ -131,5 +134,73 @@ namespace Player.Tests.PieceTests
             Assert.That(enumResult, Is.EqualTo(exceptedEnumResult));
         }
 
+        [Test]
+        public void PlaceDownPieceActionInvalid()
+        {
+            var messageReceived = new Message<ActionInvalidPayload>
+            {
+                Type = Common.Consts.ActionInvalid,
+                SenderId = Common.Consts.GameMasterId,
+                RecipientId = _assignedPlayerId,
+                Payload = new ActionInvalidPayload
+                {
+                    Reason = "she did not want to go DOWN to you PLACE"
+                }
+            };
+            _communicator.Setup(x => x.Receive()).Returns(JsonConvert.SerializeObject(messageReceived));
+
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object);
+
+            (var boolResult, var enumResult) = player.PlaceDownPiece();
+
+            Assert.That(boolResult, Is.False);
+            Assert.That(enumResult, Is.EqualTo(PlaceDownPieceResult.NoScore));
+        }
+
+        [Test]
+        public void PlaceDownPieceInvalidMessageType()
+        {
+            var messageReceived = new Message<PlaceDownPieceResponsePayload>
+            {
+                SenderId = Common.Consts.GameMasterId,
+                RecipientId = _assignedPlayerId,
+                Type = Consts.EMPTY_LIST_GAMES_RESPONSE
+            };
+            var queue = new Queue<string>(new[]
+            {
+                Consts.ACTION_VALID_RESPONSE,
+                JsonConvert.SerializeObject(messageReceived)
+            });
+            _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
+
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object);
+
+            Assert.Throws<InvalidTypeReceivedException>(() => player.PlaceDownPiece());
+        }
+
+        [Test]
+        public void PlaceDownPieceNoPayload()
+        {
+            var messageReceived = new Message
+            {
+                Type = Common.Consts.PlaceDownPieceResponse,
+                SenderId = Common.Consts.GameMasterId,
+                RecipientId = _assignedPlayerId
+            };
+            var queue = new Queue<string>(new[]
+            {
+                Consts.ACTION_VALID_RESPONSE,
+                JsonConvert.SerializeObject(messageReceived)
+            });
+            _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
+
+
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object)
+            {
+                Id = _assignedPlayerId,
+            };
+
+            Assert.Throws<NoPayloadException>(() => player.PlaceDownPiece());
+        }
     }
 }
