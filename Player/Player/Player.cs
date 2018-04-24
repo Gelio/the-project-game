@@ -203,7 +203,7 @@ namespace Player
             var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
 
             if (receivedRaw.Type == Consts.GameFinished)
-                throw new GameAlreadyFinishedException("Action will not be performed. Game has already ended.");
+                GameAlreadyFinished(receivedSerialized);
 
             if (receivedRaw.Type != Consts.DiscoveryResponse)
                 throw new InvalidTypeReceivedException($"Expected: {Consts.DiscoveryResponse} Received: {receivedRaw.Type}");
@@ -246,9 +246,8 @@ namespace Player
                 return false;
             }
             if (receivedRaw.Type == Consts.GameFinished)
-            {
                 GameAlreadyFinished(receivedSerialized);
-            }
+            
 
             throw new InvalidTypeReceivedException($"Expected: ACTION_VALID/INVALID Received: {receivedRaw.Type}");
         }
