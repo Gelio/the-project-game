@@ -34,6 +34,7 @@ namespace Player
         public Piece HeldPiece;
         private ICommunicator _communicator;
         private IGameService _gameService;
+        public string GoalAreaDirection;
         public bool IsConnected => _communicator.IsConnected;
 
         public Player(ICommunicator communicator, PlayerConfig config, IGameService gameService)
@@ -57,6 +58,7 @@ namespace Player
             WaitForGameStart();
             RefreshBoardState(); // -- gives us info about all teammates' (+ ours) initial position
             logger.Debug($"Player's init position: {X} {Y}");
+            GoalAreaDirection = Y < Game.BoardSize.GoalArea ? "up" : "down";
             Play();
         }
 
@@ -167,12 +169,8 @@ namespace Player
                         string direction = PickRandomMovementDirection();
                         Move(direction);
                     }
-                    else // Move to goal area
-                    {
-                        // TODO: Think of something more robust
-                        if (TeamId == 1) Move("up");
-                        else Move("down");
-                    }
+                    else
+                        Move(GoalAreaDirection);
                 }
                 else if (Board[GetCurrentBoardIndex()].DistanceToClosestPiece == 0) // We stand on a piece
                 {
