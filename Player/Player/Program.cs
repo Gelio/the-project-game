@@ -19,7 +19,7 @@ namespace Player
 
             if (args.Length < 3)
             {
-                Console.WriteLine("player server_ip server_port -l\nplayer server_ip server_port game_name [config_file_path]");
+                Console.WriteLine("usage:\ndotnet run comm_server_addr comm_serv_port -l\ndotnet run comm_server_addr comm_serv_port game_name [config_file_path]");
                 return;
             }
             var communicator = new Communicator(args[0], Int32.Parse(args[1]));
