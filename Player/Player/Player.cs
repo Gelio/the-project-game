@@ -160,18 +160,13 @@ namespace Player
                 logger.Debug("Player's position: {} {}", X, Y);
                 if (HeldPiece != null)
                 {
-                    if (IsInGoalArea())
+                    if (IsInGoalArea() && Board[GetCurrentBoardIndex()].GoalStatus == GoalStatusEnum.NoInfo)
                     {
-                        if (Board[GetCurrentBoardIndex()].GoalStatus == GoalStatusEnum.NoInfo)
-                        {
-                            logger.Info("Trying to place down piece");
-                            (var result, var resultEnum) = PlaceDownPiece();
-                        }
-                        string direction = PickRandomMovementDirection();
-                        Move(direction);
+                        logger.Info("Trying to place down piece");
+                        (var result, var resultEnum) = PlaceDownPiece();
                     }
                     else
-                        Move(GoalAreaDirection);
+                        Move(PickSweepingGoalAreaDirection());
                 }
                 else if (Board[GetCurrentBoardIndex()].DistanceToClosestPiece == 0) // We stand on a piece
                 {
@@ -220,6 +215,42 @@ namespace Player
         {
             string[] directions = { "up", "down", "left", "right" };
             return directions[new Random().Next(0, 4)];
+        }
+
+        private string PickSweepingGoalAreaDirection()
+        {
+            int startX, startY, endX, endY, dy;
+            startX = 0;
+            endX = Game.BoardSize.X - 1;
+            if (GoalAreaDirection == "up")
+            {
+                startY = Game.BoardSize.GoalArea - 1;
+                endY = -1;
+                dy = -1;
+            }
+            else
+            {
+                startY = Game.BoardSize.GoalArea + Game.BoardSize.TaskArea;
+                endY = (Game.BoardSize.GoalArea * 2) + Game.BoardSize.TaskArea;
+                dy = 1;
+            }
+
+            // Find first tile with no info, first searching on horizontal axis *closest* to task area.
+            // Then change axis moving outward (towards horizontal edge of the board) each outer loop iteration
+            for (int y = startY; y != endY; y += dy)
+                for (int x = startX; x <= endX; x++)
+                    if (Board[x + y * Game.BoardSize.X].GoalStatus == GoalStatusEnum.NoInfo)
+                    {
+                        if (X - x > 0)
+                            return "left";
+                        if (X - x < 0)
+                            return "right";
+                        if (Y - y > 0)
+                            return "up";
+                        else
+                            return "down";
+                    }
+            throw new InvalidOperationException("There seems to be no goal tiles left");
         }
 
         private int GetCurrentBoardIndex() => X + Game.BoardSize.X * Y;
@@ -285,7 +316,7 @@ namespace Player
             }
             if (receivedRaw.Type == Consts.GameFinished)
                 GameAlreadyFinished(receivedSerialized);
-            
+
 
             throw new InvalidTypeReceivedException($"Expected: ACTION_VALID/INVALID Received: {receivedRaw.Type}");
         }
