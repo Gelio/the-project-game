@@ -195,7 +195,7 @@ namespace Player
             for (int dy = -1; dy <= 1; dy++)
                 for (int dx = -1; dx <= 1; dx++)
                 {
-                    if (X + dx < 0 || X + dx > Game.BoardSize.X || Y + dy < 0 || Y + dy > (Game.BoardSize.TaskArea + Game.BoardSize.GoalArea * 2))
+                    if (X + dx < 0 || X + dx >= Game.BoardSize.X || Y + dy < 0 || Y + dy >= (Game.BoardSize.TaskArea + Game.BoardSize.GoalArea * 2))
                         continue;
                     int index = X + dx + Game.BoardSize.X * (Y + dy);
                     logger.Debug("dx: {}, dy: {}, index: {}", dx, dy, index);
