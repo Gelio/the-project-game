@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace Player.Common
 {
     public static class Consts
@@ -16,6 +12,7 @@ namespace Player.Common
         public static string ListGamesResponse = "LIST_GAMES_RESPONSE";
         public static string ListGamesRequest = "LIST_GAMES_REQUEST";
         public static string GameStarted = "GAME_STARTED";
+        public static string GameFinished = "GAME_FINISHED";
         public static string DiscoveryRequest = "DISCOVERY_REQUEST";
         public static string DiscoveryResponse = "DISCOVERY_RESPONSE";
         public static string ActionValid = "ACTION_VALID";

@@ -201,6 +201,10 @@ namespace Player
 
             var receivedSerialized = _communicator.Receive();
             var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
+
+            if (receivedRaw.Type == Consts.GameFinished)
+                throw new GameAlreadyFinishedException("Action will not be performed. Game has already ended.");
+
             if (receivedRaw.Type != Consts.DiscoveryResponse)
                 throw new InvalidTypeReceivedException($"Expected: {Consts.DiscoveryResponse} Received: {receivedRaw.Type}");
 
@@ -241,6 +245,10 @@ namespace Player
                 logger.Warn("ACTION INVALID: {0}", received.Payload.Reason);
                 return false;
             }
+            if (receivedRaw.Type == Consts.GameFinished)
+            {
+                GameAlreadyFinished(receivedSerialized);
+            }
 
             throw new InvalidTypeReceivedException($"Expected: ACTION_VALID/INVALID Received: {receivedRaw.Type}");
         }
@@ -259,6 +267,10 @@ namespace Player
 
             var receivedSerialized = _communicator.Receive();
             var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
+
+            if (receivedRaw.Type == Consts.GameFinished)
+                GameAlreadyFinished(receivedSerialized);
+
             if (receivedRaw.Type != Consts.RefreshStateResponse)
                 throw new InvalidTypeReceivedException($"Expected: {Consts.RefreshStateResponse} Received: {receivedRaw.Type}");
 
@@ -327,6 +339,10 @@ namespace Player
 
             var receivedSerialized = _communicator.Receive();
             var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
+
+            if (receivedRaw.Type == Consts.GameFinished)
+                GameAlreadyFinished(receivedSerialized);
+
             if (receivedRaw.Type != Consts.MoveResponse)
                 throw new InvalidTypeReceivedException($"Expected: {Consts.MoveResponse} Received: {receivedRaw.Type}");
 
@@ -357,6 +373,10 @@ namespace Player
 
             var receivedSerialized = _communicator.Receive();
             var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
+
+            if (receivedRaw.Type == Consts.GameFinished)
+                GameAlreadyFinished(receivedSerialized);
+
             if (receivedRaw.Type != Consts.PickupPieceResponse)
                 throw new InvalidTypeReceivedException($"Expected: {Consts.PickupPieceResponse} Received: {receivedRaw.Type}");
 
@@ -385,6 +405,10 @@ namespace Player
 
             var receivedSerialized = _communicator.Receive();
             var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
+
+            if (receivedRaw.Type == Consts.GameFinished)
+                GameAlreadyFinished(receivedSerialized);
+
             if (receivedRaw.Type != Consts.PlaceDownPieceResponse)
                 throw new InvalidTypeReceivedException($"Expected: {Consts.PlaceDownPieceResponse} Received: {receivedRaw.Type}");
 
@@ -426,6 +450,17 @@ namespace Player
             NoScore = 0,
             Score = 1,
             TaskArea = 2
+        }
+
+        public void GameAlreadyFinished(string receivedMessageSerialized)
+        {
+            var received = JsonConvert.DeserializeObject<Message<GameFinishedPayload>>(receivedMessageSerialized);
+            var winnerTeam = (received.Payload.Team1Score > received.Payload.Team2Score) ? received.Payload.Team1Score : received.Payload.Team2Score;
+            string message = $"Cannot perform the planned action. Game has already finished.\n" +
+                $"Scores:\n\tTeam1: {received.Payload.Team1Score}\n\tTeam2: {received.Payload.Team2Score}\n" +
+                $"Congratulations {winnerTeam}! WOOP WOOP!\n";
+
+            throw new GameAlreadyFinishedException(message);
         }
     }
 }
