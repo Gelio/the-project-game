@@ -9,6 +9,7 @@ using Player.Messages.Requests;
 using Player.GameObjects;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using Player.Messages.DTO;
 
 namespace Player
 {
@@ -197,6 +198,7 @@ namespace Player
                     if (X + dx < 0 || X + dx > Game.BoardSize.X || Y + dy < 0 || Y + dy > (Game.BoardSize.TaskArea + Game.BoardSize.GoalArea * 2))
                         continue;
                     int index = X + dx + Game.BoardSize.X * (Y + dy);
+                    logger.Debug("dx: {}, dy: {}, index: {}", dx, dy, index);
                     if (Board[index].DistanceToClosestPiece < bestDistance)
                     {
                         bestDistance = Board[index].DistanceToClosestPiece;
@@ -254,7 +256,7 @@ namespace Player
 
             foreach (var tileDTO in received.Payload.Tiles)
             {
-                Board[tileDTO.X + Game.BoardSize.X * tileDTO.Y] = AutoMapper.Mapper.Map<Tile>(tileDTO);
+                AutoMapper.Mapper.Map<TileDiscoveryDTO, Tile>(tileDTO, Board[tileDTO.X + Game.BoardSize.X * tileDTO.Y]);
                 Board[tileDTO.X + Game.BoardSize.X * tileDTO.Y].Timestamp = received.Payload.Timestamp;
                 if (tileDTO.Piece)
                 {
@@ -318,6 +320,7 @@ namespace Player
                 throw new WrongPayloadException();
             foreach (var playerInfo in received.Payload.PlayerPositions)
             {
+                // TODO: Remove all (outdated) PlayerId attributes from board tiles
                 Board[playerInfo.X + Game.BoardSize.X * playerInfo.Y].PlayerId = playerInfo.PlayerId;
                 Board[playerInfo.X + Game.BoardSize.X * playerInfo.Y].Timestamp = received.Payload.Timestamp;
                 if (playerInfo.PlayerId == Id)
