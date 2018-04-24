@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Player
+namespace Player.Interfaces
 {
     public interface ICommunicator
     {

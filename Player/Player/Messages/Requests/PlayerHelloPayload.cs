@@ -1,9 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Newtonsoft.Json;
+using Player.Interfaces;
 
-namespace Player.Messages
+namespace Player.Messages.Requests
 {
     public class PlayerHelloPayload : IPayload
     {
@@ -13,7 +11,5 @@ namespace Player.Messages
         public int TeamId;
         [JsonProperty("isLeader")]
         public bool IsLeader;
-        [JsonProperty("temporaryId")]
-        public int TemporaryId;
     }
 }

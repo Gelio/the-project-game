@@ -1,107 +1,113 @@
 using Newtonsoft.Json;
 using Player.Common;
+using Player.GameObjects;
+using Player.Messages.DTO;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
-using System.Runtime.Serialization.Json;
 
 namespace Player
 {
     class Program
     {
+        private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
         static void Main(string[] args)
         {
+            MapperInitializer.InitializeMapper();
+            LoggerInitializer.InitializeLogger();
+
             if (args.Length < 3)
             {
-                Console.WriteLine("player server_ip server_port -l\nplayer server_ip server_port game_name [config_file_path]");
+                Console.WriteLine("usage:\ndotnet run comm_server_addr comm_serv_port -l\ndotnet run comm_server_addr comm_serv_port game_name [config_file_path]");
                 return;
             }
             var communicator = new Communicator(args[0], Int32.Parse(args[1]));
 
+            GameService gameService;
+
             if (args[2] == "-l")
             {
-                IList<Game> gamesList;
+                IList<GameInfo> gamesList;
                 try
                 {
                     communicator.Connect();
-                    var gameService = new GameService(communicator);
+                    gameService = new GameService(communicator);
                     gamesList = gameService.GetGamesList();
                 }
                 catch (TimeoutException e)
                 {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine(e.Message);
-                    Console.ResetColor();
+                    logger.Fatal(e, "Connection failed:");
                     communicator.Disconnect();
                     return;
                 }
                 catch (SocketException e)
                 {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"Connection failed: {e.Message}");
-                    Console.ResetColor();
+                    logger.Fatal(e, "Connection failed:");
                     communicator.Disconnect();
                     return;
                 }
                 catch (IOException e)
                 {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine(e.Message);
-                    Console.ResetColor();
+                    logger.Fatal(e.Message);
                     communicator.Disconnect();
                     return;
                 }
                 catch (OperationCanceledException e)
                 {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine(e.Message);
-                    Console.ResetColor();
+                    logger.Fatal(e.Message);
                     communicator.Disconnect();
                     return;
                 }
 
                 if (gamesList.Count == 0)
                 {
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine("There are no games available.");
-                    Console.ResetColor();
+                    logger.Info("There are no games available.");
                     communicator.Disconnect();
                     return;
                 }
-
+                Console.WriteLine("GAMES LIST:");
                 foreach (var game in gamesList)
+                {
+                    Console.WriteLine(new string('-', 60));
                     Console.WriteLine(game);
+                }
                 communicator.Disconnect();
                 return;
             }
 
-
+            ConfigFileReader configFileReader = new ConfigFileReader();
             PlayerConfig configObject;
-            string configFilePath = "player.config.json";
+            string configFilePath = String.Empty;
             if (args.Length >= 4) configFilePath = args[3];
 
             try
             {
-                configObject = ReadConfigFile(configFilePath);
+                configObject = configFileReader.ReadConfigFile(configFilePath);
                 configObject.GameName = args[2];
             }
             catch (FileNotFoundException)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"Error: Config file {configFilePath} does not exist!");
-                Console.ResetColor();
+                logger.Fatal($"Error: Config file {configFilePath} does not exist!");
+                return;
+            }
+            catch (InvalidDataException)
+            {
+                logger.Fatal($"Error: File {configFilePath} is invalid!");
                 return;
             }
             catch (Exception e)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"Error: {e.Message}");
-                Console.ResetColor();
+                logger.Fatal(e);
                 return;
             }
 
-            var player = new Player(communicator, configObject);
+            configObject.GameName = args[2];
+
+            communicator.Connect();  //FIXME: Should be wrapped in try-catch!!
+            gameService = new GameService(communicator);
+
+            var player = new Player(communicator, configObject, gameService);
 
             try
             {
@@ -109,62 +115,40 @@ namespace Player
             }
             catch (PlayerRejectedException e)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"Connection rejected: {e.Message}");
+                logger.Fatal(e, "Connection rejected:");
                 player.Disconnect();
-                Console.ResetColor();
                 return;
             }
             catch (OperationCanceledException e)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(e.Message);
+                logger.Fatal(e);
                 player.Disconnect();
-                Console.ResetColor();
                 return;
             }
             catch (TimeoutException e)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(e.Message);
+                logger.Fatal(e);
                 player.Disconnect();
-                Console.ResetColor();
                 return;
             }
             catch (SocketException e)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"Connection failed: {e.Message}");
+                logger.Fatal(e, "Connection failed:");
                 player.Disconnect();
-                Console.ResetColor();
                 return;
             }
             catch (IOException e)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(e.Message);
+                logger.Fatal(e);
                 player.Disconnect();
-                Console.ResetColor();
+                return;
+            }
+            catch (GameAlreadyFinishedException e)
+            {
+                logger.Info(e.Message);
+                player.Disconnect();
                 return;
             }
         }
-
-        static PlayerConfig ReadConfigFile(string configFilePath)
-        {
-            if (!File.Exists(configFilePath))
-            {
-                throw new FileNotFoundException();
-            }
-
-            PlayerConfig configFileObject;
-            using (StreamReader file = File.OpenText(configFilePath))
-            {
-                JsonSerializer serializer = new JsonSerializer();
-                configFileObject = (PlayerConfig)serializer.Deserialize(file, typeof(PlayerConfig));
-            };
-
-            return configFileObject;
-        }
-
     }
 }

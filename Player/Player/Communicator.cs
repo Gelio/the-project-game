@@ -1,15 +1,15 @@
 using System;
-using System.Collections.Generic;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
 using System.Net;
+using Player.Interfaces;
 
 namespace Player
 {
     public class Communicator : ICommunicator
     {
+        private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
+        private const int MAX_MSG_LEN = 10000;
         private TcpClient _tcpClient;
         private string _serverHostName;
         private int _serverPort;
@@ -17,8 +17,6 @@ namespace Player
         public bool IsConnected => _tcpClient != null;
         public string ServerHostName => _serverHostName;
         public int ServerPort => _serverPort;
-
-        private const int MAX_MSG_LEN = 10000;
 
         public Communicator(string hostname, int port)
         {
@@ -53,7 +51,7 @@ namespace Player
             // Encode message to byte array
             var buffer = System.Text.Encoding.UTF8.GetBytes(message);
 
-            Console.WriteLine($"Sending:\n{message}");
+            logger.Trace("Sending: {0}", message);
 
             // Send 4-byte message length
             var messageLen = BitConverter.GetBytes(IPAddress.HostToNetworkOrder((Int32)buffer.Length));
@@ -85,7 +83,8 @@ namespace Player
             var buffer = new byte[messageLen];
             stream.Read(buffer, 0, messageLen);
 
-            Console.WriteLine($"Received:\n{System.Text.Encoding.UTF8.GetString(buffer)}");
+            logger.Trace("Received: {0}", System.Text.Encoding.UTF8.GetString(buffer));
+
             return System.Text.Encoding.UTF8.GetString(buffer);
         }
     }

@@ -2,34 +2,36 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Player
+namespace Player.Messages.DTO
 {
-    public class Game
+    public class GameInfoDTO
     {
         public string Name;
         public string Description;
         public Dictionary<string, int> TeamSizes;
-        public BoardSize BoardSize;
-        public int MaxRounds;
+        public BoardSizeDTO BoardSize;
+        public int MaxRounds; // TODO is it still there?
         public int GoalLimit;
-        public Delays Delays;
+        public DelaysDTO Delays;
 
+        /*
         public override string ToString()
         {
             var sb = new StringBuilder();
             sb.Append($"{Name} : {Description}");
             return sb.ToString();
         }
+        */
     }
 
-    public class BoardSize
+    public class BoardSizeDTO
     {
         public int X;
         public int TaskArea;
         public int GoalArea;
     }
 
-    public class Delays
+    public class DelaysDTO
     {
         public int Move;
         public int Pick;
@@ -40,6 +42,4 @@ namespace Player
         public int CommunicationAccept;
         public int TryPiece;
     }
-
-    
 }
