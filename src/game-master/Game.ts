@@ -38,6 +38,8 @@ import { getGameStartedMessagePayload } from '../common/getGameStartedMessagePay
 import { PeriodicPieceGeneratorFactory } from './board-generation/createPeriodicPieceGenerator';
 import { PeriodicPieceGenerator } from './board-generation/PeriodicPieceGenerator';
 
+import { CommunicationRequestsStore } from './communication/CommunicationRequestsStore';
+
 export class Game {
   public board: Board;
   public readonly playersContainer: PlayersContainer;
@@ -45,6 +47,7 @@ export class Game {
   public readonly scoreboard: Scoreboard;
 
   private readonly logger: LoggerInstance;
+  private readonly communicationRequestsStore: CommunicationRequestsStore;
   private readonly periodicPieceGenerator: PeriodicPieceGenerator;
   private readonly playerMessageHandler: PlayerMessageHandler;
   private readonly communicator: Communicator;
@@ -72,15 +75,18 @@ export class Game {
     this.communicator = communicator;
     this.periodicPieceGenerator = periodicPieceGeneratorFactory(this.board);
 
-    this.playerMessageHandler = new PlayerMessageHandler({
-      board: this.board,
-      playersContainer: this.playersContainer,
-      actionDelays: this.definition.delays,
-      logger: this.logger,
-      scoreboard: this.scoreboard,
-      sendMessage: this.sendIngameMessage.bind(this),
-      onPointsLimitReached
-    });
+    this.playerMessageHandler = new PlayerMessageHandler(
+      {
+        board: this.board,
+        playersContainer: this.playersContainer,
+        actionDelays: this.definition.delays,
+        logger: this.logger,
+        scoreboard: this.scoreboard,
+        sendMessage: this.sendIngameMessage.bind(this),
+        onPointsLimitReached
+      },
+      this.communicationRequestsStore
+    );
   }
 
   public start() {
