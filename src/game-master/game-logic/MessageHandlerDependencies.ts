@@ -15,4 +15,5 @@ export interface MessageHandlerDependencies {
   logger: LoggerInstance;
   scoreboard: Scoreboard;
   sendMessage: SendMessageFn;
+  onPointsLimitReached: Function;
 }

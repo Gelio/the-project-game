@@ -1,6 +1,5 @@
-import { EventEmitter } from 'events';
-
 import { Communicator } from '../common/Communicator';
+import { createMockCommunicator } from '../common/createMockCommunicator';
 import { COMMUNICATION_SERVER_ID, GAME_MASTER_ID } from '../common/EntityIds';
 import { LoggerFactory } from '../common/logging/LoggerFactory';
 
@@ -9,16 +8,6 @@ import { UnregisterGameRequest } from '../interfaces/requests/UnregisterGameRequ
 import { Game } from './Game';
 import { GameMaster } from './GameMaster';
 import { MessageRouter } from './MessageRouter';
-
-function createMockCommunicator(): Communicator {
-  const communicator: Communicator = <any>new EventEmitter();
-
-  communicator.bindListeners = jest.fn();
-  communicator.destroy = jest.fn();
-  communicator.sendMessage = jest.fn();
-
-  return communicator;
-}
 
 describe('[CS] GameMaster', () => {
   let communicator: Communicator;
