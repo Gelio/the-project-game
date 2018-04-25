@@ -2,6 +2,7 @@ import { createDelay } from '../../common/createDelay';
 import { GAME_MASTER_ID } from '../../common/EntityIds';
 
 import { CommunicationRequestsStore } from '../communication/CommunicationRequestsStore';
+
 import { Player } from '../Player';
 import { ProcessMessageResult } from '../ProcessMessageResult';
 
@@ -16,16 +17,16 @@ import {
 export function handleCommunicationRequest(
   communicationRequestsStore: CommunicationRequestsStore,
   { actionDelays, sendMessage }: MessageHandlerDependencies,
-  sender: Player,
+  _sender: Player,
   communicationRequest: CommunicationRequestFromSender
 ): ProcessMessageResult<RequestSentMessage> {
-  const senderId = sender.playerId;
+  const senderId = communicationRequest.senderId;
   const recipientId = communicationRequest.payload.targetPlayerId;
 
-  if (communicationRequestsStore.isRequestPending(senderId, recipientId) === true) {
+  if (communicationRequestsStore.isRequestPending(senderId, recipientId)) {
     return {
       valid: false,
-      reason: `Communication request to player ${recipientId} is pending`
+      reason: `There is already pending communication request to player ${recipientId}`
     };
   }
 
