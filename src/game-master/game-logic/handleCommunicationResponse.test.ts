@@ -86,7 +86,8 @@ describe('[GM] handleCommunicationResponse', () => {
         actionDelays: <any>actionDelays,
         logger,
         scoreboard: <any>null,
-        sendMessage
+        sendMessage,
+        onPointsLimitReached: jest.fn()
       },
       <any>null,
       message
