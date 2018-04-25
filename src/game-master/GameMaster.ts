@@ -192,7 +192,10 @@ export class GameMaster implements Service {
     const connectedPlayers = this.game.playersContainer.getConnectedPlayers();
     if (connectedPlayers.length === 0) {
       this.logger.info('All players disconnected');
-      this.onPointsLimitReached();
+
+      if (this.game.state === GameState.InProgress) {
+        this.onPointsLimitReached();
+      }
     }
   }
 
