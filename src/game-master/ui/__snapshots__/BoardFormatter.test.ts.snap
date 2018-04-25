@@ -1,0 +1,17 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`[GM] BoardFormatter displayTile for team area tile should match snapshot for the first team 1`] = `"{blue-bg} {/}"`;
+
+exports[`[GM] BoardFormatter displayTile for team area tile should match snapshot for the second team 1`] = `"{red-bg} {/}"`;
+
+exports[`[GM] BoardFormatter displayTile for team area tile should match snapshot when the tile has a completed goal 1`] = `"{blue-bg}{yellow-fg}G{/}"`;
+
+exports[`[GM] BoardFormatter displayTile for team area tile should match snapshot when the tile has an uncompleted goal 1`] = `"{blue-bg}{white-fg}G{/}"`;
+
+exports[`[GM] BoardFormatter displayTile with piece should match snapshot for sham 1`] = `"{grey-fg}X{/}"`;
+
+exports[`[GM] BoardFormatter displayTile with piece should match snapshot for valid pieces 1`] = `"{yellow-fg}X{/}"`;
+
+exports[`[GM] BoardFormatter displayTile with player should match snapshot for player from team 1 1`] = `"{blue-fg}{white-bg}P{/}"`;
+
+exports[`[GM] BoardFormatter displayTile with player should match snapshot for player from team 2 1`] = `"{red-fg}{white-bg}P{/}"`;
