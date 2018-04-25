@@ -3,13 +3,11 @@ import { LoggerInstance } from 'winston';
 import { ActionDelays } from '../../interfaces/ActionDelays';
 
 import { RequestSentMessage } from '../../interfaces/messages/RequestSentMessage';
-
 import {
   CommunicationRequestFromSender,
   CommunicationRequestToRecipient
 } from '../../interfaces/requests/CommunicationRequest';
 
-import { Player } from '../Player';
 import { ProcessMessageResult, ValidMessageResult } from '../ProcessMessageResult';
 import { SendMessageFn } from '../SendMessageFn';
 
@@ -35,12 +33,12 @@ describe('[GM] handleCommunicationRequest', () => {
   let actionDelays: ActionDelays;
   let logger: LoggerInstance;
   let communicationRequestsStore: CommunicationRequestsStore;
-  let sender: Player;
+
   let sendMessage: SendMessageFn;
 
   beforeEach(() => {
     actionDelays = <any>{
-      communicationRequest: 70
+      communicationRequest: 500
     };
 
     const loggerFactory = new LoggerFactory();
@@ -48,12 +46,9 @@ describe('[GM] handleCommunicationRequest', () => {
 
     logger = loggerFactory.createEmptyLogger();
 
-    sender = new Player();
-    sender.playerId = 'p1';
+    sendMessage = jest.fn();
 
     communicationRequestsStore = new CommunicationRequestsStore();
-
-    sendMessage = jest.fn();
   });
 
   function executeHandleCommunicationRequest(
@@ -61,6 +56,14 @@ describe('[GM] handleCommunicationRequest', () => {
     recipientId: PlayerId
   ): ProcessMessageResult<RequestSentMessage> {
     const message = createRequestToRecipient(senderId, recipientId);
+
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
 
     return handleCommunicationRequest(
       communicationRequestsStore,
@@ -70,9 +73,10 @@ describe('[GM] handleCommunicationRequest', () => {
         actionDelays: <any>actionDelays,
         logger,
         scoreboard: <any>null,
-        sendMessage
+        sendMessage,
+        onPointsLimitReached: jest.fn()
       },
-      sender,
+      <any>null,
       message
     );
   }
@@ -81,29 +85,31 @@ describe('[GM] handleCommunicationRequest', () => {
     it('should reject communication response', () => {
       communicationRequestsStore.addPendingRequest('p1', 'p2');
 
-      const result: ValidMessageResult<RequestSentMessage> = <any>executeHandleCommunicationRequest(
-        'p1',
-        'p2'
-      );
+      const result = executeHandleCommunicationRequest('p1', 'p2');
 
       expect(result.valid).toBe(false);
+    });
+
+    it('should not send the communication request to target player', () => {
+      communicationRequestsStore.addPendingRequest('p1', 'p2');
+
+      executeHandleCommunicationRequest('p1', 'p2');
+
+      jest.advanceTimersByTime(actionDelays.communicationRequest);
+
+      expect(sendMessage).toHaveBeenCalledTimes(0);
     });
   });
 
   describe('when there is no pending communication request', () => {
     it('should accept communication response', () => {
-      const result: ValidMessageResult<RequestSentMessage> = <any>executeHandleCommunicationRequest(
-        'p1',
-        'p2'
-      );
+      const result = executeHandleCommunicationRequest('p1', 'p2');
 
       expect(result.valid).toBe(true);
     });
   });
 
-  it('should remove add pending communication request', () => {
-    communicationRequestsStore.addPendingRequest('p1', 'p2');
-
+  it('should add pending communication request', () => {
     executeHandleCommunicationRequest('p1', 'p2');
 
     expect(communicationRequestsStore.isRequestPending('p1', 'p2')).toBe(true);
@@ -114,6 +120,8 @@ describe('[GM] handleCommunicationRequest', () => {
       'p1',
       'p2'
     );
+
+    jest.advanceTimersByTime(actionDelays.communicationRequest);
 
     await result.responseMessage;
 
@@ -130,41 +138,28 @@ describe('[GM] handleCommunicationRequest', () => {
     expect(sendMessage).toHaveBeenCalledWith(requestToRecipient);
   });
 
-  it('should not send the response to asker before action delay', () => {
-    jest.useFakeTimers();
-
-    communicationRequestsStore.addPendingRequest('p1', 'p2');
-
+  it('should not send the response to communication requester before action delay', () => {
     executeHandleCommunicationRequest('p1', 'p2');
 
     jest.advanceTimersByTime(actionDelays.communicationRequest - 1);
 
     expect(sendMessage).toHaveBeenCalledTimes(0);
-
-    jest.useRealTimers();
   });
 
-  it('should resolve the response after action delay', () => {
-    jest.useFakeTimers();
-
+  it('should resolve the response after action delay', async () => {
     const result: ValidMessageResult<RequestSentMessage> = <any>executeHandleCommunicationRequest(
       'p1',
       'p2'
     );
 
-    result.responseMessage.then(response => {
-      expect(response.recipientId).toBe('p1');
-    });
-
     jest.advanceTimersByTime(actionDelays.communicationRequest);
-    expect.assertions(1);
 
-    jest.useRealTimers();
+    const response = await result.responseMessage;
+
+    expect(response.recipientId).toBe('p1');
   });
 
   it('should not resolve the response before action delay', () => {
-    jest.useFakeTimers();
-
     let resolved = false;
 
     const result: ValidMessageResult<RequestSentMessage> = <any>executeHandleCommunicationRequest(
@@ -178,7 +173,5 @@ describe('[GM] handleCommunicationRequest', () => {
 
     jest.advanceTimersByTime(actionDelays.communicationRequest - 1);
     expect(resolved).toBe(false);
-
-    jest.useRealTimers();
   });
 });
