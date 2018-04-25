@@ -8,6 +8,7 @@ import { BoardSize } from '../interfaces/BoardSize';
 import { DiscoveryRequest } from '../interfaces/requests/DiscoveryRequest';
 
 import { Game } from './Game';
+import { GameState } from './GameState';
 import { Player } from './Player';
 import { PlayersContainer } from './PlayersContainer';
 import { InvalidMessageResult } from './ProcessMessageResult';
@@ -55,6 +56,7 @@ describe('[GM] Game', () => {
       actionDelays,
       jest.fn()
     );
+    game.state = GameState.InProgress;
 
     player = new Player();
     player.playerId = 'player';
@@ -100,6 +102,22 @@ describe('[GM] Game', () => {
       expect(invalidResult.reason).toMatchSnapshot();
     });
 
+    it('should reject message when the game is not in progress', () => {
+      game.addPlayer(player);
+      game.state = GameState.Registered;
+
+      const message: DiscoveryRequest = {
+        senderId: player.playerId,
+        type: 'DISCOVERY_REQUEST',
+        payload: undefined
+      };
+      const processedMessageResult = game.processMessage(message);
+      expect(processedMessageResult.valid).toBe(false);
+
+      const invalidResult = <InvalidMessageResult>processedMessageResult;
+      expect(invalidResult.reason).toMatchSnapshot();
+    });
+
     it('should process valid request', () => {
       game.addPlayer(player);
 
@@ -111,16 +129,6 @@ describe('[GM] Game', () => {
       const processedMessageResult = game.processMessage(message);
       expect(processedMessageResult.valid).toBe(true);
     });
-  });
-
-  it('should start the game', () => {
-    game.start();
-    expect(game.hasStarted).toBe(true);
-  });
-
-  it('should stop the game', () => {
-    game.stop();
-    expect(game.hasStarted).toBe(false);
   });
 
   describe('after resetting the game', () => {

@@ -10,6 +10,7 @@ import { Message } from '../interfaces/Message';
 import { Board } from './models/Board';
 import { Scoreboard } from './models/Scoreboard';
 
+import { GameState } from './GameState';
 import { ProcessMessageResult } from './ProcessMessageResult';
 import { SendMessageFn } from './SendMessageFn';
 
@@ -18,18 +19,17 @@ import { UIController } from './ui/UIController';
 import { PlayerMessageHandler } from './game-logic/PlayerMessageHandler';
 
 export class Game {
-  public hasStarted = false;
   public board: Board;
   public playersContainer: PlayersContainer;
+  public state = GameState.Registered;
 
-  // @ts-ignore
   private readonly logger: LoggerInstance;
   private readonly uiController: UIController;
   private readonly actionDelays: ActionDelays;
   private readonly playerMessageHandler: PlayerMessageHandler;
   private readonly scoreboard: Scoreboard;
+  private readonly sendMessage: SendMessageFn;
 
-  //TODO: Consider implementing board factory
   constructor(
     boardSize: BoardSize,
     pointsLimit: number,
@@ -45,6 +45,7 @@ export class Game {
     this.uiController = uiController;
     this.playersContainer = playersContainer;
     this.actionDelays = actionDelays;
+    this.sendMessage = sendMessage;
 
     this.playerMessageHandler = new PlayerMessageHandler({
       board: this.board,
@@ -52,7 +53,7 @@ export class Game {
       actionDelays: this.actionDelays,
       logger: this.logger,
       scoreboard: this.scoreboard,
-      sendMessage
+      sendMessage: this.sendIngameMessage.bind(this)
     });
   }
 
@@ -62,6 +63,13 @@ export class Game {
       return {
         valid: false,
         reason: 'Sender ID is invalid'
+      };
+    }
+
+    if (this.state !== GameState.InProgress) {
+      return {
+        valid: false,
+        reason: 'Game is not in progress'
       };
     }
 
@@ -82,14 +90,6 @@ export class Game {
     }
 
     return processMessageResult;
-  }
-
-  public start() {
-    this.hasStarted = true;
-  }
-
-  public stop() {
-    this.hasStarted = false;
   }
 
   public reset() {
@@ -117,5 +117,17 @@ export class Game {
 
   private updateBoard() {
     this.uiController.updateBoard(this.board);
+  }
+
+  private sendIngameMessage(message: Message<any>): void {
+    if (this.state !== GameState.InProgress) {
+      this.logger.notice(
+        `Message ${message.type} will not be sent because the game is not in progress`
+      );
+
+      return;
+    }
+
+    return this.sendMessage(message);
   }
 }
