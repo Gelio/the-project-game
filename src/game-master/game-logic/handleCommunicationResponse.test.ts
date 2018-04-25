@@ -102,16 +102,22 @@ describe('[GM] handleCommunicationResponse', () => {
   });
 
   describe('rejected communication response', () => {
-    it('should return response immediately', () => {
+    it('should return response immediately', async () => {
+      jest.useFakeTimers();
+
       communicationRequestsStore.addPendingRequest('p1', 'p2');
 
       const result: ValidMessageResult<
         ResponseSentMessage
       > = <any>executeHandleCommunicationResponse('p1', 'p2', false, <any>null);
 
-      result.responseMessage.then(response => {
-        expect(response.recipientId).toBe('p2');
-      });
+      jest.advanceTimersByTime(0);
+
+      const response = await result.responseMessage;
+
+      expect(response.recipientId).toBe('p2');
+
+      jest.useRealTimers();
     });
 
     it('should remove pending communication request immediately', () => {
