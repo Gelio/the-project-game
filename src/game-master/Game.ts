@@ -18,6 +18,9 @@ import { UIController } from './ui/UIController';
 
 import { PlayerMessageHandler } from './game-logic/PlayerMessageHandler';
 
+import { PeriodicPieceGeneratorFactory } from './board-generation/createPeriodicPieceGenerator';
+import { PeriodicPieceGenerator } from './board-generation/PeriodicPieceGenerator';
+
 export class Game {
   public board: Board;
   public playersContainer: PlayersContainer;
@@ -29,6 +32,7 @@ export class Game {
   private readonly playerMessageHandler: PlayerMessageHandler;
   private readonly scoreboard: Scoreboard;
   private readonly sendMessage: SendMessageFn;
+  private readonly periodicPieceGenerator: PeriodicPieceGenerator;
 
   constructor(
     boardSize: BoardSize,
@@ -37,7 +41,8 @@ export class Game {
     uiController: UIController,
     playersContainer: PlayersContainer,
     actionDelays: ActionDelays,
-    sendMessage: SendMessageFn
+    sendMessage: SendMessageFn,
+    periodicPieceGeneratorFactory: PeriodicPieceGeneratorFactory
   ) {
     this.board = new Board(boardSize, pointsLimit);
     this.scoreboard = new Scoreboard(pointsLimit);
@@ -46,6 +51,7 @@ export class Game {
     this.playersContainer = playersContainer;
     this.actionDelays = actionDelays;
     this.sendMessage = sendMessage;
+    this.periodicPieceGenerator = periodicPieceGeneratorFactory(this.board);
 
     this.playerMessageHandler = new PlayerMessageHandler({
       board: this.board,
@@ -55,6 +61,23 @@ export class Game {
       scoreboard: this.scoreboard,
       sendMessage: this.sendIngameMessage.bind(this)
     });
+  }
+
+  public start() {
+    if (this.state === GameState.InProgress) {
+      throw new Error('Game is already in progress');
+    }
+
+    this.state = GameState.InProgress;
+    this.periodicPieceGenerator.init();
+  }
+
+  public stop() {
+    if (this.state === GameState.InProgress) {
+      this.periodicPieceGenerator.destroy();
+    }
+
+    this.state = GameState.Finished;
   }
 
   public processMessage(message: Message<any>): ProcessMessageResult<any> {
@@ -90,11 +113,6 @@ export class Game {
     }
 
     return processMessageResult;
-  }
-
-  public reset() {
-    this.board.reset();
-    this.setPlayersPositions();
   }
 
   public removePlayer(disconnectedPlayer: Player) {

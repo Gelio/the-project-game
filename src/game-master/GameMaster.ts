@@ -29,7 +29,8 @@ import { RegisterGameResponse } from '../interfaces/responses/RegisterGameRespon
 
 import { registerUncaughtExceptionHandler } from '../registerUncaughtExceptionHandler';
 
-import { PeriodicPieceGenerator } from './board-generation/PeriodicPieceGenerator';
+import { createPeriodicPieceGenerator } from './board-generation/createPeriodicPieceGenerator';
+import { PeriodicPieceGeneratorOptions } from './board-generation/PeriodicPieceGenerator';
 
 import { Game } from './Game';
 import { GameMasterState } from './GameMasterState';
@@ -67,7 +68,6 @@ export class GameMaster implements Service {
 
   private readonly uiController: UIController;
   private readonly loggerFactory: LoggerFactory;
-  private periodicPieceGenerator: PeriodicPieceGenerator;
   private logger: LoggerInstance;
   private failedRegistrations: number;
 
@@ -328,6 +328,12 @@ export class GameMaster implements Service {
   private initGame() {
     this.playersContainer = new PlayersContainer();
 
+    const periodicPieceGeneratorOptions: PeriodicPieceGeneratorOptions = {
+      checkInterval: this.options.generatePiecesInterval,
+      piecesLimit: this.options.piecesLimit,
+      shamChance: this.options.shamChance
+    };
+
     this.game = new Game(
       this.options.boardSize,
       this.options.pointsLimit,
@@ -335,19 +341,10 @@ export class GameMaster implements Service {
       this.uiController,
       this.playersContainer,
       this.options.actionDelays,
-      this.sendMessage
+      this.sendMessage,
+      createPeriodicPieceGenerator(periodicPieceGeneratorOptions, this.logger)
     );
     this.uiController.updateBoard(this.game.board);
-
-    this.periodicPieceGenerator = new PeriodicPieceGenerator(
-      this.game.board,
-      {
-        checkInterval: this.options.generatePiecesInterval,
-        piecesLimit: this.options.piecesLimit,
-        shamChance: this.options.shamChance
-      },
-      this.logger
-    );
   }
 
   private tryStartGame() {
@@ -378,7 +375,6 @@ export class GameMaster implements Service {
     }
 
     this.game.setPlayersPositions();
-    this.periodicPieceGenerator.init();
     const gameStartedPayload: GameStartedMessagePayload = {
       teamInfo: {
         1: {
@@ -391,7 +387,7 @@ export class GameMaster implements Service {
         }
       }
     };
-    this.game.state = GameState.InProgress;
+    this.game.start();
     this.updateState(GameMasterState.InGame);
 
     this.playersContainer.players.forEach(player => {
@@ -409,9 +405,9 @@ export class GameMaster implements Service {
   }
 
   private stopGame() {
-    this.periodicPieceGenerator.destroy();
-    this.game.state = GameState.Finished;
+    this.game.stop();
     this.updateState(GameMasterState.Finished);
+    // TODO: unregister game
   }
 
   private updateState(state: GameMasterState) {
