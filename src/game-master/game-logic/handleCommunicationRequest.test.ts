@@ -18,7 +18,7 @@ import { handleCommunicationRequest } from './handleCommunicationRequest';
 
 import { CommunicationRequestsStore } from '../communication/CommunicationRequestsStore';
 
-function createRequestToRecipient(
+function createRequestFromSender(
   senderId: PlayerId,
   recipientId: PlayerId
 ): CommunicationRequestFromSender {
@@ -49,21 +49,19 @@ describe('[GM] handleCommunicationRequest', () => {
     sendMessage = jest.fn();
 
     communicationRequestsStore = new CommunicationRequestsStore();
+
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   function executeHandleCommunicationRequest(
     senderId: PlayerId,
     recipientId: PlayerId
   ): ProcessMessageResult<RequestSentMessage> {
-    const message = createRequestToRecipient(senderId, recipientId);
-
-    beforeEach(() => {
-      jest.useFakeTimers();
-    });
-
-    afterEach(() => {
-      jest.useRealTimers();
-    });
+    const message = createRequestFromSender(senderId, recipientId);
 
     return handleCommunicationRequest(
       communicationRequestsStore,
@@ -82,7 +80,7 @@ describe('[GM] handleCommunicationRequest', () => {
   }
 
   describe('when there is pending communication request', () => {
-    it('should reject communication response', () => {
+    it('should reject communication request', () => {
       communicationRequestsStore.addPendingRequest('p1', 'p2');
 
       const result = executeHandleCommunicationRequest('p1', 'p2');
@@ -138,7 +136,7 @@ describe('[GM] handleCommunicationRequest', () => {
     expect(sendMessage).toHaveBeenCalledWith(requestToRecipient);
   });
 
-  it('should not send the response to communication requester before action delay', () => {
+  it('should not send the message to communication request recipient before action delay', () => {
     executeHandleCommunicationRequest('p1', 'p2');
 
     jest.advanceTimersByTime(actionDelays.communicationRequest - 1);
