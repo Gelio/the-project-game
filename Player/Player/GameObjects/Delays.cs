@@ -13,6 +13,7 @@ namespace Player.GameObjects
         public int Test;
         public int CommunicationRequest;
         public int CommunicationAccept;
+        // FIXME: `TryPiece` is no longer used (there is no action for trying a piece)
         public int TryPiece;
     }
 }

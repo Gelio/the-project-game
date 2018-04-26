@@ -64,6 +64,7 @@ namespace Player
         public string Receive()
         {
             var stream = _tcpClient.GetStream();
+            // NOTE: messageLengthBuffer would probably be more readable than fourBytes
             var fourBytes = new byte[4];
 
             // Read the length of incoming message
@@ -80,6 +81,7 @@ namespace Player
             }
 
             // Initialize buffer and read the actual message
+            // NOTE: messageBuffer would probably provide more information
             var buffer = new byte[messageLen];
             stream.Read(buffer, 0, messageLen);
 

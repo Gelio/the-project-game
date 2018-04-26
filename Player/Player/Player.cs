@@ -15,6 +15,30 @@ namespace Player
 {
     public class Player
     {
+        /**
+        **General notes about this file**
+
+        REFACTOR: this class should definitely be split into multiple smaller ones
+
+        Some of the methods are public just so they may be used directly in the tests.
+        This alone is a _code smell_. Those methods should be extracted into smaller classes
+        that do that one thing.
+
+        Those smaller classes would have those methods as `public`, which would make them
+        testable without breaking any OOP principles. Additionally, they would be more
+        composable and this file would be much shorter.
+
+        I will mark candidates for extraction in the code.
+
+        The same goes for properties - most of them are public, which goes against data
+        encapsulation.
+         */
+
+        /**
+        NOTE: it would be nice to use dependency injection instead of a global logger
+
+        Especially for testing purposes
+         */
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
         public string Id;
@@ -24,9 +48,12 @@ namespace Player
         public int AskLevel;
         public int RespondLevel;
         public int Timeout;
+        // NOTE: would it not be easier to group X and Y into a single `Position` property?
         public int X;
         public int Y;
+        // FIXME: unused variable
         public string ServerHostName => _communicator.ServerHostName;
+        // FIXME: unused variable
         public int ServerPort => _communicator.ServerPort;
         public IList<string> TeamMembersIds;
         public string LeaderId;
@@ -45,6 +72,11 @@ namespace Player
 
             Id = Guid.NewGuid().ToString();
             TeamId = config.TeamNumber;
+            /**
+            NOTE: do we need to extract all those variables from the config?
+
+            Using the config directly would reduce the amount of properties in the Player class.
+             */
             IsLeader = config.IsLeader;
             AskLevel = config.AskLevel;
             RespondLevel = config.RespondLevel;
@@ -65,6 +97,13 @@ namespace Player
 
         public void GetGameInfo()
         {
+            /**
+            REFACTOR: candidate for extraction
+
+            Instead of modifying the `Board` property, it may return a new `Board`.
+            This way you make it more testable because it does not modify anything, only returns
+            new instances.
+             */
             var gamesList = _gameService.GetGamesList();
             Game = gamesList.FirstOrDefault(x => x.Name == GameName);
             if (Game == null)
@@ -72,6 +111,7 @@ namespace Player
                 throw new OperationCanceledException("Game not found");
             }
 
+            // REFACTOR: extract board size into a variable so the for loop is more readable
             for (int i = 0; i < Game.BoardSize.X * (Game.BoardSize.GoalArea * 2 + Game.BoardSize.TaskArea); i++)
             {
                 Board.Add(new Tile()
@@ -82,6 +122,11 @@ namespace Player
             }
         }
 
+        /**
+        NOTE: would it not be better to use async/await and make this code run concurrently?
+
+        I believe it would be a better practice than blocking synchronous calls.
+         */
         public void ConnectToServer()
         {
             if (!_communicator.IsConnected)
@@ -101,12 +146,18 @@ namespace Player
                 }
             };
             var helloMessageSerialized = JsonConvert.SerializeObject(helloMessage);
+            // NOTE: as mentioned elsewhere, `SendObject` that serializes objects would be shorter
+            // and more readable
             _communicator.Send(helloMessageSerialized);
 
 
             Task<string> receivedMessageSerializedTask;
             try
             {
+                /**
+                NOTE: as mentioned elsewhere, `ReceiveWithTimeout` would be shorter and more
+                readable.
+                 */
                 receivedMessageSerializedTask = Task.Run(() => _communicator.Receive());
                 if (!receivedMessageSerializedTask.Wait(Timeout))
                     throw new TimeoutException($"Did not receive any message after {Timeout}ms");
@@ -156,6 +207,25 @@ namespace Player
         {
             while (true)
             {
+                /**
+                NOTE: The Strategy pattern would be a perfect fit here.
+
+                It could be implemented like so:
+                1. There would be a class whose methods correspond to player actions and their return
+                values would be there results of those actions. Let's call that class
+                `PlayerActionPerformer` (feel free to rename it in your implementation)
+
+                2. `IPlayerStrategy` would have a method called `PerformAction` (probably async).
+
+                3. A concrete strategy would be a class that implements `IPlayerStrategy` and also
+                takes `PlayerActionPerformer` as a dependency. It would also have access to more
+                of player's properties, such as position, board, teamMemberIds etc.
+
+                4. Player's `Play` method would call `PerformAction` on the strategy until the game
+                is finished.
+
+                Let me know what do you think about such a solution.
+                */
                 RefreshBoardState();
                 logger.Debug("Player's position: {} {}", X, Y);
                 if (HeldPiece != null)
@@ -163,6 +233,7 @@ namespace Player
                     if (IsInGoalArea() && Board[GetCurrentBoardIndex()].GoalStatus == GoalStatusEnum.NoInfo)
                     {
                         logger.Info("Trying to place down piece");
+                        // FIXME: unnecessary variables
                         (var result, var resultEnum) = PlaceDownPiece();
                     }
                     else
@@ -172,6 +243,7 @@ namespace Player
                 {
                     logger.Info("Trying to pick up piece...");
                     PickUpPiece();
+                    // FIXME: unnecessary `continue`
                     continue;
                 }
                 else // Find a piece
@@ -190,6 +262,7 @@ namespace Player
             for (int dy = -1; dy <= 1; dy++)
                 for (int dx = -1; dx <= 1; dx++)
                 {
+                    // TODO: check if there is a player on that field and `continue` if so
                     if (X + dx < 0 || X + dx >= Game.BoardSize.X || Y + dy < 0 || Y + dy >= (Game.BoardSize.TaskArea + Game.BoardSize.GoalArea * 2))
                         continue;
                     int index = X + dx + Game.BoardSize.X * (Y + dy);
@@ -271,6 +344,9 @@ namespace Player
             var receivedSerialized = _communicator.Receive();
             var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
 
+            // NOTE: let's think of a better solution that checking the message type each time
+            // a message is received. Maybe create a method that would call `Receive`, deserialize the
+            // message and check the type? It would reduce some chunks of repeated code.
             if (receivedRaw.Type == Consts.GameFinished)
                 GameAlreadyFinished(receivedSerialized);
 
@@ -339,6 +415,17 @@ namespace Player
             if (receivedRaw.Type == Consts.GameFinished)
                 GameAlreadyFinished(receivedSerialized);
 
+            /**
+            REFACTOR: do not rely on the fact that the first message you receive after you send one
+            will be the response to your request. You may also receive a communication request.
+
+            How about transforming the messages into a stream and filtering them? This way,
+            you would subscribe to that message stream and listen for the first response that you
+            expect here. It would be extensible since other parts of the system could listen
+            to other types of messages and handle them, such as a component responsible for
+            catching communication requests.
+             */
+
             if (receivedRaw.Type != Consts.RefreshStateResponse)
                 throw new InvalidTypeReceivedException($"Expected: {Consts.RefreshStateResponse} Received: {receivedRaw.Type}");
 
@@ -351,6 +438,9 @@ namespace Player
                 throw new WrongPayloadException();
             foreach (var playerInfo in received.Payload.PlayerPositions)
             {
+                // REFACTOR: how about changing the `Board` type to a class that wraps `List<Tile>`,
+                // but also provides additional methods, such as updating the board based on the payload
+                // of some requests?
                 // TODO: Remove all (outdated) PlayerId attributes from board tiles
                 Board[playerInfo.X + Game.BoardSize.X * playerInfo.Y].PlayerId = playerInfo.PlayerId;
                 Board[playerInfo.X + Game.BoardSize.X * playerInfo.Y].Timestamp = received.Payload.Timestamp;
