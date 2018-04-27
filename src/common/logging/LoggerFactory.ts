@@ -1,10 +1,12 @@
+import { Stream } from 'stream';
 import * as winston from 'winston';
+
+const typelessWinston: any = winston;
 
 export class LoggerFactory {
   public logLevel: winston.NPMLoggingLevel = 'silly';
 
   public createLogger(transports: winston.TransportInstance[]): winston.LoggerInstance {
-    const typelessWinston: any = winston;
     const format = typelessWinston.format;
 
     return typelessWinston.createLogger({
@@ -15,7 +17,6 @@ export class LoggerFactory {
   }
 
   public createConsoleLogger(): winston.LoggerInstance {
-    const typelessWinston: any = winston;
     const format = typelessWinston.format;
 
     const consoleTransport = new winston.transports.Console(<any>{
@@ -30,10 +31,11 @@ export class LoggerFactory {
   }
 
   public createEmptyLogger(): winston.LoggerInstance {
-    const consoleTransport = new winston.transports.Console({
-      silent: true
+    const emptyStreamTransport = new typelessWinston.transports.Stream({
+      silent: true,
+      stream: new Stream.Writable({ objectMode: true, write: () => null })
     });
 
-    return this.createLogger([consoleTransport]);
+    return this.createLogger([emptyStreamTransport]);
   }
 }
