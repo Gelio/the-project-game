@@ -182,11 +182,14 @@ export class Board {
   }
 
   public getDistanceToClosestPiece(tilePosition: Point): number {
-    if (this.pieces.length === 0) {
+    // TODO: test the logic below
+    const piecesLayingOnBoard = this.pieces.filter(piece => !piece.isPickedUp);
+
+    if (piecesLayingOnBoard.length === 0) {
       return -1;
     }
 
-    return this.pieces.reduce(
+    return piecesLayingOnBoard.reduce(
       (minDistance, piece) =>
         Math.min(Point.manhattanDistance(tilePosition, piece.position), minDistance),
       Infinity
