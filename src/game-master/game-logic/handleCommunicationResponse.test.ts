@@ -212,19 +212,18 @@ describe('[GM] handleCommunicationResponse', () => {
       expect(sendMessage).toHaveBeenCalledTimes(0);
     });
 
-    it('should resolve the response after action delay', () => {
+    it('should resolve the response after action delay', async () => {
       communicationRequestsStore.addPendingRequest('p1', 'p2');
 
       const result: ValidMessageResult<
         ResponseSentMessage
       > = <any>executeHandleCommunicationResponse('p1', 'p2', true, <any>null);
 
-      result.responseMessage.then(response => {
-        expect(response.recipientId).toBe('p2');
-      });
-
       jest.advanceTimersByTime(actionDelays.communicationAccept);
-      expect.assertions(1);
+
+      const response = await result.responseMessage;
+
+      expect(response.recipientId).toBe('p2');
     });
 
     it('should not resolve the response before action delay', () => {
