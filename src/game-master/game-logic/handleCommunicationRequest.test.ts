@@ -105,71 +105,71 @@ describe('[GM] handleCommunicationRequest', () => {
 
       expect(result.valid).toBe(true);
     });
-  });
 
-  it('should add pending communication request', () => {
-    executeHandleCommunicationRequest('p1', 'p2');
+    it('should add pending communication request', () => {
+      executeHandleCommunicationRequest('p1', 'p2');
 
-    expect(communicationRequestsStore.isRequestPending('p1', 'p2')).toBe(true);
-  });
-
-  it('should send message to recipient', async () => {
-    const result: ValidMessageResult<RequestSentMessage> = <any>executeHandleCommunicationRequest(
-      'p1',
-      'p2'
-    );
-
-    jest.advanceTimersByTime(actionDelays.communicationRequest);
-
-    await result.responseMessage;
-
-    const requestToRecipient: CommunicationRequestToRecipient = {
-      type: 'COMMUNICATION_REQUEST',
-      senderId: GAME_MASTER_ID,
-      recipientId: 'p2',
-      payload: {
-        senderPlayerId: 'p1'
-      }
-    };
-
-    expect(sendMessage).toHaveBeenCalledTimes(1);
-    expect(sendMessage).toHaveBeenCalledWith(requestToRecipient);
-  });
-
-  it('should not send the message to communication request recipient before action delay', () => {
-    executeHandleCommunicationRequest('p1', 'p2');
-
-    jest.advanceTimersByTime(actionDelays.communicationRequest - 1);
-
-    expect(sendMessage).toHaveBeenCalledTimes(0);
-  });
-
-  it('should resolve the response after action delay', async () => {
-    const result: ValidMessageResult<RequestSentMessage> = <any>executeHandleCommunicationRequest(
-      'p1',
-      'p2'
-    );
-
-    jest.advanceTimersByTime(actionDelays.communicationRequest);
-
-    const response = await result.responseMessage;
-
-    expect(response.recipientId).toBe('p1');
-  });
-
-  it('should not resolve the response before action delay', () => {
-    let resolved = false;
-
-    const result: ValidMessageResult<RequestSentMessage> = <any>executeHandleCommunicationRequest(
-      'p1',
-      'p2'
-    );
-
-    result.responseMessage.then(() => {
-      resolved = true;
+      expect(communicationRequestsStore.isRequestPending('p1', 'p2')).toBe(true);
     });
 
-    jest.advanceTimersByTime(actionDelays.communicationRequest - 1);
-    expect(resolved).toBe(false);
+    it('should send message to recipient', async () => {
+      const result: ValidMessageResult<RequestSentMessage> = <any>executeHandleCommunicationRequest(
+        'p1',
+        'p2'
+      );
+
+      jest.advanceTimersByTime(actionDelays.communicationRequest);
+
+      await result.responseMessage;
+
+      const requestToRecipient: CommunicationRequestToRecipient = {
+        type: 'COMMUNICATION_REQUEST',
+        senderId: GAME_MASTER_ID,
+        recipientId: 'p2',
+        payload: {
+          senderPlayerId: 'p1'
+        }
+      };
+
+      expect(sendMessage).toHaveBeenCalledTimes(1);
+      expect(sendMessage).toHaveBeenCalledWith(requestToRecipient);
+    });
+
+    it('should not send the message to communication request recipient before action delay', () => {
+      executeHandleCommunicationRequest('p1', 'p2');
+
+      jest.advanceTimersByTime(actionDelays.communicationRequest - 1);
+
+      expect(sendMessage).toHaveBeenCalledTimes(0);
+    });
+
+    it('should resolve the response after action delay', async () => {
+      const result: ValidMessageResult<RequestSentMessage> = <any>executeHandleCommunicationRequest(
+        'p1',
+        'p2'
+      );
+
+      jest.advanceTimersByTime(actionDelays.communicationRequest);
+
+      const response = await result.responseMessage;
+
+      expect(response.recipientId).toBe('p1');
+    });
+
+    it('should not resolve the response before action delay', () => {
+      let resolved = false;
+
+      const result: ValidMessageResult<RequestSentMessage> = <any>executeHandleCommunicationRequest(
+        'p1',
+        'p2'
+      );
+
+      result.responseMessage.then(() => {
+        resolved = true;
+      });
+
+      jest.advanceTimersByTime(actionDelays.communicationRequest - 1);
+      expect(resolved).toBe(false);
+    });
   });
 });
