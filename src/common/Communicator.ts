@@ -25,7 +25,7 @@ export class Communicator extends CustomEventEmitter {
 
     this.socket = socket;
     this.expectedMessageLength = null;
-    this.messageLengthBuffer = new Buffer(this.messageLengthArray.buffer);
+    this.messageLengthBuffer = Buffer.from(this.messageLengthArray.buffer);
     this.logger = logger;
 
     this.readMessage = this.readMessage.bind(this);

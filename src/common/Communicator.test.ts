@@ -23,7 +23,7 @@ function createCommunicator(socket: any) {
 function createTestMessage(): Message<any> {
   return {
     payload: { foo: 'bar' },
-    senderId: 5,
+    senderId: 'hello',
     type: 'TEST_MESSAGE'
   };
 }
@@ -31,7 +31,7 @@ function createTestMessage(): Message<any> {
 function serializeMessage(message: Message<any>) {
   const stringifiedMessage = JSON.stringify(message);
 
-  const buffer = new Buffer(stringifiedMessage.length + 4);
+  const buffer = Buffer.alloc(stringifiedMessage.length + 4);
   // Network order is Big Endian
   buffer.writeUInt32BE(stringifiedMessage.length, 0);
 
@@ -298,7 +298,7 @@ describe('Communicator', () => {
       it('should be emitted when multiple messages arrived in a single TCP packet', () => {
         const message = createTestMessage();
         const serializedMessage = serializeMessage(message);
-        const repeatedMessages = new Buffer(serializedMessage.length * 2);
+        const repeatedMessages = Buffer.alloc(serializedMessage.length * 2);
         serializedMessage.copy(repeatedMessages, 0);
         serializedMessage.copy(repeatedMessages, serializedMessage.length);
 

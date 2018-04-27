@@ -50,6 +50,15 @@ describe('[GM] Board', () => {
           'Piece already exists at that position'
         );
       });
+
+      it('should not add a piece on the board when it is picked up', () => {
+        board.removePiece(piece);
+        piece.isPickedUp = true;
+
+        board.addPiece(piece);
+
+        expect(board.getTileAtPosition(piecePosition).piece).toBeNull();
+      });
     });
 
     describe('removePiece', () => {
@@ -134,14 +143,14 @@ describe('[GM] Board', () => {
       player = new Player();
       player.isBusy = player.isConnected = player.isLeader = true;
       player.teamId = 1;
-      player.playerId = 1;
+      player.playerId = 'player1';
     });
 
     describe('addPlayer', () => {
       it('should place player on the board', () => {
         board.addPlayer(player);
 
-        expect(player.position).toBeTruthy();
+        expect(player.position).toBeDefined();
         expect(board.getTileAtPosition(<Point>player.position).player).toBe(player);
       });
 
@@ -159,6 +168,7 @@ describe('[GM] Board', () => {
     describe('movePlayer', () => {
       it('should move player to new position', () => {
         board.addPlayer(player);
+        // FIXME: set `newPosition` based on player's position
         const newPosition = new Point(1, 2);
 
         board.movePlayer(player, newPosition);
@@ -168,6 +178,7 @@ describe('[GM] Board', () => {
 
       it('should throw an error when player position does not match the one on the board', () => {
         board.addPlayer(player);
+        // FIXME: set `newPosition` based on player's position
         const newPosition = new Point(2, 4);
 
         player.position = newPosition;
@@ -209,7 +220,7 @@ describe('[GM] Board', () => {
       board.addPlayer(player);
       board.setRandomPlayerPosition(player);
 
-      expect(player.position).toBeTruthy();
+      expect(player.position).toBeDefined();
     });
   });
 
@@ -229,7 +240,29 @@ describe('[GM] Board', () => {
     it('should return the tile if position is valid', () => {
       const point: Point = new Point(0, 0);
 
-      expect(board.getTileAtPosition.bind(board, point)).toBeTruthy();
+      expect(board.getTileAtPosition.bind(board, point)).toBeDefined();
+    });
+
+    it('should return correct teamId of tile inside first team area', () => {
+      const tile = board.getTileAtPosition(new Point(0, 0));
+
+      expect(board.getTileTeamId(tile)).toBe(1);
+    });
+
+    it('should return correct teamId of tile inside second team area', () => {
+      const tile = board.getTileAtPosition(
+        new Point(0, board.size.taskArea + board.size.goalArea + 1)
+      );
+
+      expect(board.getTileTeamId(tile)).toBe(2);
+    });
+
+    it('should throw error when checking teamId of non teamTile', () => {
+      const tile = board.getTileAtPosition(new Point(0, board.size.goalArea + 1));
+
+      expect(() => {
+        board.getTileTeamId(tile);
+      }).toThrow();
     });
   });
 });

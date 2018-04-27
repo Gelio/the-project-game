@@ -14,4 +14,8 @@ export abstract class BaseTile {
     this.x = x;
     this.y = y;
   }
+
+  public equals(tile: BaseTile) {
+    return this.x === tile.x && this.y === tile.y;
+  }
 }

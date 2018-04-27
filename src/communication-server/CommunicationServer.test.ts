@@ -3,6 +3,8 @@ import { LoggerInstance } from 'winston';
 
 import { Communicator } from '../common/Communicator';
 import { createDelay } from '../common/createDelay';
+import { COMMUNICATION_SERVER_ID, GAME_MASTER_ID } from '../common/EntityIds';
+import { GameName } from '../common/GameName';
 import { LoggerFactory } from '../common/logging/LoggerFactory';
 
 import { CommunicationServer, CommunicationServerOptions } from './CommunicationServer';
@@ -22,7 +24,7 @@ import { RegisterGameResponse } from '../interfaces/responses/RegisterGameRespon
 
 function getRegisterGameRequest(): RegisterGameRequest {
   return {
-    senderId: -1,
+    senderId: GAME_MASTER_ID,
     type: 'REGISTER_GAME_REQUEST',
     payload: {
       teamSizes: {
@@ -42,14 +44,13 @@ function getRegisterGameRequest(): RegisterGameRequest {
   };
 }
 
-function getPlayerHelloMessage(gameName: string): PlayerHelloMessage {
+function getPlayerHelloMessage(gameName: GameName): PlayerHelloMessage {
   return {
     type: 'PLAYER_HELLO',
-    senderId: -2,
+    senderId: 'player_id',
     payload: {
       teamId: 1,
       isLeader: false,
-      temporaryId: 123,
       game: gameName
     }
   };
@@ -57,10 +58,10 @@ function getPlayerHelloMessage(gameName: string): PlayerHelloMessage {
 
 function getPlayerAcceptedMessage(playerHelloMessage: PlayerHelloMessage): PlayerAcceptedMessage {
   return {
-    payload: { assignedPlayerId: 2 },
     type: 'PLAYER_ACCEPTED',
-    senderId: -1,
-    recipientId: playerHelloMessage.payload.temporaryId
+    senderId: GAME_MASTER_ID,
+    recipientId: playerHelloMessage.senderId,
+    payload: undefined
   };
 }
 
@@ -160,7 +161,7 @@ describe('[CS] CommunicationServer', () => {
       const message: Message<any> = {
         type: 'UNKNOWN',
         payload: {},
-        senderId: -1
+        senderId: GAME_MASTER_ID
       };
 
       communicator.sendMessage(message);
@@ -222,7 +223,7 @@ describe('[CS] CommunicationServer', () => {
 
       const playerListGamesRequest: ListGamesRequest = {
         type: 'LIST_GAMES_REQUEST',
-        senderId: -2,
+        senderId: 'uuid',
         payload: undefined
       };
       playerCommunicator.sendMessage(playerListGamesRequest);
@@ -276,8 +277,8 @@ describe('[CS] CommunicationServer', () => {
         const playerRejectedMessage: PlayerRejectedMessage = {
           payload: { reason: 'test' },
           type: 'PLAYER_REJECTED',
-          senderId: -1,
-          recipientId: playerHelloMessage.payload.temporaryId
+          senderId: GAME_MASTER_ID,
+          recipientId: playerHelloMessage.senderId
         };
         gmCommunicator.sendMessage(playerRejectedMessage);
 
@@ -300,13 +301,13 @@ describe('[CS] CommunicationServer', () => {
         const playerDisconnectedMessage = <PlayerDisconnectedMessage>await gmCommunicator.waitForAnyMessage();
 
         expect(playerDisconnectedMessage.type).toEqual('PLAYER_DISCONNECTED');
-        expect(playerDisconnectedMessage.payload.playerId).toEqual(2);
+        expect(playerDisconnectedMessage.payload.playerId).toEqual(playerHelloMessage.senderId);
       });
 
       it('should list registered game when requested', async () => {
         const playerListGamesRequest: ListGamesRequest = {
           type: 'LIST_GAMES_REQUEST',
-          senderId: -2,
+          senderId: 'uuid',
           payload: undefined
         };
         playerCommunicator.sendMessage(playerListGamesRequest);
@@ -328,7 +329,7 @@ describe('[CS] CommunicationServer', () => {
 
         const playerListGamesRequest: ListGamesRequest = {
           type: 'LIST_GAMES_REQUEST',
-          senderId: -2,
+          senderId: 'uuid',
           payload: undefined
         };
         playerCommunicator.sendMessage(playerListGamesRequest);
@@ -363,8 +364,8 @@ describe('[CS] CommunicationServer', () => {
 
         const unregisterGameRequest: UnregisterGameRequest = {
           type: 'UNREGISTER_GAME_REQUEST',
-          senderId: -1,
-          recipientId: -3,
+          senderId: GAME_MASTER_ID,
+          recipientId: COMMUNICATION_SERVER_ID,
           payload: {
             gameName: registerGameRequest.payload.name
           }
@@ -381,8 +382,8 @@ describe('[CS] CommunicationServer', () => {
       it('should not disconnect a GM after the game finished', async () => {
         const unregisterGameRequest: UnregisterGameRequest = {
           type: 'UNREGISTER_GAME_REQUEST',
-          senderId: -1,
-          recipientId: -3,
+          senderId: GAME_MASTER_ID,
+          recipientId: COMMUNICATION_SERVER_ID,
           payload: {
             gameName: registerGameRequest.payload.name
           }

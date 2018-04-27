@@ -1,6 +1,6 @@
 {
   "name": "the-project-game",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "",
   "dependencies": {
     "blessed": "^0.1.81",
@@ -27,7 +27,8 @@
     "tsnode": "ts-node",
     "game-master": "ts-node src/start-game-master.ts",
     "communication-server": "ts-node src/start-communication-server.ts",
-    "player": "ts-node src/start-player.ts",
+    "game-master:debug": "ts-node --inspect=9229 src/start-game-master.ts",
+    "communication-server:debug": "ts-node --inspect=9230 src/start-communication-server.ts",
     "precommit": "lint-staged",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -51,8 +52,7 @@
       "!**/*.d.ts",
       "!**/node_modules/**",
       "!**/vendor/**",
-      "!**/coverage/**",
-      "!**/src/player/**"
+      "!**/coverage/**"
     ]
   },
   "lint-staged": {

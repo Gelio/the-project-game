@@ -1,9 +1,12 @@
 import { arrayShuffle } from '../../common/arrayShuffle';
-
 import { Point } from '../../common/Point';
+import { TeamId } from '../../common/TeamId';
+
 import { BoardSize } from '../../interfaces/BoardSize';
+
 import { Player } from '../Player';
 import { Piece } from './Piece';
+
 import { Tile } from './tiles/Tile';
 
 import { GoalGenerator } from '../board-generation/GoalGenerator';
@@ -43,6 +46,25 @@ export class Board {
     return tile;
   }
 
+  public getTileTeamId(teamTile: Tile): TeamId {
+    if (
+      this.firstTeamPositions.find(
+        position => position.x === teamTile.x && position.y === teamTile.y
+      )
+    ) {
+      return 1;
+    }
+    if (
+      this.secondTeamPositions.find(
+        position => position.x === teamTile.x && position.y === teamTile.y
+      )
+    ) {
+      return 2;
+    }
+
+    throw new Error('The tile is not a team tile');
+  }
+
   public addPlayer(player: Player) {
     if (player.position) {
       throw new Error('Player is already added on board');
@@ -72,7 +94,7 @@ export class Board {
       throw new Error('Old player position corrupted');
     }
 
-    if (newTile.player) {
+    if (newTile.player && newTile.player !== player) {
       throw new Error('Two players cannot stand on the same tile');
     }
 
@@ -91,7 +113,9 @@ export class Board {
       throw new Error('Piece already exists at that position');
     }
 
-    tile.piece = piece;
+    if (!piece.isPickedUp) {
+      tile.piece = piece;
+    }
     this.pieces.push(piece);
   }
 
@@ -138,11 +162,14 @@ export class Board {
     }
     if (player.position) {
       this.getTileAtPosition(player.position).player = null;
+      player.position = null;
     }
+    arrayShuffle(possiblePositions);
 
     for (const position of possiblePositions) {
       if (!this.getTileAtPosition(position).player) {
         player.position = position;
+        this.getTileAtPosition(position).player = player;
         break;
       }
     }
@@ -152,6 +179,21 @@ export class Board {
     }
 
     this.getTileAtPosition(player.position).player = player;
+  }
+
+  public getDistanceToClosestPiece(tilePosition: Point): number {
+    // TODO: test the logic below
+    const piecesLayingOnBoard = this.pieces.filter(piece => !piece.isPickedUp);
+
+    if (piecesLayingOnBoard.length === 0) {
+      return -1;
+    }
+
+    return piecesLayingOnBoard.reduce(
+      (minDistance, piece) =>
+        Math.min(Point.manhattanDistance(tilePosition, piece.position), minDistance),
+      Infinity
+    );
   }
 
   private generateBoard() {

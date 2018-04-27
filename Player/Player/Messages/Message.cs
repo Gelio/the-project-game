@@ -3,16 +3,16 @@ using System.Collections.Generic;
 using System.Text;
 using Newtonsoft.Json;
 
-namespace Player.Messages
+namespace Player.Interfaces
 {
     public class Message<T> where T : IPayload
     {
         [JsonProperty("type")]
         public string Type;
         [JsonProperty("senderId")]
-        public int SenderId;
+        public string SenderId;
         [JsonProperty("recipientId")]
-        public int? RecipientId;
+        public string RecipientId;
         [JsonProperty("payload")]
         public T Payload;
     }
@@ -22,8 +22,8 @@ namespace Player.Messages
         [JsonProperty("type")]
         public string Type;
         [JsonProperty("senderId")]
-        public int SenderId;
+        public string SenderId;
         [JsonProperty("recipientId")]
-        public int? RecipientId;
+        public string RecipientId;
     }
 }

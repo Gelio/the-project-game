@@ -1,16 +1,15 @@
-using System;
 using System.Collections.Generic;
-using System.Text;
 using NUnit.Framework;
 using Moq;
 using Newtonsoft.Json;
+using Player.Interfaces;
+using Player.GameObjects;
 
 namespace Player.Tests
 {
     [TestFixture]
     class GameServiceTests
     {
-
         [Test]
         public void GetsGameList()
         {
@@ -19,9 +18,9 @@ namespace Player.Tests
             var mockCommunicator = new Mock<ICommunicator>();
             mockCommunicator.Setup(x => x.Receive()).Returns(mockMsg);
 
-            var expectedGameList = new List<Game>
+            var expectedGameList = new List<GameInfo>
             {
-                new Game
+                new GameInfo
                 {
                     Name = "Default",
                     Description = "This field is for UI purposes",
@@ -50,7 +49,7 @@ namespace Player.Tests
                         TryPiece = 4000
                     }
                  },
-                new Game
+                new GameInfo
                 {
                     Name = "Quick",
                     Description = "A quick-paced game on a small field",

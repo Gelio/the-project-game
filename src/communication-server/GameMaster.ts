@@ -2,6 +2,8 @@ import { LoggerInstance } from 'winston';
 
 import { Communicator } from '../common/Communicator';
 import { CustomEventEmitter } from '../common/CustomEventEmitter';
+import { COMMUNICATION_SERVER_ID, GAME_MASTER_ID } from '../common/EntityIds';
+import { REQUEST_TYPE } from '../common/REQUEST_TYPE';
 
 import { Message } from '../interfaces/Message';
 import { MessageWithRecipient } from '../interfaces/MessageWithRecipient';
@@ -68,12 +70,12 @@ export class GameMaster extends CustomEventEmitter {
   }
 
   private handleMessage(message: MessageWithRecipient<any>) {
-    if (message.type === 'UNREGISTER_GAME_REQUEST') {
+    if (message.type === REQUEST_TYPE.UNREGISTER_GAME_REQUEST) {
       this.onGameFinished();
 
       const response: UnregisterGameResponse = {
-        senderId: -3,
-        recipientId: -1,
+        senderId: COMMUNICATION_SERVER_ID,
+        recipientId: GAME_MASTER_ID,
         type: 'UNREGISTER_GAME_RESPONSE',
         payload: {
           unregistered: true

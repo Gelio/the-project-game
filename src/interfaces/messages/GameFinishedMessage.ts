@@ -1,7 +1,13 @@
 import { MessageWithRecipient } from '../MessageWithRecipient';
 
-export interface GameFinishedMessage
-  extends MessageWithRecipient<{ team1Score: number; team2Score: number }> {
+import { GameMasterId } from '../../common/EntityIds';
+
+export interface GameFinishedMessagePayload {
+  team1Score: number;
+  team2Score: number;
+}
+
+export interface GameFinishedMessage extends MessageWithRecipient<GameFinishedMessagePayload> {
   type: 'GAME_FINISHED';
-  senderId: -1;
+  senderId: GameMasterId;
 }

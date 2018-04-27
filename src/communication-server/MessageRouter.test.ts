@@ -1,11 +1,6 @@
-import { Communicator } from '../common/Communicator';
-import { MessageRouter } from './MessageRouter';
+import { createMockCommunicator } from '../common/createMockCommunicator';
 
-function createMockCommunicator(): Communicator {
-  return <any>{
-    sendMessage: jest.fn()
-  };
-}
+import { MessageRouter } from './MessageRouter';
 
 describe('[CS] MessageRouter', () => {
   let messageRouter: MessageRouter;
@@ -46,16 +41,16 @@ describe('[CS] MessageRouter', () => {
 
   describe('communicating with Players', () => {
     it('should throw an error when registering a player with existing ID', () => {
-      messageRouter.registerPlayerCommunicator(5, <any>{});
+      messageRouter.registerPlayerCommunicator('uuid', <any>{});
 
-      expect(() => messageRouter.registerPlayerCommunicator(5, <any>{})).toThrow();
+      expect(() => messageRouter.registerPlayerCommunicator('uuid', <any>{})).toThrow();
     });
 
     it('should call sendMessage based on recipientId when routing messages', () => {
       const communicator = createMockCommunicator();
-      messageRouter.registerPlayerCommunicator(5, communicator);
+      messageRouter.registerPlayerCommunicator('uuid', communicator);
       const message = <any>{
-        recipientId: 5
+        recipientId: 'uuid'
       };
 
       messageRouter.sendMessageToPlayer(message);
@@ -66,9 +61,9 @@ describe('[CS] MessageRouter', () => {
 
     it("should throw an error when recipient's communicator is not registered", () => {
       const communicator = createMockCommunicator();
-      messageRouter.registerPlayerCommunicator(5, communicator);
+      messageRouter.registerPlayerCommunicator('uuid', communicator);
       const message = <any>{
-        recipientId: 80
+        recipientId: 'someid'
       };
 
       expect(() => messageRouter.sendMessageToPlayer(message)).toThrow();
@@ -78,11 +73,11 @@ describe('[CS] MessageRouter', () => {
       // tslint:disable-next-line:prefer-array-literal
       const communicators = Array.from(new Array(5)).map(createMockCommunicator);
       communicators.forEach((communicator, index) =>
-        messageRouter.registerPlayerCommunicator(index, communicator)
+        messageRouter.registerPlayerCommunicator(index.toString(), communicator)
       );
 
       const message = <any>{
-        recipientId: 0
+        recipientId: '0'
       };
 
       messageRouter.sendMessageToPlayer(message);

@@ -1,5 +1,7 @@
+import { PlayerId } from '../common/EntityIds';
 import { Point } from '../common/Point';
 import { TeamId } from '../common/TeamId';
+
 import { Piece } from './models/Piece';
 
 export class Player {
@@ -8,7 +10,7 @@ export class Player {
   public isLeader: boolean;
   public isBusy = false;
 
-  public playerId: number;
+  public playerId: PlayerId;
   public position: Point | null = null;
   public heldPiece: Piece | null = null;
 }

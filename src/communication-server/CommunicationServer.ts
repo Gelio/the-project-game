@@ -2,6 +2,10 @@ import { createServer, Server, Socket } from 'net';
 import { LoggerInstance } from 'winston';
 
 import { Communicator } from '../common/Communicator';
+import { COMMUNICATION_SERVER_ID, GAME_MASTER_ID } from '../common/EntityIds';
+
+import { REQUEST_TYPE } from '../common/REQUEST_TYPE';
+
 import { Game } from './Game';
 import { GameMaster } from './GameMaster';
 import { MessageRouter } from './MessageRouter';
@@ -11,12 +15,12 @@ import { GameDefinition } from '../interfaces/GameDefinition';
 import { Message } from '../interfaces/Message';
 import { Service } from '../interfaces/Service';
 
-import { PlayerAcceptedMessage } from '../interfaces/messages/PlayerAcceptedMessage';
 import { PlayerDisconnectedMessage } from '../interfaces/messages/PlayerDisconnectedMessage';
 import { PlayerHelloMessage } from '../interfaces/messages/PlayerHelloMessage';
 import { PlayerRejectedMessage } from '../interfaces/messages/PlayerRejectedMessage';
 import { MessageWithRecipient } from '../interfaces/MessageWithRecipient';
 
+import { ListGamesRequest } from '../interfaces/requests/ListGamesRequest';
 import { RegisterGameRequest } from '../interfaces/requests/RegisterGameRequest';
 
 import {
@@ -130,11 +134,11 @@ export class CommunicationServer implements Service {
         this.handlePlayer(communicator, <PlayerHelloMessage>message);
         break;
 
-      case 'LIST_GAMES_REQUEST':
-        this.handleListGamesRequest(communicator);
+      case REQUEST_TYPE.LIST_GAMES_REQUEST:
+        this.handleListGamesRequest(communicator, <ListGamesRequest>message);
         break;
 
-      case 'REGISTER_GAME_REQUEST':
+      case REQUEST_TYPE.REGISTER_GAME_REQUEST:
         this.handleGameMaster(communicator, <RegisterGameRequest>message);
         break;
 
@@ -149,8 +153,8 @@ export class CommunicationServer implements Service {
     if (this.gameMasters.has(registerGameRequest.payload.name)) {
       const failedResponse: RegisterGameResponse = {
         type: 'REGISTER_GAME_RESPONSE',
-        senderId: -3,
-        recipientId: -1,
+        senderId: COMMUNICATION_SERVER_ID,
+        recipientId: GAME_MASTER_ID,
         payload: {
           registered: false
         }
@@ -176,8 +180,8 @@ export class CommunicationServer implements Service {
 
     const successResponse: RegisterGameResponse = {
       type: 'REGISTER_GAME_RESPONSE',
-      senderId: -3,
-      recipientId: -1,
+      senderId: COMMUNICATION_SERVER_ID,
+      recipientId: GAME_MASTER_ID,
       payload: {
         registered: true
       }
@@ -221,13 +225,34 @@ export class CommunicationServer implements Service {
   }
 
   private async handlePlayer(communicator: Communicator, helloMessage: PlayerHelloMessage) {
+    if (this.messageRouter.hasRegisteredPlayerCommunicator(helloMessage.senderId)) {
+      const response: PlayerRejectedMessage = {
+        type: 'PLAYER_REJECTED',
+        senderId: GAME_MASTER_ID,
+        recipientId: helloMessage.senderId,
+        payload: {
+          reason: 'Player with this ID already exists'
+        }
+      };
+
+      this.logger.verbose(
+        `Client ${communicator.address} wanted to register with ID ${
+          helloMessage.senderId
+        } but it already exists`
+      );
+
+      communicator.sendMessage(response);
+
+      return;
+    }
+
     const gameName = helloMessage.payload.game;
     const gameMaster = this.gameMasters.get(gameName);
     if (!gameMaster) {
       const response: PlayerRejectedMessage = {
         type: 'PLAYER_REJECTED',
-        senderId: -1,
-        recipientId: helloMessage.payload.temporaryId,
+        senderId: GAME_MASTER_ID,
+        recipientId: helloMessage.senderId,
         payload: {
           reason: 'Game does not exist'
         }
@@ -242,24 +267,21 @@ export class CommunicationServer implements Service {
       return;
     }
 
-    this.messageRouter.registerPlayerCommunicator(helloMessage.payload.temporaryId, communicator);
+    this.messageRouter.registerPlayerCommunicator(helloMessage.senderId, communicator);
     gameMaster.sendMessage(helloMessage);
 
     const gameMasterResponse = await gameMaster.communicator.waitForSpecificMessage(
-      (msg: MessageWithRecipient<any>) => msg.recipientId === helloMessage.payload.temporaryId
+      (msg: MessageWithRecipient<any>) => msg.recipientId === helloMessage.senderId
     );
+    this.messageRouter.unregisterPlayerCommunicator(helloMessage.senderId);
+
     /**
-     * NOTE: The response will be forwarded to the player via `MessageRouter`, so there is no
-     * need to send it to `communicator` again
+     * NOTE: There is no need to send the message to the `communicator` because
+     * `GameMaster` will forward it to the `MessageRouter`
      */
-
-    this.messageRouter.unregisterPlayerCommunicator(helloMessage.payload.temporaryId);
-
     if (gameMasterResponse.type !== 'PLAYER_ACCEPTED') {
       return;
     }
-
-    const playerAcceptedMessage = <PlayerAcceptedMessage>gameMasterResponse;
 
     // Stop listening for the client's initial message
     communicator.removeAllListeners('message');
@@ -267,7 +289,7 @@ export class CommunicationServer implements Service {
     const playerInfo: PlayerInfo = {
       gameName,
       teamId: helloMessage.payload.teamId,
-      id: playerAcceptedMessage.payload.assignedPlayerId,
+      id: helloMessage.senderId,
       isLeader: helloMessage.payload.isLeader
     };
     const player = new Player(communicator, this.messageRouter, this.logger, playerInfo);
@@ -286,7 +308,7 @@ export class CommunicationServer implements Service {
     player.init();
   }
 
-  private handleListGamesRequest(communicator: Communicator) {
+  private handleListGamesRequest(communicator: Communicator, message: ListGamesRequest) {
     const games: GameDefinition[] = [];
 
     this.gameMasters.forEach(gameMaster => games.push(gameMaster.game.gameDefinition));
@@ -295,8 +317,8 @@ export class CommunicationServer implements Service {
 
     const listGamesResponse: ListGamesResponse = {
       type: 'LIST_GAMES_RESPONSE',
-      senderId: -3,
-      recipientId: -2,
+      senderId: COMMUNICATION_SERVER_ID,
+      recipientId: message.senderId,
       payload: listGamesResponsePaylod
     };
     communicator.sendMessage(listGamesResponse);
@@ -322,8 +344,8 @@ export class CommunicationServer implements Service {
     if (this.messageRouter.hasRegisteredGameMasterCommunicator(player.info.gameName)) {
       const playerDisconnectedMessage: PlayerDisconnectedMessage = {
         type: 'PLAYER_DISCONNECTED',
-        recipientId: -1,
-        senderId: -3,
+        recipientId: GAME_MASTER_ID,
+        senderId: COMMUNICATION_SERVER_ID,
         payload: {
           playerId: player.info.id
         }

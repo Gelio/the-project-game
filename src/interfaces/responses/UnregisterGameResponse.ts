@@ -1,5 +1,7 @@
 import { MessageWithRecipient } from '../MessageWithRecipient';
 
+import { CommunicationServerId, GameMasterId } from '../../common/EntityIds';
+
 export interface UnregisterGameResponsePayload {
   unregistered: boolean;
 }
@@ -7,6 +9,6 @@ export interface UnregisterGameResponsePayload {
 export interface UnregisterGameResponse
   extends MessageWithRecipient<UnregisterGameResponsePayload> {
   type: 'UNREGISTER_GAME_RESPONSE';
-  senderId: -3;
-  recipientId: -1;
+  senderId: CommunicationServerId;
+  recipientId: GameMasterId;
 }
