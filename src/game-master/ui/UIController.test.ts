@@ -2,12 +2,15 @@ import * as blessed from 'blessed';
 
 import { UIController } from './UIController';
 
-import { Board } from '../models/Board';
+import { Point } from '../../common/Point';
+
 import { GameMasterOptions } from '../GameMaster';
-import { Scoreboard } from '../models/Scoreboard';
-import { PlayersContainer } from '../PlayersContainer';
 import { Player } from '../Player';
+import { PlayersContainer } from '../PlayersContainer';
+
+import { Board } from '../models/Board';
 import { Piece } from '../models/Piece';
+import { Scoreboard } from '../models/Scoreboard';
 
 describe('[GM] UIController', () => {
   let boxes: blessed.Widgets.BoxElement[];
@@ -249,6 +252,8 @@ describe('[GM] UIController', () => {
       const piece = new Piece();
       piece.isPickedUp = true;
       piece.isSham = false;
+      piece.position = new Point(0, 0);
+      board.addPiece(piece);
 
       runUpdateGameInfo();
 

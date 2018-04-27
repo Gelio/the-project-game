@@ -20,7 +20,7 @@ Round: 1 / 5
 {blue-fg}Blue{/} team players: 0 / 2
 {red-fg}Red{/} team players: 0 / 3
 
-Pieces: 0 (0 picked up, 0 shams)"
+Pieces: 1 (1 picked up, 0 shams)"
 `;
 
 exports[`[GM] UIController updateGameInfo should match snapshot after players joined 1`] = `
