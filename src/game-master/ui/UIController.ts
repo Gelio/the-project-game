@@ -11,21 +11,25 @@ import { Scoreboard } from '../models/Scoreboard';
 
 import { BoardFormatter } from './BoardFormatter';
 
+export type BoxFactoryFn = (options: blessed.Widgets.BoxOptions) => blessed.Widgets.BoxElement;
+
 export class UIController implements Service {
   private readonly screen: blessed.Widgets.Screen;
   private readonly boardFormatter: BoardFormatter;
+  private readonly boxFactoryFn: BoxFactoryFn;
 
   private boardBox: blessed.Widgets.BoxElement;
   private infoBox: blessed.Widgets.BoxElement;
   private logsBox: blessed.Widgets.BoxElement;
 
-  constructor(screen: blessed.Widgets.Screen) {
+  constructor(screen: blessed.Widgets.Screen, boxFactoryFn: BoxFactoryFn) {
     this.screen = screen;
     this.boardFormatter = new BoardFormatter();
+    this.boxFactoryFn = boxFactoryFn;
   }
 
   public init() {
-    this.boardBox = blessed.box({
+    this.boardBox = this.boxFactoryFn({
       width: '50%',
       height: '100%',
       border: {
@@ -35,7 +39,7 @@ export class UIController implements Service {
     });
     this.boardBox.setContent(`${config.uiLabelStyle}Board{/}`);
 
-    this.infoBox = blessed.box({
+    this.infoBox = this.boxFactoryFn({
       left: '50%',
       width: '50%',
       height: '30%',
@@ -46,7 +50,7 @@ export class UIController implements Service {
     });
     this.infoBox.setContent(`${config.uiLabelStyle}Info{/}`);
 
-    this.logsBox = blessed.box({
+    this.logsBox = this.boxFactoryFn({
       left: '50%',
       top: '30%',
       width: '50%',
@@ -88,6 +92,7 @@ export class UIController implements Service {
       this.boardBox.pushLine(line.join(''));
     }
 
+    // FIXME: check if `render` is needed and when should it be called
     this.render();
   }
 

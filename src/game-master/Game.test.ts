@@ -67,6 +67,8 @@ describe('[GM] Game', () => {
   let communicator: Communicator;
   let player: Player;
   let otherPlayer: Player;
+  // TODO: add tests using updateUIFn
+  let updateUIFn: Function;
 
   beforeEach(() => {
     periodicPieceGenerator = <any>createMockPeriodicPieceGenerator();
@@ -76,13 +78,16 @@ describe('[GM] Game', () => {
     const loggerFactory = new LoggerFactory();
     loggerInstance = loggerFactory.createEmptyLogger();
 
+    updateUIFn = jest.fn();
+
     game = new Game(
       gameDefinition,
       loggerInstance,
       uiController,
       communicator,
       () => periodicPieceGenerator,
-      jest.fn()
+      jest.fn(),
+      updateUIFn
     );
 
     player = new Player();
