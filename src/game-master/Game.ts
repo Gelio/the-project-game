@@ -283,12 +283,14 @@ export class Game {
       throw new Error('Team is full');
     }
 
-    if (message.payload.isLeader && teamPlayers.find(player => player.isLeader)) {
+    const teamAlreadyHasLeader = teamPlayers.find(player => player.isLeader);
+    if (message.payload.isLeader && teamAlreadyHasLeader) {
       throw new Error('Team already has a leader');
     }
 
     if (
       !message.payload.isLeader &&
+      !teamAlreadyHasLeader &&
       teamPlayers.length + 1 === this.definition.teamSizes[message.payload.teamId]
     ) {
       throw new Error('Team does not have a leader');
