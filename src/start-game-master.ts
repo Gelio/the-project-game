@@ -12,6 +12,7 @@ const screen = createBlessedScreen();
 const uiController = new UIController(screen);
 
 const loggerFactory = new LoggerFactory();
+loggerFactory.logLevel = 'verbose';
 
 const gameMaster = new GameMaster(config, uiController, loggerFactory);
 gameMaster.init();
