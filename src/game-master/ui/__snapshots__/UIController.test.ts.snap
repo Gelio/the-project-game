@@ -1,0 +1,72 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`[GM] UIController updateBoard should update the board box 1`] = `
+"{black-fg}{white-bg}{bold}Board{/}
+{blue-bg}{white-fg}G{/}{blue-bg}{white-fg}G{/}{blue-bg}{white-fg}G{/}{blue-bg}{white-fg}G{/}{blue-bg}{white-fg}G{/}
+{blue-bg}{white-fg}G{/}{blue-bg}{white-fg}G{/}{blue-bg}{white-fg}G{/}{blue-bg}{white-fg}G{/}{blue-bg}{white-fg}G{/}
+     
+     
+     
+{red-bg}{white-fg}G{/}{red-bg}{white-fg}G{/}{red-bg}{white-fg}G{/}{red-bg}{white-fg}G{/}{red-bg}{white-fg}G{/}
+{red-bg}{white-fg}G{/}{red-bg}{white-fg}G{/}{red-bg}{white-fg}G{/}{red-bg}{white-fg}G{/}{red-bg}{white-fg}G{/}"
+`;
+
+exports[`[GM] UIController updateGameInfo should match snapshot after a piece is added 1`] = `
+"{black-fg}{white-bg}{bold}Info{/}
+Round: 1 / 5
+{blue-fg}Blue{/} team score: 0 / 5
+{red-fg}Red{/} team score: 0 / 5
+
+{blue-fg}Blue{/} team players: 0 / 2
+{red-fg}Red{/} team players: 0 / 3
+
+Pieces: 0 (0 picked up, 0 shams)"
+`;
+
+exports[`[GM] UIController updateGameInfo should match snapshot after players joined 1`] = `
+"{black-fg}{white-bg}{bold}Info{/}
+Round: 1 / 5
+{blue-fg}Blue{/} team score: 0 / 5
+{red-fg}Red{/} team score: 0 / 5
+
+{blue-fg}Blue{/} team players: 1 / 2
+{red-fg}Red{/} team players: 1 / 3
+
+Pieces: 0 (0 picked up, 0 shams)"
+`;
+
+exports[`[GM] UIController updateGameInfo should match snapshot by default 1`] = `
+"{black-fg}{white-bg}{bold}Info{/}
+Round: 1 / 5
+{blue-fg}Blue{/} team score: 0 / 5
+{red-fg}Red{/} team score: 0 / 5
+
+{blue-fg}Blue{/} team players: 0 / 2
+{red-fg}Red{/} team players: 0 / 3
+
+Pieces: 0 (0 picked up, 0 shams)"
+`;
+
+exports[`[GM] UIController updateGameInfo should match snapshot for the next round 1`] = `
+"{black-fg}{white-bg}{bold}Info{/}
+Round: 2 / 5
+{blue-fg}Blue{/} team score: 0 / 5
+{red-fg}Red{/} team score: 0 / 5
+
+{blue-fg}Blue{/} team players: 0 / 2
+{red-fg}Red{/} team players: 0 / 3
+
+Pieces: 0 (0 picked up, 0 shams)"
+`;
+
+exports[`[GM] UIController updateGameInfo should match snapshot when scores have changed 1`] = `
+"{black-fg}{white-bg}{bold}Info{/}
+Round: 1 / 5
+{blue-fg}Blue{/} team score: 2 / 5
+{red-fg}Red{/} team score: 5 / 5
+
+{blue-fg}Blue{/} team players: 0 / 2
+{red-fg}Red{/} team players: 0 / 3
+
+Pieces: 0 (0 picked up, 0 shams)"
+`;
