@@ -92,7 +92,6 @@ export class UIController implements Service {
       this.boardBox.pushLine(line.join(''));
     }
 
-    // FIXME: check if `render` is needed and when should it be called
     this.render();
   }
 
@@ -103,8 +102,6 @@ export class UIController implements Service {
     scoreboard: Scoreboard,
     playersContainer: PlayersContainer
   ) {
-    // TODO: add tests
-
     this.infoBox.setContent(`${config.uiLabelStyle}Info{/}`);
 
     this.infoBox.pushLine(`Round: ${currentRound} / ${gameMasterOptions.gamesLimit}`);
@@ -131,5 +128,7 @@ export class UIController implements Service {
     this.infoBox.pushLine(
       `Pieces: ${board.pieces.length} (${pickedUpPiecesCount} picked up, ${shamCount} shams)`
     );
+
+    this.render();
   }
 }

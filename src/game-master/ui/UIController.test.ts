@@ -203,6 +203,12 @@ describe('[GM] UIController', () => {
       );
     }
 
+    it('should call render on the screen', () => {
+      runUpdateGameInfo();
+
+      expect(screen.render).toHaveBeenCalled();
+    });
+
     it('should match snapshot by default', () => {
       runUpdateGameInfo();
 
