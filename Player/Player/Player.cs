@@ -1,15 +1,15 @@
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
-using Player.Interfaces;
-using Player.Common;
 using System.Linq;
-using Player.Messages.Responses;
-using Player.Messages.Requests;
-using Player.GameObjects;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Player.Common;
+using Player.GameObjects;
+using Player.Interfaces;
 using Player.Messages.DTO;
+using Player.Messages.Requests;
+using Player.Messages.Responses;
 
 namespace Player
 {
@@ -59,7 +59,7 @@ namespace Player
             WaitForGameStart();
             RefreshBoardState(); // -- gives us info about all teammates' (+ ours) initial position
             logger.Debug($"Player's init position: {X} {Y}");
-            GoalAreaDirection = Y < Game.BoardSize.GoalArea ? "up" : "down";
+            GoalAreaDirection = Y < Game.BoardSize.GoalArea ? Consts.Up : Consts.Down;
             Play();
         }
 
@@ -202,18 +202,18 @@ namespace Player
                     }
                 }
             if (bestDy == -1)
-                return "up";
+                return Consts.Up;
             if (bestDy == 1)
-                return "down";
+                return Consts.Down;
             if (bestDx == -1)
-                return "left";
+                return Consts.Left;
             if (bestDx == 1)
-                return "right";
-            return "up";
+                return Consts.Right;
+            return Consts.Up;
         }
         private string PickRandomMovementDirection()
         {
-            string[] directions = { "up", "down", "left", "right" };
+            string[] directions = { Consts.Up, Consts.Down, Consts.Left, Consts.Right };
             return directions[new Random().Next(0, 4)];
         }
 
@@ -222,7 +222,7 @@ namespace Player
             int startX, startY, endX, endY, dy;
             startX = 0;
             endX = Game.BoardSize.X - 1;
-            if (GoalAreaDirection == "up")
+            if (GoalAreaDirection == Consts.Up)
             {
                 startY = Game.BoardSize.GoalArea - 1;
                 endY = -1;
@@ -242,13 +242,13 @@ namespace Player
                     if (Board[x + y * Game.BoardSize.X].GoalStatus == GoalStatusEnum.NoInfo)
                     {
                         if (X - x > 0)
-                            return "left";
+                            return Consts.Left;
                         if (X - x < 0)
-                            return "right";
+                            return Consts.Right;
                         if (Y - y > 0)
-                            return "up";
+                            return Consts.Up;
                         else
-                            return "down";
+                            return Consts.Down;
                     }
             throw new InvalidOperationException("There seems to be no goal tiles left");
         }
@@ -376,16 +376,16 @@ namespace Player
             int newY = Y;
             switch (direction)
             {
-                case "up":
+                case Consts.Up:
                     newY -= 1;
                     break;
-                case "down":
+                case Consts.Down:
                     newY += 1;
                     break;
-                case "left":
+                case Consts.Left:
                     newX -= 1;
                     break;
-                case "right":
+                case Consts.Right:
                     newX += 1;
                     break;
                 default:
