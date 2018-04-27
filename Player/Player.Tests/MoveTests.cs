@@ -120,10 +120,10 @@ namespace Player.Tests
                     newY += 1;
                     break;
                 case "left":
-                    newX += 1;
+                    newX -= 1;
                     break;
                 case "right":
-                    newX -= 1;
+                    newX += 1;
                     break;
             }
             int indexAfterMove = newX + _game.BoardSize.X * newY;

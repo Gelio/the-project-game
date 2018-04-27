@@ -1,14 +1,15 @@
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
-using Player.Interfaces;
-using Player.Common;
 using System.Linq;
-using Player.Messages.Responses;
-using Player.Messages.Requests;
-using Player.GameObjects;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Player.Common;
+using Player.GameObjects;
+using Player.Interfaces;
+using Player.Messages.DTO;
+using Player.Messages.Requests;
+using Player.Messages.Responses;
 
 namespace Player
 {
@@ -34,6 +35,7 @@ namespace Player
         public Piece HeldPiece;
         private ICommunicator _communicator;
         private IGameService _gameService;
+        public string GoalAreaDirection;
         public bool IsConnected => _communicator.IsConnected;
 
         public Player(ICommunicator communicator, PlayerConfig config, IGameService gameService)
@@ -57,6 +59,7 @@ namespace Player
             WaitForGameStart();
             RefreshBoardState(); // -- gives us info about all teammates' (+ ours) initial position
             logger.Debug($"Player's init position: {X} {Y}");
+            GoalAreaDirection = Y < Game.BoardSize.GoalArea ? Consts.Up : Consts.Down;
             Play();
         }
 
@@ -71,7 +74,11 @@ namespace Player
 
             for (int i = 0; i < Game.BoardSize.X * (Game.BoardSize.GoalArea * 2 + Game.BoardSize.TaskArea); i++)
             {
-                Board.Add(new Tile());
+                Board.Add(new Tile()
+                {
+                    DistanceToClosestPiece = int.MaxValue,
+                    GoalStatus = GoalStatusEnum.NoInfo
+                });
             }
         }
 
@@ -153,38 +160,100 @@ namespace Player
                 logger.Debug("Player's position: {} {}", X, Y);
                 if (HeldPiece != null)
                 {
-                    if (IsInGoalArea())
+                    if (IsInGoalArea() && Board[GetCurrentBoardIndex()].GoalStatus == GoalStatusEnum.NoInfo)
                     {
                         logger.Info("Trying to place down piece");
                         (var result, var resultEnum) = PlaceDownPiece();
-                        string direction = PickMovementDirection();
-                        Move(direction);
                     }
                     else
-                        Move("up");
+                        Move(PickSweepingGoalAreaDirection());
                 }
-                else
+                else if (Board[GetCurrentBoardIndex()].DistanceToClosestPiece == 0) // We stand on a piece
                 {
-                    if (Board[GetBoardIndex()].DistanceToClosestPiece == 0)
-                    {
-                        logger.Info("Trying to pick up piece...");
-                        PickUpPiece();
-                        continue;
-                    }
-
-                    string direction = PickMovementDirection();
+                    logger.Info("Trying to pick up piece...");
+                    PickUpPiece();
+                    continue;
+                }
+                else // Find a piece
+                {
+                    Discover();
+                    string direction = PickClosestPieceDirection();
                     Move(direction);
                 }
             }
         }
 
-        private string PickMovementDirection()
+        private string PickClosestPieceDirection()
         {
-            string[] directions = { "up", "down", "left", "right" };
+            int bestDistance = int.MaxValue;
+            int bestDx = 0, bestDy = 0;
+            for (int dy = -1; dy <= 1; dy++)
+                for (int dx = -1; dx <= 1; dx++)
+                {
+                    if (X + dx < 0 || X + dx >= Game.BoardSize.X || Y + dy < 0 || Y + dy >= (Game.BoardSize.TaskArea + Game.BoardSize.GoalArea * 2))
+                        continue;
+                    int index = X + dx + Game.BoardSize.X * (Y + dy);
+                    logger.Debug("dx: {}, dy: {}, index: {}", dx, dy, index);
+                    if (Board[index].DistanceToClosestPiece < bestDistance)
+                    {
+                        bestDistance = Board[index].DistanceToClosestPiece;
+                        bestDx = dx;
+                        bestDy = dy;
+                    }
+                }
+            if (bestDy == -1)
+                return Consts.Up;
+            if (bestDy == 1)
+                return Consts.Down;
+            if (bestDx == -1)
+                return Consts.Left;
+            if (bestDx == 1)
+                return Consts.Right;
+            return Consts.Up;
+        }
+        private string PickRandomMovementDirection()
+        {
+            string[] directions = { Consts.Up, Consts.Down, Consts.Left, Consts.Right };
             return directions[new Random().Next(0, 4)];
         }
 
-        private int GetBoardIndex() => X + Game.BoardSize.X * Y;
+        private string PickSweepingGoalAreaDirection()
+        {
+            int startX, startY, endX, endY, dy;
+            startX = 0;
+            endX = Game.BoardSize.X - 1;
+            if (GoalAreaDirection == Consts.Up)
+            {
+                startY = Game.BoardSize.GoalArea - 1;
+                endY = -1;
+                dy = -1;
+            }
+            else
+            {
+                startY = Game.BoardSize.GoalArea + Game.BoardSize.TaskArea;
+                endY = (Game.BoardSize.GoalArea * 2) + Game.BoardSize.TaskArea;
+                dy = 1;
+            }
+
+            // Find first tile with no info, first searching on horizontal axis *closest* to task area.
+            // Then change axis moving outward (towards horizontal edge of the board) each outer loop iteration
+            for (int y = startY; y != endY; y += dy)
+                for (int x = startX; x <= endX; x++)
+                    if (Board[x + y * Game.BoardSize.X].GoalStatus == GoalStatusEnum.NoInfo)
+                    {
+                        if (X - x > 0)
+                            return Consts.Left;
+                        if (X - x < 0)
+                            return Consts.Right;
+                        if (Y - y > 0)
+                            return Consts.Up;
+                        else
+                            return Consts.Down;
+                    }
+            throw new InvalidOperationException("There seems to be no goal tiles left");
+        }
+
+        private int GetCurrentBoardIndex() => X + Game.BoardSize.X * Y;
         private bool IsInGoalArea() => (Y < Game.BoardSize.GoalArea || Y >= Game.BoardSize.GoalArea + Game.BoardSize.TaskArea);
         public bool Discover()
         {
@@ -218,7 +287,7 @@ namespace Player
 
             foreach (var tileDTO in received.Payload.Tiles)
             {
-                Board[tileDTO.X + Game.BoardSize.X * tileDTO.Y] = AutoMapper.Mapper.Map<Tile>(tileDTO);
+                AutoMapper.Mapper.Map<TileDiscoveryDTO, Tile>(tileDTO, Board[tileDTO.X + Game.BoardSize.X * tileDTO.Y]);
                 Board[tileDTO.X + Game.BoardSize.X * tileDTO.Y].Timestamp = received.Payload.Timestamp;
                 if (tileDTO.Piece)
                 {
@@ -247,7 +316,7 @@ namespace Player
             }
             if (receivedRaw.Type == Consts.GameFinished)
                 GameAlreadyFinished(receivedSerialized);
-            
+
 
             throw new InvalidTypeReceivedException($"Expected: ACTION_VALID/INVALID Received: {receivedRaw.Type}");
         }
@@ -282,16 +351,17 @@ namespace Player
                 throw new WrongPayloadException();
             foreach (var playerInfo in received.Payload.PlayerPositions)
             {
+                // TODO: Remove all (outdated) PlayerId attributes from board tiles
                 Board[playerInfo.X + Game.BoardSize.X * playerInfo.Y].PlayerId = playerInfo.PlayerId;
                 Board[playerInfo.X + Game.BoardSize.X * playerInfo.Y].Timestamp = received.Payload.Timestamp;
                 if (playerInfo.PlayerId == Id)
                 {
                     X = playerInfo.X;
                     Y = playerInfo.Y;
-                    Board[GetBoardIndex()].DistanceToClosestPiece = received.Payload.CurrentPositionDistanceToClosestPiece;
+                    Board[GetCurrentBoardIndex()].DistanceToClosestPiece = received.Payload.CurrentPositionDistanceToClosestPiece;
                     gotOwnInfo = true;
-                    if (Board[GetBoardIndex()].Piece == null && Board[GetBoardIndex()].DistanceToClosestPiece == 0)
-                        Board[GetBoardIndex()].Piece = new Piece();
+                    if (Board[GetCurrentBoardIndex()].Piece == null && Board[GetCurrentBoardIndex()].DistanceToClosestPiece == 0)
+                        Board[GetCurrentBoardIndex()].Piece = new Piece();
                 }
             }
 
@@ -306,17 +376,17 @@ namespace Player
             int newY = Y;
             switch (direction)
             {
-                case "up":
+                case Consts.Up:
                     newY -= 1;
                     break;
-                case "down":
+                case Consts.Down:
                     newY += 1;
                     break;
-                case "left":
-                    newX += 1;
-                    break;
-                case "right":
+                case Consts.Left:
                     newX -= 1;
+                    break;
+                case Consts.Right:
+                    newX += 1;
                     break;
                 default:
                     return false;
@@ -335,6 +405,8 @@ namespace Player
             _communicator.Send(messageSerialized);
 
             if (!GetActionStatus()) { return false; }
+
+            logger.Debug("Moving {}", direction);
 
             var receivedSerialized = _communicator.Receive();
             var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
@@ -415,14 +487,14 @@ namespace Player
             if (received.Payload == null)
                 throw new NoPayloadException();
 
-            Board[X + Game.BoardSize.X * Y].Piece = HeldPiece;
+            Board[GetCurrentBoardIndex()].Piece = HeldPiece;
             HeldPiece = null;
             if (!received.Payload.DidCompleteGoal.HasValue
                  && (Y < Game.BoardSize.GoalArea
                 || Y >= Game.BoardSize.GoalArea + Game.BoardSize.TaskArea))
             {
-                Board[X + Game.BoardSize.X * Y].Piece.HasInfo = true;
-                Board[X + Game.BoardSize.X * Y].Piece.IsSham = true;
+                Board[GetCurrentBoardIndex()].Piece.HasInfo = true;
+                Board[GetCurrentBoardIndex()].Piece.IsSham = true;
                 logger.Info("The piece was a sham!");
                 return (true, PlaceDownPieceResult.Sham);
             }
@@ -434,11 +506,13 @@ namespace Player
             else if (!received.Payload.DidCompleteGoal.Value)
             {
                 logger.Info("This tile is not a goal tile");
+                Board[GetCurrentBoardIndex()].GoalStatus = GoalStatusEnum.NoGoal;
                 return (true, PlaceDownPieceResult.NoScore);
             }
             else
             {
                 logger.Info($"Got 1 point for placing a piece @ {X} {Y}!");
+                Board[GetCurrentBoardIndex()].GoalStatus = GoalStatusEnum.CompletedGoal;
                 return (true, PlaceDownPieceResult.Score);
             }
 

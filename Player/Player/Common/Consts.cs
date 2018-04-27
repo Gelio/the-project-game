@@ -25,6 +25,11 @@ namespace Player.Common
         public static string PickupPieceResponse = "PICK_UP_PIECE_RESPONSE";
         public static string PlaceDownPieceRequest = "PLACE_DOWN_PIECE_REQUEST";
         public static string PlaceDownPieceResponse = "PLACE_DOWN_PIECE_RESPONSE";
+
+        public const string Up = "up";
+        public const string Down = "down";
+        public const string Left = "left";
+        public const string Right = "right";
     }
 }
 
