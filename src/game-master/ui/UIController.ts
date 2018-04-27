@@ -1,8 +1,14 @@
 import * as blessed from 'blessed';
 
 import { Service } from '../../interfaces/Service';
+
 import { config } from '../config';
+import { GameMasterOptions } from '../GameMaster';
+import { PlayersContainer } from '../PlayersContainer';
+
 import { Board } from '../models/Board';
+import { Scoreboard } from '../models/Scoreboard';
+
 import { BoardFormatter } from './BoardFormatter';
 
 export class UIController implements Service {
@@ -83,5 +89,42 @@ export class UIController implements Service {
     }
 
     this.render();
+  }
+
+  public updateGameInfo(
+    currentRound: number,
+    gameMasterOptions: GameMasterOptions,
+    board: Board,
+    scoreboard: Scoreboard,
+    playersContainer: PlayersContainer
+  ) {
+    // TODO: add tests
+
+    this.infoBox.setContent(`${config.uiLabelStyle}Info{/}`);
+
+    this.infoBox.pushLine(`Round: ${currentRound} / ${gameMasterOptions.gamesLimit}`);
+    this.infoBox.pushLine(
+      `{blue-fg}Blue{/} team score: ${scoreboard.team1Score} / ${scoreboard.scoreLimit}`
+    );
+    this.infoBox.pushLine(
+      `{red-fg}Red{/} team score: ${scoreboard.team2Score} / ${scoreboard.scoreLimit}`
+    );
+
+    const blueTeamPlayers = playersContainer.getPlayersFromTeam(1).length;
+    const blueTeamCapacity = gameMasterOptions.teamSizes[1];
+    this.infoBox.pushLine('');
+    this.infoBox.pushLine(
+      `{blue-fg}Blue{/} team players: ${blueTeamPlayers} / ${blueTeamCapacity}`
+    );
+    const redTeamPlayers = playersContainer.getPlayersFromTeam(2).length;
+    const redTeamCapacity = gameMasterOptions.teamSizes[2];
+    this.infoBox.pushLine(`{red-fg}Red{/} team players: ${redTeamPlayers} / ${redTeamCapacity}`);
+
+    this.infoBox.pushLine('');
+    const pickedUpPiecesCount = board.pieces.filter(piece => piece.isPickedUp).length;
+    const shamCount = board.pieces.filter(piece => piece.isSham).length;
+    this.infoBox.pushLine(
+      `Pieces: ${board.pieces.length} (${pickedUpPiecesCount} picked up, ${shamCount} shams)`
+    );
   }
 }
