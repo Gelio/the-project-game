@@ -10,6 +10,10 @@ namespace Player
 
         public static void InitializeMapper()
         {
+            /**
+            NOTE: should the `isInitialized` flag be checked so Mapper is not initialized multiple
+            times?
+             */
             isInitialized = true;
             AutoMapper.Mapper.Initialize(cfg =>
             {

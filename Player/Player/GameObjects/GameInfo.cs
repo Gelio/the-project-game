@@ -18,6 +18,7 @@ namespace Player.GameObjects
         public override string ToString()
         {
             var sb = new StringBuilder();
+            // NOTE: `AppendLine` may be used instead of `Append` with `\n` at the end
             sb.Append($"Title:       {Name}\n");
             sb.Append($"Description: {Description}\n");
             sb.Append($"Team sizes:  {TeamSizes.Select(x => x.Value.ToString()).Aggregate((s1, s2) => s1 + ", " + s2)}\n");

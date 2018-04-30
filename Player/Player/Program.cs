@@ -28,9 +28,23 @@ namespace Player
 
             if (args[2] == "-l")
             {
+                /**
+REFACTOR: split `Main` into multiple methods
+
+All the code is in one large function. Please split it into multiple ones, e.g.:
+                * list games
+                * parse config
+                * play
+                  */
                 IList<GameInfo> gamesList;
                 try
                 {
+                    /**
+                    REFACTOR: consider implementing `IDisposable` for `Communicator`
+
+                    This way `using` can be used which would make sure `Disconnect` is called.
+                    */
+
                     communicator.Connect();
                     gameService = new GameService(communicator);
                     gamesList = gameService.GetGamesList();
@@ -102,8 +116,16 @@ namespace Player
                 return;
             }
 
+            // FIXME: GameName is accessed in the `try` block above
             configObject.GameName = args[2];
 
+            /**
+            REFACTOR: again, IDisposable on `Communicator` would be useful so you can use the `using`
+            block.
+
+            Moreover, `Connect` is called on the `communicator`, whereas later is is the
+            `player` who gets the `Disconnect` call. I believe it should be made consistent.
+             */
             communicator.Connect();  //FIXME: Should be wrapped in try-catch!!
             gameService = new GameService(communicator);
 
