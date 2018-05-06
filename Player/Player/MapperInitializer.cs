@@ -19,6 +19,11 @@ namespace Player
                 cfg.CreateMap<TileDiscoveryDTO, Tile>()
                     .ForMember(tile => tile.Piece, opt => opt.Ignore());
                 cfg.CreateMap<PlayerPositionDTO, PlayerPosition>();
+                // TODO: check if it works
+                cfg.CreateMap<TileCommunicationDTO, Tile>()
+                    .ForMember(tile => tile.Piece, opt => opt.MapFrom(a => a.Piece))
+                    .ReverseMap()
+                    .ForMember(x => x.Piece, m => m.MapFrom(a => a.Piece));
             });
         }
     }
