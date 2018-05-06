@@ -517,6 +517,7 @@ namespace Player
             }
 
         }
+
         public enum PlaceDownPieceResult
         {
             Sham = -1,
@@ -534,6 +535,190 @@ namespace Player
                 $"Congratulations {winnerTeam}! WOOP WOOP!\n";
 
             throw new GameAlreadyFinishedException(message);
+        }
+
+        /// <summary>
+        /// Sent to another player to initiate the communication. After receiving REQUEST_SENT from GM can do sth else.
+        /// </summary>
+        /// <param name="recipientId"></param>
+        /// <returns>True if received REQUEST_SENT message, False in case of ACTION_INVALID message</returns>
+        public bool SendCommunicationRequest(string recipientId)
+        {
+            var message = new Message<CommunicationPayload>()
+            {
+                Type = Consts.CommunicationRequest,
+                SenderId = Id,
+                Payload = new CommunicationPayload
+                {
+                    TargetPlayerId = recipientId
+                }
+            };
+
+            var messageSerialized = JsonConvert.SerializeObject(message);
+            _communicator.Send(messageSerialized);
+
+            if (!GetActionStatus()) { return false; }
+
+            var receivedSerialized = _communicator.Receive();
+            var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
+
+            if (receivedRaw.Type == Consts.GameFinished)
+                GameAlreadyFinished(receivedSerialized);
+
+            if (receivedRaw.Type != Consts.RequestSent)
+                throw new InvalidTypeReceivedException($"Expected: {Consts.RequestSent} Received: {receivedRaw.Type}");
+
+            return true;
+        }
+
+        /// <summary>
+        /// Receive message from another player who wants to communicate. After that, send the response.
+        /// </summary>
+        /// <returns>True if response was sent successfully, False if not</returns>
+        public bool ReceiveCommunicationRequestMessage()
+        {
+            var receivedSerialized = _communicator.Receive();
+            var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
+
+            if (receivedRaw.Type == Consts.GameFinished)
+                GameAlreadyFinished(receivedSerialized);
+
+            if (receivedRaw.Type != Consts.CommunicationRequest)
+                throw new InvalidTypeReceivedException($"Expected: {Consts.CommunicationRequest} Received: {receivedRaw.Type}");
+
+            var received = JsonConvert.DeserializeObject<Message<CommunicationPayload>>(receivedSerialized);
+            if (received.Payload == null)
+                throw new NoPayloadException();
+
+            string senderId = received.Payload.SenderPlayerId;
+
+            return SendCommunicationResponse(senderId);
+        }
+
+        public bool SendCommunicationResponse(string senderId)
+        {
+            // here logic for the will of responding to others - that's why it is separated from the previous method for now
+            var r = new Random();
+            int willThePoorGuyGetDataFromMe = r.Next(0, 1);
+
+            if (senderId == LeaderId || willThePoorGuyGetDataFromMe == 1)
+            {
+                return AcceptCommunication(senderId);
+            }
+            else
+            {
+                return RejectCommunication(senderId);
+            }
+        }
+
+        /// <summary>
+        /// Send the information you have about the board to the player who requested communication with you.
+        /// </summary>
+        /// <param name="recipientId"></param>
+        /// <returns></returns>
+        public bool AcceptCommunication(string recipientId)
+        {
+            // haven't checked how the mapping works, therefore it's written how it is now
+            List<TileCommunicationDTO> boardToSend = new List<TileCommunicationDTO>();
+
+            for (int i = 0; i < Game.BoardSize.X * (Game.BoardSize.GoalArea * 2 + Game.BoardSize.TaskArea); i++)
+            {
+                boardToSend.Add(new TileCommunicationDTO());
+                AutoMapper.Mapper.Map<Tile, TileCommunicationDTO>(Board[i], boardToSend[i]);
+            }
+
+            var message = new Message<CommunicationResponsePayload>()
+            {
+                Type = Consts.CommunicationResponse,
+                SenderId = Consts.GameMasterId,
+                Payload = new CommunicationResponsePayload
+                {
+                    TargetPlayerId = recipientId,
+                    Accepted = true,
+                    Board = boardToSend
+                }
+            };
+
+            var messageSerialized = JsonConvert.SerializeObject(message);
+            _communicator.Send(messageSerialized);
+
+            if (!GetActionStatus()) { return false; }
+
+            var receivedSerialized = _communicator.Receive();
+            var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
+
+            if (receivedRaw.Type == Consts.GameFinished)
+                GameAlreadyFinished(receivedSerialized);
+
+            if (receivedRaw.Type != Consts.RequestSent)
+                throw new InvalidTypeReceivedException($"Expected: {Consts.RequestSent} Received: {receivedRaw.Type}");
+
+            return true;
+        }
+
+        /// <summary>
+        /// U ain't got no time to respond to some weak players
+        /// </summary>
+        /// <param name="recipientId"></param>
+        /// <returns></returns>
+        public bool RejectCommunication(string recipientId)
+        {
+            var message = new Message<CommunicationResponsePayload>()
+            {
+                Type = Consts.CommunicationResponse,
+                SenderId = Id,
+                Payload = new CommunicationResponsePayload
+                {
+                    TargetPlayerId = recipientId,
+                    Accepted = false,
+                }
+            };
+
+            var messageSerialized = JsonConvert.SerializeObject(message);
+            _communicator.Send(messageSerialized);
+
+            if (!GetActionStatus()) { return false; }
+
+            var receivedSerialized = _communicator.Receive();
+            var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
+
+            if (receivedRaw.Type == Consts.GameFinished)
+                GameAlreadyFinished(receivedSerialized);
+
+            if (receivedRaw.Type != Consts.RequestSent)
+                throw new InvalidTypeReceivedException($"Expected: {Consts.RequestSent} Received: {receivedRaw.Type}");
+
+            return true;
+        }
+
+        /// <summary>
+        /// Receive the response from another player. If the answer was positive, get data from the payload
+        /// </summary>
+        public void ReceiveCommunicationResponse()
+        {
+            var receivedSerialized = _communicator.Receive();
+            var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
+
+            if (receivedRaw.Type == Consts.GameFinished)
+                GameAlreadyFinished(receivedSerialized);
+
+            if (receivedRaw.Type != Consts.CommunicationResponse)
+                throw new InvalidTypeReceivedException($"Expected: {Consts.CommunicationResponse} Received: {receivedRaw.Type}");
+
+            var received = JsonConvert.DeserializeObject<Message<CommunicationResponsePayload>>(receivedSerialized);
+            if (received.Payload == null)
+                throw new NoPayloadException();
+
+            if (received.Payload.Accepted)
+            {
+                for (int i = 0; i < received.Payload.Board.Count; i++)
+                {
+                    if (received.Payload.Board[i].TimeStamp > Board[i].Timestamp)
+                    {
+                        AutoMapper.Mapper.Map<TileCommunicationDTO, Tile>(received.Payload.Board[i], Board[i]);
+                    }
+                }
+            }
         }
     }
 }
