@@ -10,6 +10,8 @@ import {
   RejectedCommunicationResponseToSender
 } from '../../interfaces/responses/CommunicationResponse';
 
+import { Player } from '../Player';
+import { PlayersContainer } from '../PlayersContainer';
 import { ValidMessageResult } from '../ProcessMessageResult';
 import { SendMessageFn } from '../SendMessageFn';
 
@@ -49,13 +51,20 @@ function createResponseFromRecipient(
 }
 
 describe('[GM] handleCommunicationResponse', () => {
+  let sender: Player;
   let actionDelays: ActionDelays;
   let logger: LoggerInstance;
   let communicationRequestsStore: CommunicationRequestsStore;
 
   let sendMessage: SendMessageFn;
 
+  let asker: Player;
+  let playersContainer: PlayersContainer;
+
   beforeEach(() => {
+    sender = new Player();
+    sender.isLeader = false;
+
     actionDelays = <any>{
       communicationAccept: 500
     };
@@ -68,6 +77,12 @@ describe('[GM] handleCommunicationResponse', () => {
     sendMessage = jest.fn();
 
     communicationRequestsStore = new CommunicationRequestsStore();
+
+    asker = new Player();
+    asker.playerId = 'p1';
+    asker.isLeader = false;
+    playersContainer = new PlayersContainer();
+    playersContainer.addPlayer(asker);
   });
 
   function executeHandleCommunicationResponse(
@@ -82,14 +97,14 @@ describe('[GM] handleCommunicationResponse', () => {
       communicationRequestsStore,
       {
         board: <any>null,
-        playersContainer: <any>{},
+        playersContainer: playersContainer,
         actionDelays: <any>actionDelays,
         logger,
         scoreboard: <any>null,
         sendMessage,
         onPointsLimitReached: jest.fn()
       },
-      <any>null,
+      sender,
       message
     );
   }
@@ -150,6 +165,36 @@ describe('[GM] handleCommunicationResponse', () => {
 
       expect(sendMessage).toHaveBeenCalledTimes(1);
       expect(sendMessage).toHaveBeenCalledWith(responseToAskingPlayer);
+    });
+
+    it('should mark communication response as invalid when asker is the Leader', () => {
+      jest.useFakeTimers();
+
+      communicationRequestsStore.addPendingRequest('p1', 'p2');
+      asker.isLeader = true;
+
+      const result: ValidMessageResult<
+        ResponseSentMessage
+      > = <any>executeHandleCommunicationResponse('p1', 'p2', false, <any>null);
+
+      expect(result.valid).toBe(false);
+
+      jest.useRealTimers();
+    });
+
+    it('should mark communication response as invalid when sender is the Leader', () => {
+      jest.useFakeTimers();
+
+      communicationRequestsStore.addPendingRequest('p1', 'p2');
+      sender.isLeader = true;
+
+      const result: ValidMessageResult<
+        ResponseSentMessage
+      > = <any>executeHandleCommunicationResponse('p1', 'p2', false, <any>null);
+
+      expect(result.valid).toBe(false);
+
+      jest.useRealTimers();
     });
   });
 
