@@ -47,11 +47,11 @@ export class Game {
   public readonly scoreboard: Scoreboard;
 
   private readonly logger: LoggerInstance;
-  private readonly communicationRequestsStore: CommunicationRequestsStore;
   private readonly periodicPieceGenerator: PeriodicPieceGenerator;
   private readonly playerMessageHandler: PlayerMessageHandler;
   private readonly communicator: Communicator;
   private readonly uiController: UIController;
+  private readonly updateUI: Function;
   private _state = GameState.Registered;
 
   public get state() {
@@ -64,7 +64,8 @@ export class Game {
     uiController: UIController,
     communicator: Communicator,
     periodicPieceGeneratorFactory: PeriodicPieceGeneratorFactory,
-    onPointsLimitReached: Function
+    onPointsLimitReached: Function,
+    updateUI: Function
   ) {
     this.definition = gameDefinition;
     this.board = new Board(this.definition.boardSize, this.definition.goalLimit);
@@ -73,6 +74,7 @@ export class Game {
     this.uiController = uiController;
     this.playersContainer = new PlayersContainer();
     this.communicator = communicator;
+    this.updateUI = updateUI;
     this.periodicPieceGenerator = periodicPieceGeneratorFactory(this.board);
 
     this.playerMessageHandler = new PlayerMessageHandler(
@@ -85,7 +87,7 @@ export class Game {
         sendMessage: this.sendIngameMessage.bind(this),
         onPointsLimitReached
       },
-      this.communicationRequestsStore
+      new CommunicationRequestsStore()
     );
   }
 
@@ -134,7 +136,7 @@ export class Game {
       }
     };
 
-    this.uiController.updateBoard(this.board);
+    this.updateUI();
     this.sendIngameMessage(actionValidMessage);
     this.sendIngameMessage(await result.responseMessage);
   }
@@ -211,7 +213,7 @@ export class Game {
     }
     this.playersContainer.addPlayer(player);
     this.board.addPlayer(player);
-    this.updateBoard();
+    this.updateUI();
   }
 
   public async register() {
@@ -304,10 +306,6 @@ export class Game {
     newPlayer.isConnected = true;
 
     this.addPlayer(newPlayer);
-  }
-
-  private updateBoard() {
-    this.uiController.updateBoard(this.board);
   }
 
   private sendIngameMessage(message: Message<any>): void {

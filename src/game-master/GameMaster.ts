@@ -59,7 +59,7 @@ export class GameMaster implements Service {
   private logger: LoggerInstance;
 
   private failedRegistrations = 0;
-  private roundsPlayed = 0;
+  private currentRound = 0;
 
   private readonly messageHandlers: { [type: string]: Function } = {
     PLAYER_HELLO: this.handlePlayerHelloMessage,
@@ -203,13 +203,12 @@ export class GameMaster implements Service {
     this.game.stop();
     await this.unregisterGame();
 
-    this.roundsPlayed++;
-    this.logger.info(`Round ${this.roundsPlayed} finished`);
+    this.logger.info(`Round ${this.currentRound} finished`);
     this.logger.info(
       `Score (team1:team2): ${this.game.scoreboard.team1Score}:${this.game.scoreboard.team2Score}`
     );
 
-    if (this.roundsPlayed < this.options.gamesLimit) {
+    if (this.currentRound < this.options.gamesLimit) {
       this.createNewGame();
       await this.registerGame();
     } else {
@@ -233,9 +232,11 @@ export class GameMaster implements Service {
       this.uiController,
       this.communicator,
       createPeriodicPieceGenerator(periodicPieceGeneratorOptions, this.logger),
-      this.onPointsLimitReached.bind(this)
+      this.onPointsLimitReached.bind(this),
+      this.updateUI.bind(this)
     );
-    this.uiController.updateBoard(this.game.board);
+    this.currentRound++;
+    this.updateUI();
     this.logger.verbose('New game created');
   }
 
@@ -296,5 +297,16 @@ export class GameMaster implements Service {
       this.logger.error(error.message);
       await this.destroy();
     }
+  }
+
+  private updateUI() {
+    this.uiController.updateBoard(this.game.board);
+    this.uiController.updateGameInfo(
+      this.currentRound,
+      this.options,
+      this.game.board,
+      this.game.scoreboard,
+      this.game.playersContainer
+    );
   }
 }
