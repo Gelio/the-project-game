@@ -15,18 +15,21 @@ namespace Player
 {
     public class MessageProvider
     {
-        private List<Message<CommunicationPayload>> _communicationRequests;
-        private List<Message<CommunicationResponsePayload>> _communicationResponses;
+        private Queue<Message<CommunicationPayload>> _communicationRequests;
+        private Queue<Message<CommunicationResponsePayload>> _communicationResponses;
         private ICommunicator _communicator;
 
         public MessageProvider(ICommunicator communicator)
         {
-            _communicationRequests = new List<Message<CommunicationPayload>>();
-            _communicationResponses = new List<Message<CommunicationResponsePayload>>();
+            _communicationRequests = new Queue<Message<CommunicationPayload>>();
+            _communicationResponses = new Queue<Message<CommunicationResponsePayload>>();
             _communicator = communicator;
         }
 
-
+        public bool HasPendingRequests => _communicationRequests.Count > 0;
+        public bool HasPendingResponses => _communicationResponses.Count > 0;
+        public Message<CommunicationPayload> GetPendingRequest() => _communicationRequests.Dequeue();
+        public Message<CommunicationResponsePayload> GetPendingResponse() => _communicationResponses.Dequeue();
         public Message<P> Receive<P>() where P : IPayload, new()
         {
             CheckConnection();
@@ -51,12 +54,14 @@ namespace Player
                     throw new GameAlreadyFinishedException();
                 if (message.Type == Consts.CommunicationRequest)
                 {
-                    _communicationRequests.Add(JsonConvert.DeserializeObject<Message<CommunicationPayload>>(serializedMessage));
+                    _communicationRequests.Enqueue(JsonConvert.DeserializeObject<Message<CommunicationPayload>>(serializedMessage));
                     continue;
                 }
                 else if (message.Type == Consts.CommunicationResponse)
                 {
-                    _communicationResponses.Add(JsonConvert.DeserializeObject<Message<CommunicationResponsePayload>>(serializedMessage));
+                    var response = JsonConvert.DeserializeObject<Message<CommunicationResponsePayload>>(serializedMessage);
+                    if (response.Payload.Accepted)
+                        _communicationResponses.Enqueue(response);
                     continue;
                 }
                 else
