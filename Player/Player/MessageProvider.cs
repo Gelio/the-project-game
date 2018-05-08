@@ -13,7 +13,7 @@ using Player.Messages.Responses;
 
 namespace Player
 {
-    public class MessageProvider
+    public class MessageProvider : IMessageProvider
     {
         private Queue<Message<CommunicationPayload>> _communicationRequests;
         private Queue<Message<CommunicationResponsePayload>> _communicationResponses;
