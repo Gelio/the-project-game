@@ -1,11 +1,12 @@
-using Newtonsoft.Json;
-using Player.GameObjects;
-using Player.Interfaces;
-using Player.Messages.Responses;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Player.GameObjects;
+using Player.Interfaces;
+using Player.Messages.Requests;
+using Player.Messages.Responses;
 
 namespace Player
 {
@@ -25,7 +26,7 @@ namespace Player
                 _comm.Connect();
             }
 
-            var message = new Message
+            var message = new Message<ListGamesPayload>
             {
                 Type = Common.Consts.ListGamesRequest,
                 SenderId = Common.Consts.UnregisteredPlayerId

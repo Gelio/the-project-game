@@ -4,15 +4,11 @@ using Player.Interfaces;
 
 namespace Player.Messages.Requests
 {
-    public class MovePayload : IPayload
+    public class ListGamesPayload : IPayload
     {
-        [JsonProperty("direction")]
-        public string Direction;
-
-
         public string PayloadType()
         {
-            return Common.Consts.MoveRequest;
+            return Common.Consts.ListGamesRequest;
         }
     }
 }

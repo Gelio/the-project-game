@@ -8,5 +8,9 @@ namespace Player.Messages.Responses
     public class ActionInvalidPayload : IPayload
     {
         public string Reason;
+        public string PayloadType()
+        {
+            return Common.Consts.ActionInvalid;
+        }
     }
 }
