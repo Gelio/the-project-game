@@ -100,8 +100,8 @@ function handleAcceptedResponse(
 
 export function handleCommunicationResponse(
   communicationRequestsStore: CommunicationRequestsStore,
-  { actionDelays, sendMessage }: MessageHandlerDependencies,
-  _sender: Player,
+  { actionDelays, sendMessage, playersContainer }: MessageHandlerDependencies,
+  sender: Player,
   communicationResponse: CommunicationResponseFromRecipient
 ): ProcessMessageResult<ResponseSentMessage> {
   if (
@@ -126,6 +126,27 @@ export function handleCommunicationResponse(
       communicationRequestsStore
     );
   } else {
+    if (sender.isLeader) {
+      return {
+        valid: false,
+        reason: 'Leader can`t refuse communication'
+      };
+    }
+
+    const recipient = playersContainer.getPlayerById(communicationResponse.payload.targetPlayerId);
+    if (!recipient) {
+      return {
+        valid: false,
+        reason: 'Recipient id is not correct'
+      };
+    }
+    if (recipient.isLeader) {
+      return {
+        valid: false,
+        reason: 'Player can`t refuse communication with Leader'
+      };
+    }
+
     return handleRejectedResponse(
       <RejectedCommunicationResponseFromRecipient>communicationResponse,
       sendMessage,
