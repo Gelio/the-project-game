@@ -31,10 +31,10 @@ namespace Player
         // TODO: Remove ICommunicator dependency
         private ICommunicator _communicator;
         private IGameService _gameService;
-        private MessageProvider _messageProvider;
+        private IMessageProvider _messageProvider;
         private PlayerConfig _playerConfig;
 
-        public Player(ICommunicator communicator, PlayerConfig playerConfig, IGameService gameService, MessageProvider messageProvider)
+        public Player(ICommunicator communicator, PlayerConfig playerConfig, IGameService gameService, IMessageProvider messageProvider)
         {
             _communicator = communicator;
             _gameService = gameService;

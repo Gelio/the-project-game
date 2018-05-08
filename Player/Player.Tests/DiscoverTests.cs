@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
-using NUnit.Framework;
-using Moq;
-using Player.Common;
-using Player.Interfaces;
-using Newtonsoft.Json;
-using Player.Messages.Responses;
-using Player.Messages.DTO;
-using Player.GameObjects;
 using System.Linq;
+using Moq;
+using Newtonsoft.Json;
+using NUnit.Framework;
+using Player.Common;
+using Player.GameObjects;
+using Player.Interfaces;
+using Player.Messages.DTO;
+using Player.Messages.Responses;
 
 namespace Player.Tests
 {
@@ -20,11 +20,13 @@ namespace Player.Tests
         GameInfo _game;
         Mock<ICommunicator> _communicator;
         Mock<IGameService> _gameService;
+        Mock<IMessageProvider> _messageProvider;
 
         [SetUp]
         public void Setup()
         {
             _communicator = new Mock<ICommunicator>();
+            _messageProvider = new Mock<IMessageProvider>();
             _playerConfig = new PlayerConfig
             {
                 AskLevel = 10,
@@ -49,42 +51,10 @@ namespace Player.Tests
         }
 
         [Test]
-        public void DiscoverInvalidMessageType()
-        {
-            var messageReceived = new Message<DiscoveryResponsePayload>
-            {
-                SenderId = Common.Consts.GameMasterId,
-                RecipientId = _assignedPlayerId,
-                Type = Consts.EMPTY_LIST_GAMES_RESPONSE
-            };
-            var queue = new Queue<string>(new[]
-            {
-                Consts.ACTION_VALID_RESPONSE,
-                JsonConvert.SerializeObject(messageReceived)
-            });
-            _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
-
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object);
-
-            Assert.Throws<InvalidTypeReceivedException>(() => player.Discover());
-        }
-
-        [Test]
         public void DiscoverActionInvalid()
         {
-            var messageReceived = new Message<ActionInvalidPayload>
-            {
-                Type = Common.Consts.ActionInvalid,
-                SenderId = Common.Consts.GameMasterId,
-                RecipientId = _assignedPlayerId,
-                Payload = new ActionInvalidPayload
-                {
-                    Reason = "In order to hide take dis cover"
-                }
-            };
-            _communicator.Setup(x => x.Receive()).Returns(JsonConvert.SerializeObject(messageReceived));
-
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object);
+            _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Throws(new ActionInvalidException());
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object);
 
             var result = player.Discover();
 
@@ -125,7 +95,7 @@ namespace Player.Tests
                 tile1, tile2, tile3
             };
 
-            var messageReceived = new Message<DiscoveryResponsePayload>
+            var msg = new Message<DiscoveryResponsePayload>
             {
                 Type = Common.Consts.DiscoveryResponse,
                 SenderId = Common.Consts.GameMasterId,
@@ -137,15 +107,11 @@ namespace Player.Tests
                 }
             };
 
-            var queue = new Queue<string>(new[]
-            {
-                Consts.ACTION_VALID_RESPONSE,
-                JsonConvert.SerializeObject(messageReceived)
-            });
-            _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
+            _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Returns(new Message<ActionValidPayload>());
+            _messageProvider.Setup(x => x.Receive<DiscoveryResponsePayload>()).Returns(msg);
 
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object)
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
             {
                 Id = _assignedPlayerId,
                 X = assignedX,
@@ -163,7 +129,7 @@ namespace Player.Tests
             foreach (var t in tiles)
             {
                 Assert.That(player.Board[t.X + _game.BoardSize.X * t.Y].DistanceToClosestPiece, Is.EqualTo(t.DistanceToClosestPiece));
-                Assert.That(player.Board[t.X + _game.BoardSize.X * t.Y].Timestamp, Is.EqualTo(messageReceived.Payload.Timestamp));
+                Assert.That(player.Board[t.X + _game.BoardSize.X * t.Y].Timestamp, Is.EqualTo(msg.Payload.Timestamp));
                 if (t.Piece)
                 {
                     Assert.That(player.Board[t.X + _game.BoardSize.X * t.Y], Is.Not.Null);
@@ -179,21 +145,18 @@ namespace Player.Tests
         [Test]
         public void DiscoverNoPayload()
         {
-            var messageReceived = new Message
+            var msg = new Message<DiscoveryResponsePayload>
             {
                 Type = Common.Consts.DiscoveryResponse,
                 SenderId = Common.Consts.GameMasterId,
-                RecipientId = _assignedPlayerId
+                RecipientId = _assignedPlayerId,
+                Payload = null
             };
-            var queue = new Queue<string>(new[]
-            {
-                Consts.ACTION_VALID_RESPONSE,
-                JsonConvert.SerializeObject(messageReceived)
-            });
-            _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
 
+            _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Returns(new Message<ActionValidPayload>());
+            _messageProvider.Setup(x => x.Receive<DiscoveryResponsePayload>()).Returns(msg);
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object)
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
             {
                 Id = _assignedPlayerId,
             };
@@ -204,36 +167,10 @@ namespace Player.Tests
         [Test]
         public void DiscoverWrongPayload()
         {
-            var messageReceived = new Message<GameStartedPayload>
-            {
-                Type = Common.Consts.DiscoveryResponse,
-                SenderId = Common.Consts.GameMasterId,
-                RecipientId = _assignedPlayerId,
-                Payload = new GameStartedPayload
-                {
-                    TeamInfo = new Dictionary<int, TeamInfoDTO>()
-                    {
-                        {1, new TeamInfoDTO
-                        {
-                            LeaderId = _assignedPlayerId,
-                            Players = new List<string> { _assignedPlayerId, "b", "c", "d" }
-                        }},
-                        {2, new TeamInfoDTO
-                        {
-                            LeaderId = "h",
-                            Players = new List<string> { "e", "f", "g", "h" }
-                        }}
-                    }
-                }
-            };
-            var queue = new Queue<string>(new[]
-            {
-                Consts.ACTION_VALID_RESPONSE,
-                JsonConvert.SerializeObject(messageReceived)
-            });
-            _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
+            _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Returns(new Message<ActionValidPayload>());
+            _messageProvider.Setup(x => x.Receive<DiscoveryResponsePayload>()).Throws(new WrongPayloadException());
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object)
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
             {
                 Id = _assignedPlayerId,
                 Game = _game
@@ -250,9 +187,9 @@ namespace Player.Tests
         [Test]
         public void DiscoverGameAlreadyFinishedBeforeGettingActionStatus()
         {
-            _communicator.Setup(x => x.Receive()).Returns(Consts.GAME_FINISHED_RESPONSE);
+            _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Throws(new GameAlreadyFinishedException());
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object)
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
             {
                 Game = _game
             };
@@ -263,13 +200,10 @@ namespace Player.Tests
         [Test]
         public void DiscoverGameAlreadyFinishedAfterGettingActionStatus()
         {
-            var queue = new Queue<string>(new[]
-            {
-                Consts.ACTION_VALID_RESPONSE,
-                Consts.GAME_FINISHED_RESPONSE
-            });
-            _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object)
+            _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Returns(new Message<ActionValidPayload>());
+            _messageProvider.Setup(x => x.Receive<DiscoveryResponsePayload>()).Throws(new GameAlreadyFinishedException());
+
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
             {
             };
 
