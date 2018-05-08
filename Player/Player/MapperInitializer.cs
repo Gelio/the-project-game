@@ -1,6 +1,7 @@
+using System.Collections.Generic;
 using Player.GameObjects;
 using Player.Messages.DTO;
-using System.Collections.Generic;
+
 
 namespace Player
 {
@@ -19,11 +20,14 @@ namespace Player
                 cfg.CreateMap<TileDiscoveryDTO, Tile>()
                     .ForMember(tile => tile.Piece, opt => opt.Ignore());
                 cfg.CreateMap<PlayerPositionDTO, PlayerPosition>();
+
                 // TODO: check if it works
                 cfg.CreateMap<TileCommunicationDTO, Tile>()
-                    .ForMember(tile => tile.Piece, opt => opt.MapFrom(a => a.Piece))
-                    .ReverseMap()
-                    .ForMember(x => x.Piece, m => m.MapFrom(a => a.Piece));
+                    .ForMember(dest => dest.Piece, opt => opt.ResolveUsing(
+                        src => src.Piece == null ? new Piece { HasInfo = false } : new Piece { HasInfo = true, IsSham = src.Piece.IsSham, WasTested = src.Piece.WasTested }));
+                cfg.CreateMap<Tile, TileCommunicationDTO>()
+                    .ForMember(dest => dest.Piece, opt => opt.ResolveUsing(
+                        src => (src.Piece == null || src.Piece.HasInfo == false) ? null : new PieceDTO { IsSham = src.Piece.IsSham, WasTested = src.Piece.WasTested }));
             });
         }
     }

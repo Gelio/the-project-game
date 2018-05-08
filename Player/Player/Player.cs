@@ -112,38 +112,51 @@ namespace Player
             }
 
             TeamMembersIds = message.Payload.TeamInfo[_playerConfig.TeamNumber].Players;
+            TeamMembersIds.Remove(Id);
             LeaderId = message.Payload.TeamInfo[_playerConfig.TeamNumber].LeaderId;
             logger.Info("The game has started!");
         }
 
         public void Play()
         {
+            PrintBoard();
             while (true)
             {
+                Task.Delay(3000);
                 RefreshBoardState();
-                logger.Debug("Player's position: {} {}", X, Y);
-                if (HeldPiece != null)
-                {
-                    if (IsInGoalArea() && Board[GetCurrentBoardIndex()].GoalStatus == GoalStatusEnum.NoInfo)
-                    {
-                        logger.Info("Trying to place down piece");
-                        (var result, var resultEnum) = PlaceDownPiece();
-                    }
-                    else
-                        Move(PickSweepingGoalAreaDirection());
-                }
-                else if (Board[GetCurrentBoardIndex()].DistanceToClosestPiece == 0) // We stand on a piece
-                {
-                    logger.Info("Trying to pick up piece...");
-                    PickUpPiece();
-                    continue;
-                }
-                else // Find a piece
+                UpdateBoard();
+                if (_messageProvider.HasPendingRequests)
                 {
                     Discover();
-                    string direction = PickClosestPieceDirection();
-                    Move(direction);
+                    var senderId = _messageProvider.GetPendingRequest().Payload.SenderPlayerId;
+                    SendCommunicationResponse(senderId);
                 }
+                if (_playerConfig.IsLeader)
+                    SendCommunicationRequest(TeamMembersIds.FirstOrDefault());
+
+                // //logger.Debug("Player's position: {} {}", X, Y);
+                // if (HeldPiece != null)
+                // {
+                //     if (IsInGoalArea() && Board[GetCurrentBoardIndex()].GoalStatus == GoalStatusEnum.NoInfo)
+                //     {
+                //         logger.Info("Trying to place down piece");
+                //         (var result, var resultEnum) = PlaceDownPiece();
+                //     }
+                //     else
+                //         Move(PickSweepingGoalAreaDirection());
+                // }
+                // else if (Board[GetCurrentBoardIndex()].DistanceToClosestPiece == 0) // We stand on a piece
+                // {
+                //     logger.Info("Trying to pick up piece...");
+                //     PickUpPiece();
+                //     continue;
+                // }
+                // else // Find a piece
+                // {
+                //     Discover();
+                //     string direction = PickClosestPieceDirection();
+                //     Move(direction);
+                // }
             }
         }
 
@@ -440,7 +453,7 @@ namespace Player
         /// <returns>True if received REQUEST_SENT message, False in case of ACTION_INVALID message</returns>
         public bool SendCommunicationRequest(string recipientId)
         {
-            var message = new Message<CommunicationPayload>()
+            _messageProvider.SendMessage(new Message<IPayload>()
             {
                 Type = Consts.CommunicationRequest,
                 SenderId = Id,
@@ -448,47 +461,10 @@ namespace Player
                 {
                     TargetPlayerId = recipientId
                 }
-            };
-
-            var messageSerialized = JsonConvert.SerializeObject(message);
-            _communicator.Send(messageSerialized);
-
+            });
             if (!GetActionStatus()) { return false; }
-
-            var receivedSerialized = _communicator.Receive();
-            var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
-
-            if (receivedRaw.Type == Consts.GameFinished)
-                GameAlreadyFinished(receivedSerialized);
-
-            if (receivedRaw.Type != Consts.RequestSent)
-                throw new InvalidTypeReceivedException($"Expected: {Consts.RequestSent} Received: {receivedRaw.Type}");
-
+            _messageProvider.Receive<RequestSentPayload>();
             return true;
-        }
-
-        /// <summary>
-        /// Receive message from another player who wants to communicate. After that, send the response.
-        /// </summary>
-        /// <returns>True if response was sent successfully, False if not</returns>
-        public bool ReceiveCommunicationRequestMessage()
-        {
-            var receivedSerialized = _communicator.Receive();
-            var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
-
-            if (receivedRaw.Type == Consts.GameFinished)
-                GameAlreadyFinished(receivedSerialized);
-
-            if (receivedRaw.Type != Consts.CommunicationRequest)
-                throw new InvalidTypeReceivedException($"Expected: {Consts.CommunicationRequest} Received: {receivedRaw.Type}");
-
-            var received = JsonConvert.DeserializeObject<Message<CommunicationPayload>>(receivedSerialized);
-            if (received.Payload == null)
-                throw new NoPayloadException();
-
-            string senderId = received.Payload.SenderPlayerId;
-
-            return SendCommunicationResponse(senderId);
         }
 
         public bool SendCommunicationResponse(string senderId)
@@ -499,10 +475,12 @@ namespace Player
 
             if (senderId == LeaderId || willThePoorGuyGetDataFromMe == 1)
             {
+                logger.Info("Imma sending a response");
                 return AcceptCommunication(senderId);
             }
             else
             {
+                logger.Info("No cake for you");
                 return RejectCommunication(senderId);
             }
         }
@@ -519,36 +497,22 @@ namespace Player
 
             for (int i = 0; i < Game.BoardSize.X * (Game.BoardSize.GoalArea * 2 + Game.BoardSize.TaskArea); i++)
             {
-                boardToSend.Add(new TileCommunicationDTO());
-                AutoMapper.Mapper.Map<Tile, TileCommunicationDTO>(Board[i], boardToSend[i]);
+                boardToSend.Add(AutoMapper.Mapper.Map<Tile, TileCommunicationDTO>(Board[i]));
             }
 
-            var message = new Message<CommunicationResponsePayload>()
+            _messageProvider.SendMessage(new Message<IPayload>()
             {
                 Type = Consts.CommunicationResponse,
-                SenderId = Consts.GameMasterId,
+                SenderId = Id,
                 Payload = new CommunicationResponsePayload
                 {
                     TargetPlayerId = recipientId,
                     Accepted = true,
                     Board = boardToSend
                 }
-            };
-
-            var messageSerialized = JsonConvert.SerializeObject(message);
-            _communicator.Send(messageSerialized);
-
+            });
             if (!GetActionStatus()) { return false; }
-
-            var receivedSerialized = _communicator.Receive();
-            var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
-
-            if (receivedRaw.Type == Consts.GameFinished)
-                GameAlreadyFinished(receivedSerialized);
-
-            if (receivedRaw.Type != Consts.RequestSent)
-                throw new InvalidTypeReceivedException($"Expected: {Consts.RequestSent} Received: {receivedRaw.Type}");
-
+            _messageProvider.Receive<ResponseSentPayload>();
             return true;
         }
 
@@ -559,7 +523,7 @@ namespace Player
         /// <returns></returns>
         public bool RejectCommunication(string recipientId)
         {
-            var message = new Message<CommunicationResponsePayload>()
+            _messageProvider.SendMessage(new Message<IPayload>()
             {
                 Type = Consts.CommunicationResponse,
                 SenderId = Id,
@@ -568,52 +532,43 @@ namespace Player
                     TargetPlayerId = recipientId,
                     Accepted = false,
                 }
-            };
-
-            var messageSerialized = JsonConvert.SerializeObject(message);
-            _communicator.Send(messageSerialized);
-
+            });
             if (!GetActionStatus()) { return false; }
-
-            var receivedSerialized = _communicator.Receive();
-            var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
-
-            if (receivedRaw.Type == Consts.GameFinished)
-                GameAlreadyFinished(receivedSerialized);
-
-            if (receivedRaw.Type != Consts.RequestSent)
-                throw new InvalidTypeReceivedException($"Expected: {Consts.RequestSent} Received: {receivedRaw.Type}");
-
+            _messageProvider.Receive<ResponseSentPayload>();
             return true;
         }
 
         /// <summary>
         /// Receive the response from another player. If the answer was positive, get data from the payload
         /// </summary>
-        public void ReceiveCommunicationResponse()
+        public void UpdateBoard()
         {
-            var receivedSerialized = _communicator.Receive();
-            var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
-
-            if (receivedRaw.Type == Consts.GameFinished)
-                GameAlreadyFinished(receivedSerialized);
-
-            if (receivedRaw.Type != Consts.CommunicationResponse)
-                throw new InvalidTypeReceivedException($"Expected: {Consts.CommunicationResponse} Received: {receivedRaw.Type}");
-
-            var received = JsonConvert.DeserializeObject<Message<CommunicationResponsePayload>>(receivedSerialized);
-            if (received.Payload == null)
-                throw new NoPayloadException();
-
-            if (received.Payload.Accepted)
+            while (_messageProvider.HasPendingResponses)
             {
-                for (int i = 0; i < received.Payload.Board.Count; i++)
+                var receivedBoard = _messageProvider.GetPendingResponse().Payload.Board;
+
+                for (int i = 0; i < receivedBoard.Count; i++)
                 {
-                    if (received.Payload.Board[i].TimeStamp > Board[i].Timestamp)
+                    if (!Board[i].Timestamp.HasValue || receivedBoard[i].TimeStamp > Board[i].Timestamp)
                     {
-                        AutoMapper.Mapper.Map<TileCommunicationDTO, Tile>(received.Payload.Board[i], Board[i]);
+                        AutoMapper.Mapper.Map<TileCommunicationDTO, Tile>(receivedBoard[i], Board[i]);
                     }
                 }
+                PrintBoard();
+            }
+        }
+
+        private void PrintBoard()
+        {
+            int i = 0;
+            for (int y = 0; y < 2 * Game.BoardSize.GoalArea + Game.BoardSize.TaskArea; y++)
+            {
+                for (int x = 0; x < Game.BoardSize.X; x++, i++)
+                {
+                    var character = Board[i].HasInfo == false ? " " : "+";
+                    Console.Write($"[{character}]");
+                }
+                Console.WriteLine();
             }
         }
     }

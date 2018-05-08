@@ -28,6 +28,7 @@ namespace Player.Common
         public static string CommunicationRequest = "COMMUNICATION_REQUEST";
         public static string CommunicationResponse = "COMMUNICATION_RESPONSE";
         public static string RequestSent = "REQUEST_SENT";
+        public static string ResponseSent = "RESPONSE_SENT";
 
         public const string Up = "up";
         public const string Down = "down";
