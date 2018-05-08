@@ -74,6 +74,7 @@ export class Game {
     this.playersContainer = new PlayersContainer();
     this.communicator = communicator;
     this.periodicPieceGenerator = periodicPieceGeneratorFactory(this.board);
+    this.communicationRequestsStore = new CommunicationRequestsStore();
 
     this.playerMessageHandler = new PlayerMessageHandler(
       {
