@@ -18,6 +18,9 @@ import { InvalidMessageResult } from './ProcessMessageResult';
 import { UIController } from './ui/UIController';
 
 import { PeriodicPieceGenerator } from './board-generation/PeriodicPieceGenerator';
+import { CommunicationRequestFromSender } from '../interfaces/requests/CommunicationRequest';
+import { Point } from '../common/Point';
+import { MoveRequest } from '../interfaces/requests/MoveRequest';
 
 function createMockUiController(): UIController {
   return <any>{
@@ -141,6 +144,21 @@ describe('[GM] Game', () => {
         expect(invalidResult.reason).toMatchSnapshot();
       });
 
+      it('should reject invalid request from player', () => {
+        const message = {
+          senderId: player.playerId,
+          type: 'MOVE_REQUEST',
+          payload: {
+            direction: 'adasds'
+          }
+        };
+        const processedMessageResult = game.processPlayerMessage(message);
+        expect(processedMessageResult.valid).toBe(false);
+
+        const invalidResult = <InvalidMessageResult>processedMessageResult;
+        expect(invalidResult.reason).toMatchSnapshot();
+      });
+
       it('should process valid request', () => {
         const message: DiscoveryRequest = {
           senderId: player.playerId,
@@ -219,4 +237,6 @@ describe('[GM] Game', () => {
 
     expect(game.playersContainer.getPlayerById(player.playerId)).toBeUndefined();
   });
+
+  describe('handlePlayerDisconnected', () => {});
 });
