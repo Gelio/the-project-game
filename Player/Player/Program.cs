@@ -1,11 +1,11 @@
-using Newtonsoft.Json;
-using Player.Common;
-using Player.GameObjects;
-using Player.Messages.DTO;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
+using Newtonsoft.Json;
+using Player.Common;
+using Player.GameObjects;
+using Player.Messages.DTO;
 
 namespace Player
 {
@@ -107,7 +107,7 @@ namespace Player
             communicator.Connect();  //FIXME: Should be wrapped in try-catch!!
             gameService = new GameService(communicator);
 
-            var player = new Player(communicator, configObject, gameService);
+            var player = new Player(communicator, configObject, gameService, new MessageProvider(communicator));
 
             try
             {

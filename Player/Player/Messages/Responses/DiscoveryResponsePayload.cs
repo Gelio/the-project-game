@@ -8,5 +8,10 @@ namespace Player.Messages.Responses
     {
         public long Timestamp;
         public List<TileDiscoveryDTO> Tiles;
+
+        public string PayloadType()
+        {
+            return Common.Consts.DiscoveryResponse;
+        }
     }
 }

@@ -7,5 +7,10 @@ namespace Player.Messages.Responses
         public int DistanceToPiece;
         // long working after 2038
         public long TimeStamp;
+
+        public string PayloadType()
+        {
+            return Common.Consts.MoveResponse;
+        }
     }
 }

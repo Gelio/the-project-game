@@ -11,5 +11,11 @@ namespace Player.Messages.Requests
         public int TeamId;
         [JsonProperty("isLeader")]
         public bool IsLeader;
+
+
+        public string PayloadType()
+        {
+            return Common.Consts.PlayerHelloRequest;
+        }
     }
 }

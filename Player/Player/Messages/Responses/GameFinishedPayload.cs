@@ -6,5 +6,10 @@ namespace Player.Messages.Responses
     {
         public int Team1Score;
         public int Team2Score;
+
+        public string PayloadType()
+        {
+            return Common.Consts.GameFinished;
+        }
     }
 }

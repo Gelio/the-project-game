@@ -18,38 +18,29 @@ namespace Player
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
         public string Id;
-        public int TeamId;
-        public bool IsLeader;
-        public string GameName;
-        public int AskLevel;
-        public int RespondLevel;
-        public int Timeout;
-        public int X;
-        public int Y;
-        public string ServerHostName => _communicator.ServerHostName;
-        public int ServerPort => _communicator.ServerPort;
         public IList<string> TeamMembersIds;
         public string LeaderId;
-        public GameInfo Game;
+
+        public int X;
+        public int Y;
         public List<Tile> Board = new List<Tile>();
         public Piece HeldPiece;
+        public string GoalAreaDirection;
+        public GameInfo Game;
+
+        // TODO: Remove ICommunicator dependency
         private ICommunicator _communicator;
         private IGameService _gameService;
-        public string GoalAreaDirection;
-        public bool IsConnected => _communicator.IsConnected;
+        private MessageProvider _messageProvider;
+        private PlayerConfig _playerConfig;
 
-        public Player(ICommunicator communicator, PlayerConfig config, IGameService gameService)
+        public Player(ICommunicator communicator, PlayerConfig playerConfig, IGameService gameService, MessageProvider messageProvider)
         {
             _communicator = communicator;
             _gameService = gameService;
-
+            _messageProvider = messageProvider;
+            _playerConfig = playerConfig;
             Id = Guid.NewGuid().ToString();
-            TeamId = config.TeamNumber;
-            IsLeader = config.IsLeader;
-            AskLevel = config.AskLevel;
-            RespondLevel = config.RespondLevel;
-            Timeout = config.Timeout;
-            GameName = config.GameName;
         }
 
         public void Start()
@@ -66,7 +57,7 @@ namespace Player
         public void GetGameInfo()
         {
             var gamesList = _gameService.GetGamesList();
-            Game = gamesList.FirstOrDefault(x => x.Name == GameName);
+            Game = gamesList.FirstOrDefault(x => x.Name == _playerConfig.GameName);
             if (Game == null)
             {
                 throw new OperationCanceledException("Game not found");
@@ -84,47 +75,18 @@ namespace Player
 
         public void ConnectToServer()
         {
-            if (!_communicator.IsConnected)
-            {
-                _communicator.Connect();
-            }
-
-            var helloMessage = new Message<PlayerHelloPayload>
+            _messageProvider.SendMessage(new Message<IPayload>
             {
                 Type = Consts.PlayerHelloRequest,
                 SenderId = Id,
                 Payload = new PlayerHelloPayload
                 {
-                    Game = GameName,
-                    TeamId = TeamId,
-                    IsLeader = IsLeader,
+                    Game = _playerConfig.GameName,
+                    TeamId = _playerConfig.TeamNumber,
+                    IsLeader = _playerConfig.IsLeader,
                 }
-            };
-            var helloMessageSerialized = JsonConvert.SerializeObject(helloMessage);
-            _communicator.Send(helloMessageSerialized);
-
-
-            Task<string> receivedMessageSerializedTask;
-            try
-            {
-                receivedMessageSerializedTask = Task.Run(() => _communicator.Receive());
-                if (!receivedMessageSerializedTask.Wait(Timeout))
-                    throw new TimeoutException($"Did not receive any message after {Timeout}ms");
-            }
-            catch (AggregateException e)
-            {
-                throw e.InnerException;
-            }
-            var receivedMessageSerialized = receivedMessageSerializedTask.Result;
-
-            var receivedGenericMessage = JsonConvert.DeserializeObject<Message>(receivedMessageSerialized);
-            if (receivedGenericMessage.Type == Consts.PlayerRejected)
-            {
-                var rejectedMessage = JsonConvert.DeserializeObject<Message<PlayerRejectedPayload>>(receivedMessageSerialized);
-                throw new PlayerRejectedException(rejectedMessage.Payload.Reason);
-            }
-
-            var acceptedMessage = JsonConvert.DeserializeObject<Message<PlayerAcceptedPayload>>(receivedMessageSerialized);
+            });
+            _messageProvider.AssertPlayerStatus(_playerConfig.Timeout);
             logger.Info("Player connected to server");
         }
 
@@ -135,20 +97,22 @@ namespace Player
         }
         public void WaitForGameStart()
         {
-            string receivedMessageSerialized;
+            Message<GameStartedPayload> message;
             while (true)
             {
-                receivedMessageSerialized = _communicator.Receive();
-
-                var receivedGenericMessage = JsonConvert.DeserializeObject<Message>(receivedMessageSerialized);
-
-                if (receivedGenericMessage.Type == Consts.GameStarted) break;
+                try
+                {
+                    message = _messageProvider.Receive<GameStartedPayload>();
+                    break;
+                }
+                catch (WrongPayloadException)
+                {
+                    // suppress
+                }
             }
 
-            var message = JsonConvert.DeserializeObject<Message<GameStartedPayload>>(receivedMessageSerialized);
-
-            TeamMembersIds = message.Payload.TeamInfo[TeamId].Players;
-            LeaderId = message.Payload.TeamInfo[TeamId].LeaderId;
+            TeamMembersIds = message.Payload.TeamInfo[_playerConfig.TeamNumber].Players;
+            LeaderId = message.Payload.TeamInfo[_playerConfig.TeamNumber].LeaderId;
             logger.Info("The game has started!");
         }
 
@@ -257,27 +221,15 @@ namespace Player
         private bool IsInGoalArea() => (Y < Game.BoardSize.GoalArea || Y >= Game.BoardSize.GoalArea + Game.BoardSize.TaskArea);
         public bool Discover()
         {
-            var message = new Message<DiscoveryPayload>()
+            _messageProvider.SendMessage(new Message<IPayload>()
             {
                 Type = Consts.DiscoveryRequest,
                 RecipientId = Consts.GameMasterId,
-                SenderId = Id
-            };
-            var messageSerialized = JsonConvert.SerializeObject(message);
-            _communicator.Send(messageSerialized);
-
+                SenderId = Id,
+                Payload = new DiscoveryPayload()
+            });
             if (!GetActionStatus()) { return false; }
-
-            var receivedSerialized = _communicator.Receive();
-            var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
-
-            if (receivedRaw.Type == Consts.GameFinished)
-                GameAlreadyFinished(receivedSerialized);
-
-            if (receivedRaw.Type != Consts.DiscoveryResponse)
-                throw new InvalidTypeReceivedException($"Expected: {Consts.DiscoveryResponse} Received: {receivedRaw.Type}");
-
-            var received = JsonConvert.DeserializeObject<Message<DiscoveryResponsePayload>>(receivedSerialized);
+            var received = _messageProvider.Receive<DiscoveryResponsePayload>();
 
             if (received.Payload == null)
                 throw new NoPayloadException();
@@ -299,50 +251,34 @@ namespace Player
 
         public bool GetActionStatus()
         {
-            var receivedSerialized = _communicator.Receive();
-            var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
-
-            if (receivedRaw.Type == Consts.ActionValid)
+            try
             {
-                var received = JsonConvert.DeserializeObject<Message<ActionValidPayload>>(receivedSerialized);
+                _messageProvider.Receive<ActionValidPayload>();
                 return true;
-
             }
-            if (receivedRaw.Type == Consts.ActionInvalid)
+            catch (ActionInvalidException e)
             {
-                var received = JsonConvert.DeserializeObject<Message<ActionInvalidPayload>>(receivedSerialized);
-                logger.Warn("ACTION INVALID: {0}", received.Payload.Reason);
+                logger.Warn("ACTION INVALID: {0}", e.Message);
                 return false;
             }
-            if (receivedRaw.Type == Consts.GameFinished)
-                GameAlreadyFinished(receivedSerialized);
-
-
-            throw new InvalidTypeReceivedException($"Expected: ACTION_VALID/INVALID Received: {receivedRaw.Type}");
+            catch (WrongPayloadException e)
+            {
+                throw new InvalidTypeReceivedException($"Expected: ACTION_VALID/INVALID Received: {e.Message}");
+            }
         }
 
         public bool RefreshBoardState()
         {
-            var message = new Message<RefreshStatePayload>()
+            _messageProvider.SendMessage(new Message<IPayload>()
             {
                 Type = Consts.RefreshStateRequest,
-                SenderId = Id
-            };
-            var messageSerialized = JsonConvert.SerializeObject(message);
-            _communicator.Send(messageSerialized);
-
+                SenderId = Id,
+                Payload = new RefreshStatePayload()
+            });
             if (!GetActionStatus()) { return false; }
+            var received = _messageProvider.Receive<RefreshStateResponsePayload>();
 
-            var receivedSerialized = _communicator.Receive();
-            var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
-
-            if (receivedRaw.Type == Consts.GameFinished)
-                GameAlreadyFinished(receivedSerialized);
-
-            if (receivedRaw.Type != Consts.RefreshStateResponse)
-                throw new InvalidTypeReceivedException($"Expected: {Consts.RefreshStateResponse} Received: {receivedRaw.Type}");
-
-            var received = JsonConvert.DeserializeObject<Message<RefreshStateResponsePayload>>(receivedSerialized);
+            // TODO: Check if still necessary
             if (received.Payload == null)
                 throw new NoPayloadException();
 
@@ -392,7 +328,7 @@ namespace Player
                     return false;
             }
             int index = newX + Game.BoardSize.X * newY;
-            var message = new Message<MovePayload>()
+            _messageProvider.SendMessage(new Message<IPayload>()
             {
                 Type = Consts.MoveRequest,
                 SenderId = Id,
@@ -400,24 +336,11 @@ namespace Player
                 {
                     Direction = direction
                 }
-            };
-            var messageSerialized = JsonConvert.SerializeObject(message);
-            _communicator.Send(messageSerialized);
-
+            });
             if (!GetActionStatus()) { return false; }
-
             logger.Debug("Moving {}", direction);
+            var received = _messageProvider.Receive<MoveResponsePayload>();
 
-            var receivedSerialized = _communicator.Receive();
-            var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
-
-            if (receivedRaw.Type == Consts.GameFinished)
-                GameAlreadyFinished(receivedSerialized);
-
-            if (receivedRaw.Type != Consts.MoveResponse)
-                throw new InvalidTypeReceivedException($"Expected: {Consts.MoveResponse} Received: {receivedRaw.Type}");
-
-            var received = JsonConvert.DeserializeObject<Message<MoveResponsePayload>>(receivedSerialized);
             if (received.Payload == null)
                 throw new NoPayloadException();
 
@@ -432,26 +355,14 @@ namespace Player
 
         public bool PickUpPiece()
         {
-            var message = new Message<PickUpPiecePayload>
+            _messageProvider.SendMessage(new Message<IPayload>()
             {
                 Type = Consts.PickupPieceRequest,
-                SenderId = Id
-            };
-            var messageSerialized = JsonConvert.SerializeObject(message);
-            _communicator.Send(messageSerialized);
-
+                SenderId = Id,
+                Payload = new PickUpPiecePayload()
+            });
             if (!GetActionStatus()) { return false; }
-
-            var receivedSerialized = _communicator.Receive();
-            var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
-
-            if (receivedRaw.Type == Consts.GameFinished)
-                GameAlreadyFinished(receivedSerialized);
-
-            if (receivedRaw.Type != Consts.PickupPieceResponse)
-                throw new InvalidTypeReceivedException($"Expected: {Consts.PickupPieceResponse} Received: {receivedRaw.Type}");
-
-            var received = JsonConvert.DeserializeObject<Message<PickUpPieceResponsePayload>>(receivedSerialized);
+            var received = _messageProvider.Receive<PickUpPieceResponsePayload>();
             // if (received.Payload == null)
             //     throw new NoPayloadException();
 
@@ -464,28 +375,14 @@ namespace Player
 
         public (bool, PlaceDownPieceResult) PlaceDownPiece()
         {
-            var message = new Message<PlaceDownPiecePayload>
+            _messageProvider.SendMessage(new Message<IPayload>()
             {
                 Type = Consts.PlaceDownPieceRequest,
-                SenderId = Id
-            };
-            var messageSerialized = JsonConvert.SerializeObject(message);
-            _communicator.Send(messageSerialized);
-
+                SenderId = Id,
+                Payload = new PlaceDownPiecePayload()
+            });
             if (!GetActionStatus()) { return (false, PlaceDownPieceResult.NoScore); }
-
-            var receivedSerialized = _communicator.Receive();
-            var receivedRaw = JsonConvert.DeserializeObject<Message>(receivedSerialized);
-
-            if (receivedRaw.Type == Consts.GameFinished)
-                GameAlreadyFinished(receivedSerialized);
-
-            if (receivedRaw.Type != Consts.PlaceDownPieceResponse)
-                throw new InvalidTypeReceivedException($"Expected: {Consts.PlaceDownPieceResponse} Received: {receivedRaw.Type}");
-
-            var received = JsonConvert.DeserializeObject<Message<PlaceDownPieceResponsePayload>>(receivedSerialized);
-            if (received.Payload == null)
-                throw new NoPayloadException();
+            var received = _messageProvider.Receive<PlaceDownPieceResponsePayload>();
 
             Board[GetCurrentBoardIndex()].Piece = HeldPiece;
             HeldPiece = null;
@@ -515,7 +412,6 @@ namespace Player
                 Board[GetCurrentBoardIndex()].GoalStatus = GoalStatusEnum.CompletedGoal;
                 return (true, PlaceDownPieceResult.Score);
             }
-
         }
 
         public enum PlaceDownPieceResult

@@ -9,5 +9,10 @@ namespace Player.Messages.Responses
         public string TargetPlayerId;
         public bool Accepted;
         public List<TileCommunicationDTO> Board;
+
+        public string PayloadType()
+        {
+            return Common.Consts.CommunicationResponse;
+        }
     }
 }
