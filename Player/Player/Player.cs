@@ -579,5 +579,10 @@ namespace Player
         {
             throw new NotImplementedException();
         }
+
+        public bool DeletePiece()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
