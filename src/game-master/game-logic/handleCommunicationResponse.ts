@@ -129,21 +129,17 @@ export function handleCommunicationResponse(
     if (sender.isLeader) {
       return {
         valid: false,
-        reason: 'Leader can`t refuse communication'
+        reason: 'Leader cannot refuse communication'
       };
     }
 
-    const recipient = playersContainer.getPlayerById(communicationResponse.payload.targetPlayerId);
-    if (!recipient) {
-      return {
-        valid: false,
-        reason: 'Recipient id is not correct'
-      };
-    }
+    const recipient = <Player>playersContainer.getPlayerById(
+      communicationResponse.payload.targetPlayerId
+    );
     if (recipient.isLeader) {
       return {
         valid: false,
-        reason: 'Player can`t refuse communication with Leader'
+        reason: 'Player cannot refuse communication with a leader'
       };
     }
 
