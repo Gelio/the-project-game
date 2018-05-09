@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
-using NUnit.Framework;
-using Moq;
-using Player.Common;
-using Player.Interfaces;
-using Newtonsoft.Json;
-using Player.Messages.Responses;
-using Player.Messages.DTO;
-using Player.GameObjects;
 using System.Linq;
+using Moq;
+using Newtonsoft.Json;
+using NUnit.Framework;
+using Player.Common;
+using Player.GameObjects;
+using Player.Interfaces;
+using Player.Messages.DTO;
+using Player.Messages.Responses;
 using static Player.Player;
 
 namespace Player.Tests.PieceTests
@@ -21,6 +21,7 @@ namespace Player.Tests.PieceTests
         GameInfo _game;
         Mock<ICommunicator> _communicator;
         Mock<IGameService> _gameService;
+        Mock<IMessageProvider> _messageProvider;
 
         static Message<PlaceDownPieceResponsePayload> _scoreMsg = new Message<PlaceDownPieceResponsePayload>()
         {
@@ -76,7 +77,7 @@ namespace Player.Tests.PieceTests
                 TeamNumber = 1
             };
             _gameService = new Mock<IGameService>();
-
+            _messageProvider = new Mock<IMessageProvider>();
             _game = new GameInfo()
             {
                 BoardSize = new BoardSize
@@ -103,16 +104,12 @@ namespace Player.Tests.PieceTests
         public void PlaceDownPieceSuccess(Message<PlaceDownPieceResponsePayload> expectedMessage, int assignedX, int assignedY, bool? expectedBoolResult, Player.PlaceDownPieceResult exceptedEnumResult)
         {
             //-------------
-            var queue = new Queue<string>(new[]
-            {
-                Consts.ACTION_VALID_RESPONSE,
-                JsonConvert.SerializeObject(expectedMessage)
-            });
-            _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
+            _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Returns(new Message<ActionValidPayload>());
+            _messageProvider.Setup(x => x.Receive<PlaceDownPieceResponsePayload>()).Returns(expectedMessage);
 
             // ------------------------
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object)
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
             {
                 Id = _assignedPlayerId,
                 X = assignedX,
@@ -137,19 +134,9 @@ namespace Player.Tests.PieceTests
         [Test]
         public void PlaceDownPieceActionInvalid()
         {
-            var messageReceived = new Message<ActionInvalidPayload>
-            {
-                Type = Common.Consts.ActionInvalid,
-                SenderId = Common.Consts.GameMasterId,
-                RecipientId = _assignedPlayerId,
-                Payload = new ActionInvalidPayload
-                {
-                    Reason = "she did not want to go DOWN to you PLACE"
-                }
-            };
-            _communicator.Setup(x => x.Receive()).Returns(JsonConvert.SerializeObject(messageReceived));
+            _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Throws(new ActionInvalidException());
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object);
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object);
 
             (var boolResult, var enumResult) = player.PlaceDownPiece();
 
@@ -158,79 +145,26 @@ namespace Player.Tests.PieceTests
         }
 
         [Test]
-        public void PlaceDownPieceInvalidMessageType()
-        {
-            var messageReceived = new Message<PlaceDownPieceResponsePayload>
-            {
-                SenderId = Common.Consts.GameMasterId,
-                RecipientId = _assignedPlayerId,
-                Type = Consts.EMPTY_LIST_GAMES_RESPONSE
-            };
-            var queue = new Queue<string>(new[]
-            {
-                Consts.ACTION_VALID_RESPONSE,
-                JsonConvert.SerializeObject(messageReceived)
-            });
-            _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
-
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object);
-
-            Assert.Throws<InvalidTypeReceivedException>(() => player.PlaceDownPiece());
-        }
-
-        [Test]
         public void PlaceDownPieceNoPayload()
         {
-            var messageReceived = new Message
+            var msg2 = new Message<PlaceDownPieceResponsePayload>
             {
                 Type = Common.Consts.PlaceDownPieceResponse,
                 SenderId = Common.Consts.GameMasterId,
-                RecipientId = _assignedPlayerId
+                RecipientId = _assignedPlayerId,
+                Payload = null
             };
-            var queue = new Queue<string>(new[]
-            {
-                Consts.ACTION_VALID_RESPONSE,
-                JsonConvert.SerializeObject(messageReceived)
-            });
-            _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
+            _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Returns(new Message<ActionValidPayload>());
+            _messageProvider.Setup(x => x.Receive<PlaceDownPieceResponsePayload>()).Returns(msg2);
 
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object)
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
             {
                 Id = _assignedPlayerId,
+                Game = _game
             };
 
             Assert.Throws<NoPayloadException>(() => player.PlaceDownPiece());
-        }
-
-        [Test]
-        public void PlaceDownPieceGameAlreadyFinishedBeforeGettingActionStatus()
-        {
-            _communicator.Setup(x => x.Receive()).Returns(Consts.GAME_FINISHED_RESPONSE);
-
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object)
-            {
-                Game = _game
-            };
-
-            Assert.Throws<GameAlreadyFinishedException>(() => player.PlaceDownPiece());
-        }
-
-        [Test]
-        public void PlaceDownPieceGameAlreadyFinishedAfterGettingActionStatus()
-        {
-            var queue = new Queue<string>(new[]
-            {
-                Consts.ACTION_VALID_RESPONSE,
-                Consts.GAME_FINISHED_RESPONSE
-            });
-            _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object)
-            {
-                Game = _game
-            };
-
-            Assert.Throws<GameAlreadyFinishedException>(() => player.PlaceDownPiece());
         }
     }
 }

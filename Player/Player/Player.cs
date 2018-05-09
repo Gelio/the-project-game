@@ -376,8 +376,8 @@ namespace Player
             });
             if (!GetActionStatus()) { return false; }
             var received = _messageProvider.Receive<PickUpPieceResponsePayload>();
-            // if (received.Payload == null)
-            //     throw new NoPayloadException();
+            if (received.Payload == null)
+                throw new NoPayloadException();
 
             HeldPiece = Board[X + Game.BoardSize.X * Y].Piece;
             Board[X + Game.BoardSize.X * Y].Piece = null;
@@ -396,6 +396,9 @@ namespace Player
             });
             if (!GetActionStatus()) { return (false, PlaceDownPieceResult.NoScore); }
             var received = _messageProvider.Receive<PlaceDownPieceResponsePayload>();
+
+            if (received.Payload == null)
+                throw new NoPayloadException();
 
             Board[GetCurrentBoardIndex()].Piece = HeldPiece;
             HeldPiece = null;

@@ -1,14 +1,15 @@
 using System;
 using System.Collections.Generic;
-using NUnit.Framework;
-using Moq;
-using Player.Common;
-using Player.Interfaces;
-using Newtonsoft.Json;
-using Player.Messages.Responses;
-using Player.Messages.DTO;
-using Player.GameObjects;
 using System.Linq;
+using Moq;
+using Newtonsoft.Json;
+using NUnit.Framework;
+using Player.Common;
+using Player.GameObjects;
+using Player.Interfaces;
+using Player.Messages.DTO;
+using Player.Messages.Responses;
+
 
 namespace Player.Tests.PieceTests
 {
@@ -20,6 +21,7 @@ namespace Player.Tests.PieceTests
         GameInfo _game;
         Mock<ICommunicator> _communicator;
         Mock<IGameService> _gameService;
+        Mock<IMessageProvider> _messageProvider;
 
         [SetUp]
         public void Setup()
@@ -34,7 +36,7 @@ namespace Player.Tests.PieceTests
                 TeamNumber = 1
             };
             _gameService = new Mock<IGameService>();
-
+            _messageProvider = new Mock<IMessageProvider>();
             _game = new GameInfo()
             {
                 BoardSize = new BoardSize
@@ -52,7 +54,7 @@ namespace Player.Tests.PieceTests
             var assignedX = 12;
             var assignedY = 3;
 
-            var receivedMessage = new Message<PickUpPieceResponsePayload>()
+            var msg2 = new Message<PickUpPieceResponsePayload>()
             {
                 Type = Common.Consts.PickupPieceResponse,
                 SenderId = Common.Consts.GameMasterId,
@@ -60,16 +62,12 @@ namespace Player.Tests.PieceTests
                 Payload = new PickUpPieceResponsePayload()
             };
 
-            var queue = new Queue<string>(new[]
-            {
-                Consts.ACTION_VALID_RESPONSE,
-                JsonConvert.SerializeObject(receivedMessage)
-            });
-            _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
+            _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Returns(new Message<ActionValidPayload>());
+            _messageProvider.Setup(x => x.Receive<PickUpPieceResponsePayload>()).Returns(msg2);
 
             // ------------------------
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object)
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
             {
                 Id = _assignedPlayerId,
                 X = assignedX,
@@ -94,74 +92,34 @@ namespace Player.Tests.PieceTests
         [Test]
         public void PickUpPieceActionInvalid()
         {
-            var messageReceived = new Message<ActionInvalidPayload>
-            {
-                Type = Common.Consts.ActionInvalid,
-                SenderId = Common.Consts.GameMasterId,
-                RecipientId = _assignedPlayerId,
-                Payload = new ActionInvalidPayload
-                {
-                    Reason = "pick-up line too cheezy"
-                }
-            };
-            _communicator.Setup(x => x.Receive()).Returns(JsonConvert.SerializeObject(messageReceived));
+            _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Throws(new ActionInvalidException());
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object);
-
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object);
             var result = player.PickUpPiece();
 
             Assert.That(result, Is.False);
         }
 
         [Test]
-        public void PickUpPieceInvalidMessageType()
+        public void PickUpPieceNoPayload()
         {
-            var messageReceived = new Message<PickUpPieceResponsePayload>
+            var msg2 = new Message<PickUpPieceResponsePayload>
             {
+                Type = Common.Consts.PickupPieceResponse,
                 SenderId = Common.Consts.GameMasterId,
                 RecipientId = _assignedPlayerId,
-                Type = Consts.EMPTY_LIST_GAMES_RESPONSE
+                Payload = null
             };
-            var queue = new Queue<string>(new[]
+            _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Returns(new Message<ActionValidPayload>());
+            _messageProvider.Setup(x => x.Receive<PickUpPieceResponsePayload>()).Returns(msg2);
+
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
             {
-                Consts.ACTION_VALID_RESPONSE,
-                JsonConvert.SerializeObject(messageReceived)
-            });
-            _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
-
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object);
-
-            Assert.Throws<InvalidTypeReceivedException>(() => player.PickUpPiece());
-        }
-
-        [Test]
-        public void PickUpPieceGameAlreadyFinishedBeforeGettingActionStatus()
-        {
-            _communicator.Setup(x => x.Receive()).Returns(Consts.GAME_FINISHED_RESPONSE);
-
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object)
-            {
+                Id = _assignedPlayerId,
                 Game = _game
             };
 
-            Assert.Throws<GameAlreadyFinishedException>(() => player.PickUpPiece());
-        }
-
-        [Test]
-        public void PickUpPieceGameAlreadyFinishedAfterGettingActionStatus()
-        {
-            var queue = new Queue<string>(new[]
-            {
-                Consts.ACTION_VALID_RESPONSE,
-                Consts.GAME_FINISHED_RESPONSE
-            });
-            _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object)
-            {
-                Game = _game
-            };
-
-            Assert.Throws<GameAlreadyFinishedException>(() => player.PickUpPiece());
+            Assert.Throws<NoPayloadException>(() => player.PickUpPiece());
         }
     }
 }
