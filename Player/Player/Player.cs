@@ -122,41 +122,45 @@ namespace Player
             PrintBoard();
             while (true)
             {
-                Task.Delay(3000);
-                RefreshBoardState();
-                UpdateBoard();
-                if (_messageProvider.HasPendingRequests)
+                //logger.Debug("Player's position: {} {}", X, Y);
+                if (HeldPiece != null)
+                {
+                    if (!HeldPiece.WasTested)
+                    {
+                        logger.Info("Testing the piece");
+                        TestPiece();
+                    }
+                    if (!HeldPiece.IsSham)
+                    {
+                        if (IsInGoalArea() && Board[GetCurrentBoardIndex()].GoalStatus == GoalStatusEnum.NoInfo)
+                        {
+                            logger.Info("Trying to place down piece");
+                            (var result, var resultEnum) = PlaceDownPiece();
+                        }
+                        else
+                            Move(PickSweepingGoalAreaDirection());
+                    }
+                    else
+                    {
+                        logger.Info("Deleting the piece");
+                        DeletePiece();
+                        PrintBoard();
+                        continue;
+                    }
+
+                }
+                else if (Board[GetCurrentBoardIndex()].DistanceToClosestPiece == 0) // We stand on a piece
+                {
+                    logger.Info("Trying to pick up piece...");
+                    PickUpPiece();
+                    continue;
+                }
+                else // Find a piece
                 {
                     Discover();
-                    var senderId = _messageProvider.GetPendingRequest().Payload.SenderPlayerId;
-                    SendCommunicationResponse(senderId);
+                    string direction = PickClosestPieceDirection();
+                    Move(direction);
                 }
-                if (_playerConfig.IsLeader)
-                    SendCommunicationRequest(TeamMembersIds.FirstOrDefault());
-
-                // //logger.Debug("Player's position: {} {}", X, Y);
-                // if (HeldPiece != null)
-                // {
-                //     if (IsInGoalArea() && Board[GetCurrentBoardIndex()].GoalStatus == GoalStatusEnum.NoInfo)
-                //     {
-                //         logger.Info("Trying to place down piece");
-                //         (var result, var resultEnum) = PlaceDownPiece();
-                //     }
-                //     else
-                //         Move(PickSweepingGoalAreaDirection());
-                // }
-                // else if (Board[GetCurrentBoardIndex()].DistanceToClosestPiece == 0) // We stand on a piece
-                // {
-                //     logger.Info("Trying to pick up piece...");
-                //     PickUpPiece();
-                //     continue;
-                // }
-                // else // Find a piece
-                // {
-                //     Discover();
-                //     string direction = PickClosestPieceDirection();
-                //     Move(direction);
-                // }
             }
         }
 
@@ -376,11 +380,10 @@ namespace Player
             });
             if (!GetActionStatus()) { return false; }
             var received = _messageProvider.Receive<PickUpPieceResponsePayload>();
-            if (received.Payload == null)
-                throw new NoPayloadException();
 
             HeldPiece = Board[X + Game.BoardSize.X * Y].Piece;
             Board[X + Game.BoardSize.X * Y].Piece = null;
+            Board[X + Game.BoardSize.X * Y].DistanceToClosestPiece = int.MaxValue;
 
             logger.Info("Picked up piece @ ({}, {})", X, Y);
             return true;
@@ -568,7 +571,7 @@ namespace Player
             {
                 for (int x = 0; x < Game.BoardSize.X; x++, i++)
                 {
-                    var character = Board[i].HasInfo == false ? " " : "+";
+                    var character = Board[i].DistanceToClosestPiece == int.MaxValue ? "-" : "+";
                     Console.Write($"[{character}]");
                 }
                 Console.WriteLine();
@@ -610,6 +613,7 @@ namespace Player
             var received = _messageProvider.Receive<DeletePieceResponsePayload>();
 
             HeldPiece = null;
+            logger.Info("Piece deleted");
 
             return true;
         }
