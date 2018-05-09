@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
-using NUnit.Framework;
-using Moq;
-using Player.Common;
-using Player.Interfaces;
-using Newtonsoft.Json;
-using Player.Messages.Responses;
-using Player.Messages.DTO;
-using Player.GameObjects;
 using System.Linq;
+using Moq;
+using Newtonsoft.Json;
+using NUnit.Framework;
+using Player.Common;
+using Player.GameObjects;
+using Player.Interfaces;
+using Player.Messages.DTO;
+using Player.Messages.Responses;
 
 namespace Player.Tests
 {
@@ -20,6 +20,7 @@ namespace Player.Tests
 
         Mock<ICommunicator> _communicator;
         Mock<IGameService> _gameService;
+        Mock<IMessageProvider> _messageProvider;
 
         string Up = "up";
 
@@ -27,6 +28,7 @@ namespace Player.Tests
         public void Setup()
         {
             _communicator = new Mock<ICommunicator>();
+            _messageProvider = new Mock<IMessageProvider>();
             _playerConfig = new PlayerConfig
             {
                 AskLevel = 10,
@@ -49,45 +51,25 @@ namespace Player.Tests
         }
 
         [Test]
-        public void MoveInvalidMessageType()
+        public void ThrowsWrongPayloadType()
         {
-            var messageReceived = new Message<MoveResponsePayload>
-            {
-                SenderId = Common.Consts.GameMasterId,
-                RecipientId = Guid.NewGuid().ToString(),
-                Type = Consts.EMPTY_LIST_GAMES_RESPONSE
-            };
-            var queue = new Queue<string>(new[]
-            {
-                Consts.ACTION_VALID_RESPONSE,
-                JsonConvert.SerializeObject(messageReceived)
-            });
-            _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
+            _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Returns(new Message<ActionValidPayload>());
+            _messageProvider.Setup(x => x.Receive<MoveResponsePayload>()).Throws(new WrongPayloadException());
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object)
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
             {
                 Game = _game
             };
 
-            Assert.Throws<InvalidTypeReceivedException>(() => player.Move(Up));
+            Assert.Throws<WrongPayloadException>(() => player.Move(Up));
         }
 
         [Test]
         public void MoveActionInvalid()
         {
-            var messageReceived = new Message<ActionInvalidPayload>
-            {
-                Type = Common.Consts.ActionInvalid,
-                SenderId = Common.Consts.GameMasterId,
-                RecipientId = Guid.NewGuid().ToString(),
-                Payload = new ActionInvalidPayload
-                {
-                    Reason = "You cannot move, noone in your family moves"
-                }
-            };
-            _communicator.Setup(x => x.Receive()).Returns(JsonConvert.SerializeObject(messageReceived));
+            _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Throws(new ActionInvalidException());
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object)
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
             {
                 Game = _game
             };
@@ -128,7 +110,7 @@ namespace Player.Tests
             }
             int indexAfterMove = newX + _game.BoardSize.X * newY;
 
-            var messageReceived = new Message<MoveResponsePayload>
+            var msg2 = new Message<MoveResponsePayload>
             {
                 Type = Common.Consts.MoveResponse,
                 SenderId = Common.Consts.GameMasterId,
@@ -139,15 +121,10 @@ namespace Player.Tests
                     TimeStamp = 10
                 }
             };
+            _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Returns(new Message<ActionValidPayload>());
+            _messageProvider.Setup(x => x.Receive<MoveResponsePayload>()).Returns(msg2);
 
-            var queue = new Queue<string>(new[]
-            {
-                Consts.ACTION_VALID_RESPONSE,
-                JsonConvert.SerializeObject(messageReceived)
-            });
-            _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
-
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object)
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
             {
                 Id = assignedPlayerId,
                 X = assignedX,
@@ -164,8 +141,8 @@ namespace Player.Tests
             Assert.That(result, Is.True);
             Assert.That(player.Board[indexBeforeMove].PlayerId, Is.Null);
             Assert.That(player.Board[indexAfterMove].PlayerId, Is.EqualTo(assignedPlayerId));
-            Assert.That(player.Board[indexAfterMove].DistanceToClosestPiece, Is.EqualTo(messageReceived.Payload.DistanceToPiece));
-            Assert.That(player.Board[indexAfterMove].Timestamp, Is.EqualTo(messageReceived.Payload.TimeStamp));
+            Assert.That(player.Board[indexAfterMove].DistanceToClosestPiece, Is.EqualTo(msg2.Payload.DistanceToPiece));
+            Assert.That(player.Board[indexAfterMove].Timestamp, Is.EqualTo(msg2.Payload.TimeStamp));
             Assert.That(player.X, Is.EqualTo(newX));
             Assert.That(player.Y, Is.EqualTo(newY));
         }
@@ -173,22 +150,17 @@ namespace Player.Tests
         [Test]
         public void MoveNoPayload()
         {
-            var assignedPlayerId = Guid.NewGuid().ToString();
-            var messageReceived = new Message
+            var msg2 = new Message<MoveResponsePayload>
             {
                 Type = Common.Consts.MoveResponse,
                 SenderId = Common.Consts.GameMasterId,
-                RecipientId = assignedPlayerId
+                RecipientId = Guid.NewGuid().ToString(),
+                Payload = null
             };
-            var queue = new Queue<string>(new[]
-            {
-                Consts.ACTION_VALID_RESPONSE,
-                JsonConvert.SerializeObject(messageReceived)
-            });
-            _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
+            _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Returns(new Message<ActionValidPayload>());
+            _messageProvider.Setup(x => x.Receive<MoveResponsePayload>()).Returns(msg2);
 
-
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object)
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
             {
                 Game = _game
             };
@@ -196,90 +168,16 @@ namespace Player.Tests
             Assert.Throws<NoPayloadException>(() => player.Move(Up));
         }
 
-        //[Test]
-        //public void MoveWrongPayload()
-        //{
-        //    var assignedPlayerId = 1;
-        //    var messageReceived = new Message<GameStartedPayload>
-        //    {
-        //        Type = Common.Consts.MoveResponse,
-        //        SenderId = Common.Consts.GameMasterId,
-        //        RecipientId = assignedPlayerId,
-        //        Payload = new GameStartedPayload
-        //        {
-        //            TeamInfo = new Dictionary<int, TeamInfoDTO>()
-        //            {
-        //                {1, new TeamInfoDTO
-        //                {
-        //                    LeaderId = 2,
-        //                    Players = new List<int>(){1, 2, 3, 4}
-        //                }},
-        //                {2, new TeamInfoDTO
-        //                {
-        //                    LeaderId = 5,
-        //                    Players = new List<int>(){5,6,7,8}
-        //                }}
-        //            }
-
-        //        }
-        //    };
-        //    var queue = new Queue<string>(new[]
-        //    {
-        //        Consts.ACTION_VALID_RESPONSE,
-        //        JsonConvert.SerializeObject(messageReceived)
-        //    });
-        //    _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
-
-        //    var player = new Player(_communicator.Object, _playerConfig, _gameService.Object)
-        //    {
-        //        Id = assignedPlayerId,
-        //        Game = _game
-        //    };
-
-
-        //    Assert.Throws<WrongPayloadException>(() => player.Move(Up));
-        //}
-
         [Test]
         public void MoveWrongDirection()
         {
             var invalidDirection = "top left";
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object);
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object);
 
             var result = player.Move(invalidDirection);
 
             Assert.That(result, Is.False);
-        }
-
-        [Test]
-        public void MoveGameAlreadyFinishedBeforeGettingActionStatus()
-        {
-            _communicator.Setup(x => x.Receive()).Returns(Consts.GAME_FINISHED_RESPONSE);
-
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object)
-            {
-                Game = _game
-            };
-
-            Assert.Throws<GameAlreadyFinishedException>(() => player.Move(Up));
-        }
-
-        [Test]
-        public void MoveGameAlreadyFinishedAfterGettingActionStatus()
-        {
-            var queue = new Queue<string>(new[]
-            {
-                Consts.ACTION_VALID_RESPONSE,
-                Consts.GAME_FINISHED_RESPONSE
-            });
-            _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object)
-            {
-                Game = _game
-            };
-
-            Assert.Throws<GameAlreadyFinishedException>(() => player.Move(Up));
         }
     }
 }
