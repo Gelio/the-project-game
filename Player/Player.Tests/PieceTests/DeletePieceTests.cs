@@ -45,7 +45,7 @@ namespace Player.Tests.PieceTests
         }
 
         [Test]
-        public void DeletePieceSuccess(bool isSham)
+        public void DeletePieceSuccess()
         {
             var msg2 = new Message<DeletePieceResponsePayload>()
             {

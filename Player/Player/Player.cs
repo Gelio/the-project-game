@@ -600,7 +600,18 @@ namespace Player
 
         public bool DeletePiece()
         {
-            throw new NotImplementedException();
+            _messageProvider.SendMessage(new Message<IPayload>()
+            {
+                Type = Consts.DeletePieceRequest,
+                SenderId = Id,
+                Payload = new TestPiecePayload()
+            });
+            if (!GetActionStatus()) { return false; }
+            var received = _messageProvider.Receive<DeletePieceResponsePayload>();
+
+            HeldPiece = null;
+
+            return true;
         }
     }
 }
