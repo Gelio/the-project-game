@@ -1,4 +1,3 @@
-using System;
 using Player.Interfaces;
 
 namespace Player.Messages.Responses
@@ -9,7 +8,7 @@ namespace Player.Messages.Responses
 
         public string PayloadType()
         {
-            throw new NotImplementedException();
+            return Common.Consts.TestPieceResponse;
         }
     }
 }

@@ -574,5 +574,10 @@ namespace Player
                 Console.WriteLine();
             }
         }
+
+        public bool TestPiece()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
