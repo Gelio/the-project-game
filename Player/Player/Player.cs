@@ -577,7 +577,25 @@ namespace Player
 
         public bool TestPiece()
         {
-            throw new NotImplementedException();
+            _messageProvider.SendMessage(new Message<IPayload>()
+            {
+                Type = Consts.TestPieceRequest,
+                SenderId = Id,
+                Payload = new TestPiecePayload()
+            });
+            if (!GetActionStatus()) { return false; }
+            var received = _messageProvider.Receive<TestPieceResponsePayload>();
+            if (received.Payload == null)
+                throw new NoPayloadException();
+
+            HeldPiece.WasTested = true;
+            HeldPiece.IsSham = received.Payload.IsSham;
+
+            string pieceResult = received.Payload.IsSham ? "a sham" : "valid";
+
+            logger.Info($"Held piece is {pieceResult}!");
+
+            return true;
         }
 
         public bool DeletePiece()
