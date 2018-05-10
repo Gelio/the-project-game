@@ -16,17 +16,17 @@ import {
 
 export function handleCommunicationRequest(
   communicationRequestsStore: CommunicationRequestsStore,
-  { actionDelays, sendMessage }: MessageHandlerDependencies,
+  { actionDelays, sendMessage, playersContainer }: MessageHandlerDependencies,
   _sender: Player,
   communicationRequest: CommunicationRequestFromSender
 ): ProcessMessageResult<RequestSentMessage> {
   const senderId = communicationRequest.senderId;
   const recipientId = communicationRequest.payload.targetPlayerId;
 
-  if (typeof recipientId !== 'string') {
+  if (!playersContainer.getPlayerById(recipientId)) {
     return {
       valid: false,
-      reason: 'Invalid recipient ID. Expected a string'
+      reason: 'Invalid recipient ID - player does not exist'
     };
   }
 

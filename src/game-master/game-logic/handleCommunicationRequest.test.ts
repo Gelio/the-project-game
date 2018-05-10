@@ -8,6 +8,8 @@ import {
   CommunicationRequestToRecipient
 } from '../../interfaces/requests/CommunicationRequest';
 
+import { Player } from '../Player';
+import { PlayersContainer } from '../PlayersContainer';
 import { ProcessMessageResult, ValidMessageResult } from '../ProcessMessageResult';
 import { SendMessageFn } from '../SendMessageFn';
 
@@ -33,6 +35,9 @@ describe('[GM] handleCommunicationRequest', () => {
   let actionDelays: ActionDelays;
   let logger: LoggerInstance;
   let communicationRequestsStore: CommunicationRequestsStore;
+  let playersContainer: PlayersContainer;
+  let sender: Player;
+  let recipient: Player;
 
   let sendMessage: SendMessageFn;
 
@@ -49,6 +54,16 @@ describe('[GM] handleCommunicationRequest', () => {
     sendMessage = jest.fn();
 
     communicationRequestsStore = new CommunicationRequestsStore();
+
+    sender = new Player();
+    sender.playerId = 'p1';
+
+    recipient = new Player();
+    recipient.playerId = 'p2';
+
+    playersContainer = new PlayersContainer();
+    playersContainer.addPlayer(sender);
+    playersContainer.addPlayer(recipient);
 
     jest.useFakeTimers();
   });
@@ -67,7 +82,7 @@ describe('[GM] handleCommunicationRequest', () => {
       communicationRequestsStore,
       {
         board: <any>null,
-        playersContainer: <any>{},
+        playersContainer,
         actionDelays: <any>actionDelays,
         logger,
         scoreboard: <any>null,
@@ -80,25 +95,31 @@ describe('[GM] handleCommunicationRequest', () => {
   }
 
   it('should reject communication request for invalid recipient id types', () => {
-    expect(executeHandleCommunicationRequest('p1', <any>null).valid).toBe(false);
-    expect(executeHandleCommunicationRequest('p1', <any>undefined).valid).toBe(false);
-    expect(executeHandleCommunicationRequest('p1', <any>1).valid).toBe(false);
-    expect(executeHandleCommunicationRequest('p1', <any>{}).valid).toBe(false);
+    expect(executeHandleCommunicationRequest(sender.playerId, <any>null).valid).toBe(false);
+    expect(executeHandleCommunicationRequest(sender.playerId, <any>undefined).valid).toBe(false);
+    expect(executeHandleCommunicationRequest(sender.playerId, <any>1).valid).toBe(false);
+    expect(executeHandleCommunicationRequest(sender.playerId, <any>{}).valid).toBe(false);
+  });
+
+  it('should rejeect communication request for non existing recipient', () => {
+    expect(executeHandleCommunicationRequest(sender.playerId, 'non existing player').valid).toBe(
+      false
+    );
   });
 
   describe('when there is pending communication request', () => {
     it('should reject communication request', () => {
-      communicationRequestsStore.addPendingRequest('p1', 'p2');
+      communicationRequestsStore.addPendingRequest(sender.playerId, recipient.playerId);
 
-      const result = executeHandleCommunicationRequest('p1', 'p2');
+      const result = executeHandleCommunicationRequest(sender.playerId, recipient.playerId);
 
       expect(result.valid).toBe(false);
     });
 
     it('should not send the communication request to target player', () => {
-      communicationRequestsStore.addPendingRequest('p1', 'p2');
+      communicationRequestsStore.addPendingRequest(sender.playerId, recipient.playerId);
 
-      executeHandleCommunicationRequest('p1', 'p2');
+      executeHandleCommunicationRequest(sender.playerId, recipient.playerId);
 
       jest.advanceTimersByTime(actionDelays.communicationRequest);
 
@@ -108,21 +129,23 @@ describe('[GM] handleCommunicationRequest', () => {
 
   describe('when there is no pending communication request', () => {
     it('should accept communication response', () => {
-      const result = executeHandleCommunicationRequest('p1', 'p2');
+      const result = executeHandleCommunicationRequest(sender.playerId, recipient.playerId);
 
       expect(result.valid).toBe(true);
     });
 
     it('should add pending communication request', () => {
-      executeHandleCommunicationRequest('p1', 'p2');
+      executeHandleCommunicationRequest(sender.playerId, recipient.playerId);
 
-      expect(communicationRequestsStore.isRequestPending('p1', 'p2')).toBe(true);
+      expect(communicationRequestsStore.isRequestPending(sender.playerId, recipient.playerId)).toBe(
+        true
+      );
     });
 
     it('should send message to recipient', async () => {
       const result: ValidMessageResult<RequestSentMessage> = <any>executeHandleCommunicationRequest(
-        'p1',
-        'p2'
+        sender.playerId,
+        recipient.playerId
       );
 
       jest.advanceTimersByTime(actionDelays.communicationRequest);
@@ -132,9 +155,9 @@ describe('[GM] handleCommunicationRequest', () => {
       const requestToRecipient: CommunicationRequestToRecipient = {
         type: 'COMMUNICATION_REQUEST',
         senderId: GAME_MASTER_ID,
-        recipientId: 'p2',
+        recipientId: recipient.playerId,
         payload: {
-          senderPlayerId: 'p1'
+          senderPlayerId: sender.playerId
         }
       };
 
@@ -143,7 +166,7 @@ describe('[GM] handleCommunicationRequest', () => {
     });
 
     it('should not send the message to communication request recipient before action delay', () => {
-      executeHandleCommunicationRequest('p1', 'p2');
+      executeHandleCommunicationRequest(sender.playerId, recipient.playerId);
 
       jest.advanceTimersByTime(actionDelays.communicationRequest - 1);
 
@@ -152,23 +175,23 @@ describe('[GM] handleCommunicationRequest', () => {
 
     it('should resolve the response after action delay', async () => {
       const result: ValidMessageResult<RequestSentMessage> = <any>executeHandleCommunicationRequest(
-        'p1',
-        'p2'
+        sender.playerId,
+        recipient.playerId
       );
 
       jest.advanceTimersByTime(actionDelays.communicationRequest);
 
       const response = await result.responseMessage;
 
-      expect(response.recipientId).toBe('p1');
+      expect(response.recipientId).toBe(sender.playerId);
     });
 
     it('should not resolve the response before action delay', () => {
       let resolved = false;
 
       const result: ValidMessageResult<RequestSentMessage> = <any>executeHandleCommunicationRequest(
-        'p1',
-        'p2'
+        sender.playerId,
+        recipient.playerId
       );
 
       result.responseMessage.then(() => {
