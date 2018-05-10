@@ -8,6 +8,9 @@ namespace Player.Messages.Responses
 {
     public class CommunicationResponsePayload : IPayload
     {
+        [JsonProperty("senderPlayerId")]
+        public string SenderPlayerId;
+
         [JsonProperty("targetPlayerId")]
         public string TargetPlayerId;
 
