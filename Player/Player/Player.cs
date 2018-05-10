@@ -144,30 +144,28 @@ namespace Player
                         SendCommunicationRequest(targetId);
                 }
 
-
-                // //logger.Debug("Player's position: {} {}", X, Y);
-                // if (HeldPiece != null)
-                // {
-                //     if (IsInGoalArea() && Board[GetCurrentBoardIndex()].GoalStatus == GoalStatusEnum.NoInfo)
-                //     {
-                //         logger.Info("Trying to place down piece");
-                //         (var result, var resultEnum) = PlaceDownPiece();
-                //     }
-                //     else
-                //         Move(PickSweepingGoalAreaDirection());
-                // }
-                // else if (Board[GetCurrentBoardIndex()].DistanceToClosestPiece == 0) // We stand on a piece
-                // {
-                //     logger.Info("Trying to pick up piece...");
-                //     PickUpPiece();
-                //     continue;
-                // }
-                // else // Find a piece
-                // {
-                //     Discover();
-                //     string direction = PickClosestPieceDirection();
-                //     Move(direction);
-                // }
+                if (HeldPiece != null)
+                {
+                    if (IsInGoalArea() && Board[GetCurrentBoardIndex()].GoalStatus == GoalStatusEnum.NoInfo)
+                    {
+                        logger.Info("Trying to place down piece");
+                        (var result, var resultEnum) = PlaceDownPiece();
+                    }
+                    else
+                        Move(PickSweepingGoalAreaDirection());
+                }
+                else if (Board[GetCurrentBoardIndex()].DistanceToClosestPiece == 0) // We stand on a piece
+                {
+                    logger.Info("Trying to pick up piece...");
+                    PickUpPiece();
+                    continue;
+                }
+                else // Find a piece
+                {
+                    Discover();
+                    string direction = PickClosestPieceDirection();
+                    Move(direction);
+                }
             }
         }
 
@@ -390,8 +388,6 @@ namespace Player
             });
             if (!GetActionStatus()) { return false; }
             var received = _messageProvider.Receive<PickUpPieceResponsePayload>();
-            if (received.Payload == null)
-                throw new NoPayloadException();
 
             HeldPiece = Board[X + Game.BoardSize.X * Y].Piece;
             Board[X + Game.BoardSize.X * Y].Piece = null;
