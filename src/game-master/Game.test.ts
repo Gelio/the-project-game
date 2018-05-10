@@ -91,7 +91,6 @@ describe('[GM] Game', () => {
   let communicator: Communicator;
   let player: Player;
   let otherPlayer: Player;
-  // TODO: add tests using updateUIFn
   let updateUIFn: Function;
 
   beforeEach(() => {
@@ -192,6 +191,19 @@ describe('[GM] Game', () => {
         expect(spy).toHaveBeenCalledWith(responseMessage);
 
         jest.useRealTimers();
+      });
+
+      it('should update UI', () => {
+        game.start();
+
+        const message: DiscoveryRequest = {
+          senderId: player.playerId,
+          type: 'DISCOVERY_REQUEST',
+          payload: undefined
+        };
+
+        game.handleMessage(message);
+        expect(updateUIFn).toBeCalled();
       });
     });
   });
@@ -316,6 +328,7 @@ describe('[GM] Game', () => {
     game.addPlayer(anotherPlayer);
 
     expect(game.playersContainer.getPlayerById(player.playerId)).toBe(player);
+    expect(updateUIFn).toBeCalled();
   });
 
   it('should remove player from the game', () => {
