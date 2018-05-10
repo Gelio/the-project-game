@@ -76,7 +76,6 @@ export class Game {
     this.communicator = communicator;
     this.updateUI = updateUI;
     this.periodicPieceGenerator = periodicPieceGeneratorFactory(this.board);
-    this.communicationRequestsStore = new CommunicationRequestsStore();
 
     this.playerMessageHandler = new PlayerMessageHandler(
       {
@@ -310,23 +309,6 @@ export class Game {
     newPlayer.isConnected = true;
 
     this.addPlayer(newPlayer);
-  }
-
-<<<<<<< HEAD
-  private sendIngameMessage(message: Message<any>): void {
-    if (this.state !== GameState.InProgress) {
-      this.logger.verbose(
-        `Message ${message.type} will not be sent because the game is not in progress`
-      );
-
-      return;
-    }
-
-    return this.communicator.sendMessage(message);
-=======
-  private updateBoard() {
-    this.uiController.updateBoard(this.board);
->>>>>>> [GM][T] add missing game tests
   }
 
   private sendGameStartedMessageToPlayers() {
