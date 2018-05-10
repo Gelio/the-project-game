@@ -28,6 +28,8 @@ namespace Player
         public string GoalAreaDirection;
         public GameInfo Game;
 
+        private Dictionary<string, bool> WaitingForResponse;
+
         // TODO: Remove ICommunicator dependency
         private ICommunicator _communicator;
         private IGameService _gameService;
@@ -41,6 +43,7 @@ namespace Player
             _messageProvider = messageProvider;
             _playerConfig = playerConfig;
             Id = Guid.NewGuid().ToString();
+            WaitingForResponse = new Dictionary<string, bool>();
         }
 
         public void Start()
@@ -113,6 +116,7 @@ namespace Player
 
             TeamMembersIds = message.Payload.TeamInfo[_playerConfig.TeamNumber].Players;
             TeamMembersIds.Remove(Id);
+            TeamMembersIds.ToList().ForEach(id => WaitingForResponse.Add(id, false));
             LeaderId = message.Payload.TeamInfo[_playerConfig.TeamNumber].LeaderId;
             logger.Info("The game has started!");
         }
@@ -132,7 +136,12 @@ namespace Player
                     SendCommunicationResponse(senderId);
                 }
                 if (_playerConfig.IsLeader)
-                    SendCommunicationRequest(TeamMembersIds.FirstOrDefault());
+                {
+                    var targetId = TeamMembersIds.FirstOrDefault();
+                    if (targetId != null && !WaitingForResponse[targetId])
+                        SendCommunicationRequest(targetId);
+                }
+
 
                 // //logger.Debug("Player's position: {} {}", X, Y);
                 // if (HeldPiece != null)
@@ -466,6 +475,7 @@ namespace Player
                 }
             });
             if (!GetActionStatus()) { return false; }
+            WaitingForResponse[otherId] = true;
             _messageProvider.Receive<RequestSentPayload>();
             return true;
         }
@@ -548,7 +558,12 @@ namespace Player
         {
             while (_messageProvider.HasPendingResponses)
             {
-                var receivedBoard = _messageProvider.GetPendingResponse().Payload.Board;
+                var receivedMessage = _messageProvider.GetPendingResponse();
+                var receivedBoard = receivedMessage.Payload.Board;
+                var otherId = receivedMessage.Payload.SenderPlayerId;
+
+
+                WaitingForResponse[otherId] = false;
 
                 for (int i = 0; i < receivedBoard.Count; i++)
                 {
