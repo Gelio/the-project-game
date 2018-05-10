@@ -99,27 +99,5 @@ namespace Player.Tests.PieceTests
 
             Assert.That(result, Is.False);
         }
-
-        [Test]
-        public void PickUpPieceNoPayload()
-        {
-            var msg2 = new Message<PickUpPieceResponsePayload>
-            {
-                Type = Common.Consts.PickupPieceResponse,
-                SenderId = Common.Consts.GameMasterId,
-                RecipientId = _assignedPlayerId,
-                Payload = null
-            };
-            _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Returns(new Message<ActionValidPayload>());
-            _messageProvider.Setup(x => x.Receive<PickUpPieceResponsePayload>()).Returns(msg2);
-
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
-            {
-                Id = _assignedPlayerId,
-                Game = _game
-            };
-
-            Assert.Throws<NoPayloadException>(() => player.PickUpPiece());
-        }
     }
 }
