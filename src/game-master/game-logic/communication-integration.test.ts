@@ -6,6 +6,7 @@ import { Player } from '../Player';
 
 import { handleCommunicationRequest } from './handleCommunicationRequest';
 import { handleCommunicationResponse } from './handleCommunicationResponse';
+import { PlayersContainer } from '../PlayersContainer';
 
 describe('[GM] communication integration', () => {
   let communicationRequestsStore: CommunicationRequestsStore;
@@ -13,6 +14,7 @@ describe('[GM] communication integration', () => {
   let sendMessage: Function;
   let communicationRequester: Player;
   let informationSource: Player;
+  let playersContainer: PlayersContainer;
 
   beforeEach(() => {
     communicationRequestsStore = new CommunicationRequestsStore();
@@ -24,17 +26,21 @@ describe('[GM] communication integration', () => {
 
     communicationRequester = new Player();
     communicationRequester.playerId = 'requester';
-    communicationRequester.isLeader = true;
+    communicationRequester.isLeader = false;
 
     informationSource = new Player();
     informationSource.playerId = 'source';
-    communicationRequester.isLeader = true;
+    informationSource.isLeader = false;
+
+    playersContainer = new PlayersContainer();
+    playersContainer.addPlayer(communicationRequester);
+    playersContainer.addPlayer(informationSource);
 
     jest.useFakeTimers();
 
     handleCommunicationRequest(
       communicationRequestsStore,
-      <any>{ actionDelays, sendMessage },
+      <any>{ actionDelays, sendMessage, playersContainer },
       communicationRequester,
       {
         senderId: communicationRequester.playerId,
@@ -56,7 +62,8 @@ describe('[GM] communication integration', () => {
       communicationRequestsStore,
       <any>{
         actionDelays,
-        sendMessage
+        sendMessage,
+        playersContainer
       },
       informationSource,
       {
@@ -78,7 +85,8 @@ describe('[GM] communication integration', () => {
       communicationRequestsStore,
       <any>{
         actionDelays,
-        sendMessage
+        sendMessage,
+        playersContainer
       },
       informationSource,
       {
