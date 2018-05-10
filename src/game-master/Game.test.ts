@@ -346,13 +346,24 @@ describe('[GM] Game', () => {
 
   describe('register', () => {
     it('should send correct game definition', () => {
-      game.register();
-
       const message = {
         type: 'REGISTER_GAME_REQUEST',
         senderId: GAME_MASTER_ID,
         payload: gameDefinition
       };
+
+      const responseMessage = {
+        type: 'REGISTER_GAME_RESPONSE',
+        senderId: COMMUNICATION_SERVER_ID,
+        recipientId: GAME_MASTER_ID,
+        payload: {
+          registered: true
+        }
+      };
+
+      communicator.waitForSpecificMessage = jest.fn(() => Promise.resolve(responseMessage));
+      game.register();
+
       expect(communicator.sendMessage).toBeCalledWith(message);
     });
 
@@ -373,8 +384,6 @@ describe('[GM] Game', () => {
 
   describe('unregister', () => {
     it('should send correct name of the game', () => {
-      game.unregister();
-
       const message = {
         type: 'UNREGISTER_GAME_REQUEST',
         senderId: GAME_MASTER_ID,
@@ -383,6 +392,19 @@ describe('[GM] Game', () => {
           gameName: gameDefinition.name
         }
       };
+
+      const responseMessage = {
+        type: 'UNREGISTER_GAME_RESPONSE',
+        senderId: COMMUNICATION_SERVER_ID,
+        recipientId: GAME_MASTER_ID,
+        payload: {
+          unregistered: true
+        }
+      };
+
+      communicator.waitForSpecificMessage = jest.fn(() => Promise.resolve(responseMessage));
+      game.unregister();
+
       expect(communicator.sendMessage).toBeCalledWith(message);
     });
 
