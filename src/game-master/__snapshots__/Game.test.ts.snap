@@ -7,3 +7,7 @@ exports[`[GM] Game processMessage after game started should reject message from 
 exports[`[GM] Game processMessage after game started should reject message from non existing player 1`] = `"Sender ID is invalid"`;
 
 exports[`[GM] Game processMessage should reject message when the game is not in progress 1`] = `"Game is not in progress"`;
+
+exports[`[GM] Game register should throw when cannot register the game 1`] = `[Error: Cannot register the game]`;
+
+exports[`[GM] Game unregister should throw when cannot unregister the game 1`] = `[Error: Cannot unregister the game]`;

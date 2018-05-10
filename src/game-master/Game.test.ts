@@ -2,14 +2,28 @@ import { LoggerInstance } from 'winston';
 
 import { Communicator } from '../common/Communicator';
 import { createMockCommunicator } from '../common/createMockCommunicator';
-import { COMMUNICATION_SERVER_ID, GAME_MASTER_ID } from '../common/EntityIds';
+import { COMMUNICATION_SERVER_ID, GAME_MASTER_ID, PlayerId } from '../common/EntityIds';
 import { LoggerFactory } from '../common/logging/LoggerFactory';
 
 import { ActionDelays } from '../interfaces/ActionDelays';
 import { BoardSize } from '../interfaces/BoardSize';
+import { Direction } from '../interfaces/Direction';
 import { GameDefinition } from '../interfaces/GameDefinition';
 
+import { ActionInvalidMessage } from '../interfaces/messages/ActionInvalidMessage';
+import { ActionValidMessage } from '../interfaces/messages/ActionValidMessage';
+import { GameFinishedMessage } from '../interfaces/messages/GameFinishedMessage';
+import { GameStartedMessage } from '../interfaces/messages/GameStartedMessage';
+import { PlayerDisconnectedMessage } from '../interfaces/messages/PlayerDisconnectedMessage';
+import { PlayerHelloMessage } from '../interfaces/messages/PlayerHelloMessage';
 import { DiscoveryRequest } from '../interfaces/requests/DiscoveryRequest';
+import { MoveRequest } from '../interfaces/requests/MoveRequest';
+import { RegisterGameRequest } from '../interfaces/requests/RegisterGameRequest';
+import { TestPieceRequest } from '../interfaces/requests/TestPieceRequest';
+import { UnregisterGameRequest } from '../interfaces/requests/UnregisterGameRequest';
+import { RegisterGameResponse } from '../interfaces/responses/RegisterGameResponse';
+import { TestPieceResponse } from '../interfaces/responses/TestPieceResponse';
+import { UnregisterGameResponse } from '../interfaces/responses/UnregisterGameResponse';
 
 import { Game } from './Game';
 import { GameState } from './GameState';
@@ -19,6 +33,8 @@ import { InvalidMessageResult } from './ProcessMessageResult';
 import { UIController } from './ui/UIController';
 
 import { PeriodicPieceGenerator } from './board-generation/PeriodicPieceGenerator';
+
+import { Piece } from './models/Piece';
 
 function createMockUiController(): UIController {
   return <any>{
@@ -33,7 +49,7 @@ function createMockPeriodicPieceGenerator() {
   };
 }
 
-function getPlayerDisconnectedMessage(player: Player): any {
+function getPlayerDisconnectedMessage(player: Player): PlayerDisconnectedMessage {
   return {
     type: 'PLAYER_DISCONNECTED',
     senderId: COMMUNICATION_SERVER_ID,
@@ -44,7 +60,7 @@ function getPlayerDisconnectedMessage(player: Player): any {
   };
 }
 
-function getPlayerHelloMessage(playerId: String, isLeader: boolean): any {
+function getPlayerHelloMessage(playerId: PlayerId, isLeader: boolean): PlayerHelloMessage {
   return {
     type: 'PLAYER_HELLO',
     senderId: playerId,
@@ -145,7 +161,7 @@ describe('[GM] Game', () => {
 
       game.handleMessage(message);
 
-      const actionInvalidMessage = {
+      const actionInvalidMessage: ActionInvalidMessage = {
         type: 'ACTION_INVALID',
         recipientId: message.senderId,
         senderId: GAME_MASTER_ID,
@@ -156,39 +172,47 @@ describe('[GM] Game', () => {
 
       expect(spy).toHaveBeenCalledWith(actionInvalidMessage);
     });
+
     describe('message with valid action', () => {
-      it('should respond with action valid and action result', () => {
+      it('should respond with action valid and action result', async () => {
         jest.useFakeTimers();
         game.start();
 
-        const message: DiscoveryRequest = {
+        player.heldPiece = new Piece();
+        player.heldPiece.isSham = true;
+
+        const message: TestPieceRequest = {
           senderId: player.playerId,
-          type: 'DISCOVERY_REQUEST',
+          type: 'TEST_PIECE_REQUEST',
           payload: undefined
         };
 
-        game.handleMessage(message);
+        const promise = game.handleMessage(message);
 
-        const actionValidMessage = {
+        const actionValidMessage: ActionValidMessage = {
           type: 'ACTION_VALID',
           recipientId: message.senderId,
           senderId: GAME_MASTER_ID,
           payload: {
-            delay: actionDelays.discover
+            delay: actionDelays.test
           }
         };
 
-        const responseMessage = {
+        const responseMessage: TestPieceResponse = {
           recipientId: message.senderId,
           senderId: GAME_MASTER_ID,
-          type: 'ACTION_VALID',
+          type: 'TEST_PIECE_RESPONSE',
           payload: {
-            delay: actionDelays.discover
+            isSham: player.heldPiece.isSham
           }
         };
+
         expect(spy).toHaveBeenCalledWith(actionValidMessage);
-        jest.advanceTimersByTime(actionDelays.discover);
-        expect(spy).toHaveBeenCalledWith(responseMessage);
+        jest.advanceTimersByTime(actionDelays.test);
+        await promise;
+
+        expect(spy).toHaveBeenCalledTimes(2);
+        expect(spy).toHaveBeenLastCalledWith(responseMessage);
 
         jest.useRealTimers();
       });
@@ -196,10 +220,12 @@ describe('[GM] Game', () => {
       it('should update UI', () => {
         game.start();
 
-        const message: DiscoveryRequest = {
+        const message: MoveRequest = {
           senderId: player.playerId,
-          type: 'DISCOVERY_REQUEST',
-          payload: undefined
+          type: 'MOVE_REQUEST',
+          payload: {
+            direction: Direction.Up
+          }
         };
 
         game.handleMessage(message);
@@ -220,6 +246,7 @@ describe('[GM] Game', () => {
           type: 'DISCOVERY_REQUEST',
           payload: undefined
         };
+
         const processedMessageResult = game.processPlayerMessage(message);
         expect(processedMessageResult.valid).toBe(false);
 
@@ -317,7 +344,7 @@ describe('[GM] Game', () => {
     });
   });
 
-  it('should add player to the game', () => {
+  it('should add the player to the game', () => {
     const anotherPlayer = new Player();
     anotherPlayer.playerId = 'anotherPlayer';
     anotherPlayer.teamId = 2;
@@ -328,17 +355,25 @@ describe('[GM] Game', () => {
     game.addPlayer(anotherPlayer);
 
     expect(game.playersContainer.getPlayerById(player.playerId)).toBe(player);
+  });
+
+  it('should update UI after the player is added to the game', () => {
+    const anotherPlayer = new Player();
+    anotherPlayer.playerId = 'anotherPlayer';
+
+    game.addPlayer(anotherPlayer);
+
     expect(updateUIFn).toBeCalled();
   });
 
-  it('should remove player from the game', () => {
+  it('should remove the player from the game', () => {
     game.removePlayer(player);
 
     expect(game.playersContainer.getPlayerById(player.playerId)).toBeUndefined();
   });
 
   describe('handlePlayerDisconnected', () => {
-    it('should remove player when the game is registered state', () => {
+    it('should remove the player when the game has not started', () => {
       const message = getPlayerDisconnectedMessage(player);
 
       game.handlePlayerDisconnectedMessage(message);
@@ -346,7 +381,7 @@ describe('[GM] Game', () => {
       expect(game.playersContainer.getPlayerById(player.playerId)).toBeUndefined();
     });
 
-    it('should disconnect player after the game has started', () => {
+    it('should mark the player as disconnected', () => {
       game.start();
 
       const message = getPlayerDisconnectedMessage(player);
@@ -359,13 +394,13 @@ describe('[GM] Game', () => {
 
   describe('register', () => {
     it('should send correct game definition', () => {
-      const message = {
+      const message: RegisterGameRequest = {
         type: 'REGISTER_GAME_REQUEST',
         senderId: GAME_MASTER_ID,
         payload: gameDefinition
       };
 
-      const responseMessage = {
+      const responseMessage: RegisterGameResponse = {
         type: 'REGISTER_GAME_RESPONSE',
         senderId: COMMUNICATION_SERVER_ID,
         recipientId: GAME_MASTER_ID,
@@ -381,7 +416,7 @@ describe('[GM] Game', () => {
     });
 
     it('should throw when cannot register the game', () => {
-      const message = {
+      const message: RegisterGameResponse = {
         type: 'REGISTER_GAME_RESPONSE',
         senderId: COMMUNICATION_SERVER_ID,
         recipientId: GAME_MASTER_ID,
@@ -391,13 +426,13 @@ describe('[GM] Game', () => {
       };
 
       communicator.waitForSpecificMessage = jest.fn(() => Promise.resolve(message));
-      expect(game.register()).rejects.toEqual(new Error('Cannot register the game'));
+      expect(game.register()).rejects.toMatchSnapshot();
     });
   });
 
   describe('unregister', () => {
     it('should send correct name of the game', () => {
-      const message = {
+      const message: UnregisterGameRequest = {
         type: 'UNREGISTER_GAME_REQUEST',
         senderId: GAME_MASTER_ID,
         recipientId: COMMUNICATION_SERVER_ID,
@@ -406,7 +441,7 @@ describe('[GM] Game', () => {
         }
       };
 
-      const responseMessage = {
+      const responseMessage: UnregisterGameResponse = {
         type: 'UNREGISTER_GAME_RESPONSE',
         senderId: COMMUNICATION_SERVER_ID,
         recipientId: GAME_MASTER_ID,
@@ -422,7 +457,7 @@ describe('[GM] Game', () => {
     });
 
     it('should throw when cannot unregister the game', () => {
-      const message = {
+      const message: UnregisterGameResponse = {
         type: 'UNREGISTER_GAME_RESPONSE',
         senderId: COMMUNICATION_SERVER_ID,
         recipientId: GAME_MASTER_ID,
@@ -432,7 +467,7 @@ describe('[GM] Game', () => {
       };
 
       communicator.waitForSpecificMessage = jest.fn(() => Promise.resolve(message));
-      expect(game.unregister()).rejects.toEqual(new Error('Cannot unregister the game'));
+      expect(game.unregister()).rejects.toMatchSnapshot();
     });
   });
 
@@ -442,7 +477,7 @@ describe('[GM] Game', () => {
     game.start();
 
     playerIDs.forEach(playerId => {
-      const message = {
+      const message: GameStartedMessage = {
         senderId: GAME_MASTER_ID,
         recipientId: playerId,
         type: 'GAME_STARTED',
@@ -470,7 +505,7 @@ describe('[GM] Game', () => {
     game.stop();
 
     playerIDs.forEach(playerId => {
-      const message = {
+      const message: GameFinishedMessage = {
         senderId: GAME_MASTER_ID,
         recipientId: playerId,
         type: 'GAME_FINISHED',
@@ -490,24 +525,15 @@ describe('[GM] Game', () => {
         game.start();
       });
 
-      it('no new player should be able to join the game', () => {
+      it('should not accept new players', () => {
         const message = getPlayerHelloMessage('newPlayer', false);
 
         expect(() => game.tryAcceptPlayer(message)).toThrow();
       });
-
-      it('returning player should be able to reconnect', () => {
-        player.isConnected = false;
-
-        const message = getPlayerHelloMessage('newPlayer', true);
-
-        game.tryAcceptPlayer(message);
-        expect(player.isConnected).toBe(true);
-      });
     });
 
     describe('when game master is waiting for players', () => {
-      it('should reject player when teams are full', () => {
+      it('should reject the player when team is full', () => {
         game.definition.teamSizes['1'] = 1;
         const message = getPlayerHelloMessage('newPlayer', false);
 
@@ -520,10 +546,13 @@ describe('[GM] Game', () => {
         expect(() => game.tryAcceptPlayer(message)).toThrow();
       });
 
-      describe('team has only one slot left and doesn`t have team leader', () => {
-        it('should reject player who is not a team leader', () => {
-          game.definition.teamSizes['1'] = 2;
+      describe('team has only one slot left and does not have team leader', () => {
+        beforeEach(() => {
           player.isLeader = false;
+        });
+
+        it('should reject a player who is not a team leader', () => {
+          game.definition.teamSizes['1'] = 2;
 
           const message = getPlayerHelloMessage('newPlayer', false);
 
@@ -532,7 +561,6 @@ describe('[GM] Game', () => {
 
         it('should accept team leader', () => {
           game.definition.teamSizes['1'] = 2;
-          player.isLeader = false;
 
           const message = getPlayerHelloMessage('newPlayer', true);
 
@@ -544,7 +572,7 @@ describe('[GM] Game', () => {
     });
 
     describe('team has many slots left', () => {
-      it('should reject player who is not a team leader', () => {
+      it('should accept a player who is not a team leader', () => {
         const message = getPlayerHelloMessage('newPlayer', false);
 
         game.tryAcceptPlayer(message);
