@@ -90,7 +90,9 @@ namespace Player
                 }
             });
             _messageProvider.AssertPlayerStatus(_playerConfig.Timeout);
-            logger.Info("Player connected to server");
+            logger.Info($"Player ({Id}) connected to server");
+            logger.Debug($"Team no.: {_playerConfig.TeamNumber}");
+            logger.Debug($"Is leader: {_playerConfig.IsLeader}");
         }
 
         public void Disconnect()
@@ -268,6 +270,7 @@ namespace Player
                     Board[tileDTO.X + Game.BoardSize.X * tileDTO.Y].Piece = new Piece();
                 }
             }
+            logger.Info($"Discovered {received.Payload.Tiles.Count} tiles");
             return true;
         }
 
@@ -325,6 +328,8 @@ namespace Player
 
             if (!gotOwnInfo)
                 throw new InvalidOperationException("No info about player");
+
+            logger.Debug($"Player's position: ({X}, {Y})");
             return true;
         }
 
@@ -477,6 +482,7 @@ namespace Player
             if (!GetActionStatus()) { return false; }
             WaitingForResponse[otherId] = true;
             _messageProvider.Receive<RequestSentPayload>();
+            logger.Info($"Communication request sent to {otherId}");
             return true;
         }
 
@@ -488,12 +494,10 @@ namespace Player
 
             if (otherId == LeaderId || willThePoorGuyGetDataFromMe == 1)
             {
-                logger.Info("Imma sending a response");
                 return AcceptCommunication(otherId);
             }
             else
             {
-                logger.Info("No cake for you");
                 return RejectCommunication(otherId);
             }
         }
@@ -526,6 +530,7 @@ namespace Player
             });
             if (!GetActionStatus()) { return false; }
             _messageProvider.Receive<ResponseSentPayload>();
+            logger.Info($"Communication response sent to {otherId}");
             return true;
         }
 
@@ -548,6 +553,7 @@ namespace Player
             });
             if (!GetActionStatus()) { return false; }
             _messageProvider.Receive<ResponseSentPayload>();
+            logger.Info($"Rejected communication request from {otherId}");
             return true;
         }
 
@@ -562,8 +568,8 @@ namespace Player
                 var receivedBoard = receivedMessage.Payload.Board;
                 var otherId = receivedMessage.Payload.SenderPlayerId;
 
-
                 WaitingForResponse[otherId] = false;
+                logger.Debug($"Updating board using info from {otherId}");
 
                 for (int i = 0; i < receivedBoard.Count; i++)
                 {

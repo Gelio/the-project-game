@@ -15,6 +15,8 @@ namespace Player
 {
     public class MessageProvider : IMessageProvider
     {
+        private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
         private Queue<Message<CommunicationPayload>> _communicationRequests;
         private Queue<Message<CommunicationResponsePayload>> _communicationResponses;
         private ICommunicator _communicator;
@@ -49,19 +51,33 @@ namespace Player
                 }
 
                 if (message.Type == dummyInstance.PayloadType())
+                {
+                    logger.Debug($"Received expected message type ({dummyInstance.PayloadType()})");
                     return JsonConvert.DeserializeObject<Message<P>>(serializedMessage);
+                }
                 if (message.Type == Consts.GameFinished)
                     throw new GameAlreadyFinishedException();
                 if (message.Type == Consts.CommunicationRequest)
                 {
-                    _communicationRequests.Enqueue(JsonConvert.DeserializeObject<Message<CommunicationPayload>>(serializedMessage));
+                    var request = JsonConvert.DeserializeObject<Message<CommunicationPayload>>(serializedMessage);
+                    _communicationRequests.Enqueue(request);
+                    logger.Info($"Received communication request from {request.Payload.SenderPlayerId}");
+                    logger.Debug($"Pending requests: {_communicationRequests.Count}, Pending responses: {_communicationResponses.Count}");
                     continue;
                 }
                 else if (message.Type == Consts.CommunicationResponse)
                 {
                     var response = JsonConvert.DeserializeObject<Message<CommunicationResponsePayload>>(serializedMessage);
                     if (response.Payload.Accepted)
+                    {
                         _communicationResponses.Enqueue(response);
+                        logger.Info($"Received accepted communication response from {response.Payload.SenderPlayerId}");
+                    }
+                    else
+                    {
+                        logger.Info($"Received rejected communication response from {response.Payload.SenderPlayerId}");
+                    }
+                    logger.Debug($"Pending requests: {_communicationRequests.Count}, Pending responses: {_communicationResponses.Count}");
                     continue;
                 }
                 else
