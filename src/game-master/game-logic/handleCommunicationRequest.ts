@@ -23,6 +23,13 @@ export function handleCommunicationRequest(
   const senderId = communicationRequest.senderId;
   const recipientId = communicationRequest.payload.targetPlayerId;
 
+  if (typeof recipientId !== 'string') {
+    return {
+      valid: false,
+      reason: 'Invalid recipient ID. Expected a string'
+    };
+  }
+
   if (communicationRequestsStore.isRequestPending(senderId, recipientId)) {
     return {
       valid: false,

@@ -79,6 +79,13 @@ describe('[GM] handleCommunicationRequest', () => {
     );
   }
 
+  it('should reject communication request for invalid recipient id types', () => {
+    expect(executeHandleCommunicationRequest('p1', <any>null).valid).toBe(false);
+    expect(executeHandleCommunicationRequest('p1', <any>undefined).valid).toBe(false);
+    expect(executeHandleCommunicationRequest('p1', <any>1).valid).toBe(false);
+    expect(executeHandleCommunicationRequest('p1', <any>{}).valid).toBe(false);
+  });
+
   describe('when there is pending communication request', () => {
     it('should reject communication request', () => {
       communicationRequestsStore.addPendingRequest('p1', 'p2');
