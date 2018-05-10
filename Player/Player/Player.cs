@@ -452,9 +452,9 @@ namespace Player
         /// <summary>
         /// Sent to another player to initiate the communication. After receiving REQUEST_SENT from GM can do sth else.
         /// </summary>
-        /// <param name="recipientId"></param>
+        /// <param name="otherId"></param>
         /// <returns>True if received REQUEST_SENT message, False in case of ACTION_INVALID message</returns>
-        public bool SendCommunicationRequest(string recipientId)
+        public bool SendCommunicationRequest(string otherId)
         {
             _messageProvider.SendMessage(new Message<IPayload>()
             {
@@ -462,7 +462,7 @@ namespace Player
                 SenderId = Id,
                 Payload = new CommunicationPayload
                 {
-                    TargetPlayerId = recipientId
+                    TargetPlayerId = otherId
                 }
             });
             if (!GetActionStatus()) { return false; }
@@ -470,21 +470,21 @@ namespace Player
             return true;
         }
 
-        public bool SendCommunicationResponse(string senderId)
+        public bool SendCommunicationResponse(string otherId)
         {
             // here logic for the will of responding to others - that's why it is separated from the previous method for now
             var r = new Random();
             int willThePoorGuyGetDataFromMe = r.Next(0, 1);
 
-            if (senderId == LeaderId || willThePoorGuyGetDataFromMe == 1)
+            if (otherId == LeaderId || willThePoorGuyGetDataFromMe == 1)
             {
                 logger.Info("Imma sending a response");
-                return AcceptCommunication(senderId);
+                return AcceptCommunication(otherId);
             }
             else
             {
                 logger.Info("No cake for you");
-                return RejectCommunication(senderId);
+                return RejectCommunication(otherId);
             }
         }
 
@@ -493,7 +493,7 @@ namespace Player
         /// </summary>
         /// <param name="recipientId"></param>
         /// <returns></returns>
-        public bool AcceptCommunication(string recipientId)
+        public bool AcceptCommunication(string otherId)
         {
             // haven't checked how the mapping works, therefore it's written how it is now
             List<TileCommunicationDTO> boardToSend = new List<TileCommunicationDTO>();
@@ -509,7 +509,7 @@ namespace Player
                 SenderId = Id,
                 Payload = new CommunicationResponsePayload
                 {
-                    TargetPlayerId = recipientId,
+                    TargetPlayerId = otherId,
                     Accepted = true,
                     Board = boardToSend
                 }
@@ -522,9 +522,9 @@ namespace Player
         /// <summary>
         /// U ain't got no time to respond to some weak players
         /// </summary>
-        /// <param name="recipientId"></param>
+        /// <param name="otherId"></param>
         /// <returns></returns>
-        public bool RejectCommunication(string recipientId)
+        public bool RejectCommunication(string otherId)
         {
             _messageProvider.SendMessage(new Message<IPayload>()
             {
@@ -532,7 +532,7 @@ namespace Player
                 SenderId = Id,
                 Payload = new CommunicationResponsePayload
                 {
-                    TargetPlayerId = recipientId,
+                    TargetPlayerId = otherId,
                     Accepted = false,
                 }
             });
