@@ -3,10 +3,10 @@ import { CommunicationRequestsStore } from '../communication/CommunicationReques
 import { ActionDelays } from '../../interfaces/ActionDelays';
 
 import { Player } from '../Player';
+import { PlayersContainer } from '../PlayersContainer';
 
 import { handleCommunicationRequest } from './handleCommunicationRequest';
 import { handleCommunicationResponse } from './handleCommunicationResponse';
-import { PlayersContainer } from '../PlayersContainer';
 
 describe('[GM] communication integration', () => {
   let communicationRequestsStore: CommunicationRequestsStore;
