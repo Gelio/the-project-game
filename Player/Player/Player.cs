@@ -567,7 +567,7 @@ namespace Player
 
                 for (int i = 0; i < receivedBoard.Count; i++)
                 {
-                    if (!Board[i].Timestamp.HasValue || receivedBoard[i].TimeStamp > Board[i].Timestamp)
+                    if (/* receivedBoard[i].TimeStamp != 0 && */ receivedBoard[i].TimeStamp > Board[i].Timestamp)
                     {
                         AutoMapper.Mapper.Map<TileCommunicationDTO, Tile>(receivedBoard[i], Board[i]);
                     }
