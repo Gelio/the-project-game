@@ -258,7 +258,7 @@ describe('[GM] handleCommunicationResponse', () => {
         recipientId: asker.playerId,
         payload: {
           accepted: true,
-          boardInfo: <any>null,
+          board: <any>null,
           senderPlayerId: sender.playerId
         }
       };

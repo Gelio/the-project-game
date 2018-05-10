@@ -76,7 +76,7 @@ function handleAcceptedResponse(
     recipientId: communicationResponse.payload.targetPlayerId,
     payload: {
       accepted: true,
-      boardInfo: communicationResponse.payload.board,
+      board: communicationResponse.payload.board,
       senderPlayerId: communicationResponse.senderId
     }
   };
