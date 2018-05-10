@@ -76,6 +76,7 @@ export class Game {
     this.communicator = communicator;
     this.updateUI = updateUI;
     this.periodicPieceGenerator = periodicPieceGeneratorFactory(this.board);
+    this.communicationRequestsStore = new CommunicationRequestsStore();
 
     this.playerMessageHandler = new PlayerMessageHandler(
       {
