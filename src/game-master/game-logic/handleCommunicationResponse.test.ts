@@ -10,6 +10,8 @@ import {
   RejectedCommunicationResponseToSender
 } from '../../interfaces/responses/CommunicationResponse';
 
+import { Player } from '../Player';
+import { PlayersContainer } from '../PlayersContainer';
 import { ValidMessageResult } from '../ProcessMessageResult';
 import { SendMessageFn } from '../SendMessageFn';
 
@@ -49,13 +51,29 @@ function createResponseFromRecipient(
 }
 
 describe('[GM] handleCommunicationResponse', () => {
+  let sender: Player;
   let actionDelays: ActionDelays;
   let logger: LoggerInstance;
   let communicationRequestsStore: CommunicationRequestsStore;
 
   let sendMessage: SendMessageFn;
 
+  let asker: Player;
+  let playersContainer: PlayersContainer;
+
   beforeEach(() => {
+    sender = new Player();
+    sender.playerId = 'p2';
+    sender.isLeader = false;
+
+    asker = new Player();
+    asker.playerId = 'p1';
+    asker.isLeader = false;
+
+    playersContainer = new PlayersContainer();
+    playersContainer.addPlayer(sender);
+    playersContainer.addPlayer(asker);
+
     actionDelays = <any>{
       communicationAccept: 500
     };
@@ -82,21 +100,26 @@ describe('[GM] handleCommunicationResponse', () => {
       communicationRequestsStore,
       {
         board: <any>null,
-        playersContainer: <any>{},
+        playersContainer,
         actionDelays: <any>actionDelays,
         logger,
         scoreboard: <any>null,
         sendMessage,
         onPointsLimitReached: jest.fn()
       },
-      <any>null,
+      sender,
       message
     );
   }
 
   describe('when there is no pending communication request', () => {
     it('should reject communication response', () => {
-      const result = executeHandleCommunicationResponse('p1', 'p2', true, <any>null);
+      const result = executeHandleCommunicationResponse(
+        asker.playerId,
+        sender.playerId,
+        true,
+        <any>null
+      );
 
       expect(result.valid).toBe(false);
     });
@@ -106,50 +129,90 @@ describe('[GM] handleCommunicationResponse', () => {
     it('should return response immediately', async () => {
       jest.useFakeTimers();
 
-      communicationRequestsStore.addPendingRequest('p1', 'p2');
+      communicationRequestsStore.addPendingRequest(asker.playerId, sender.playerId);
 
       const result: ValidMessageResult<
         ResponseSentMessage
-      > = <any>executeHandleCommunicationResponse('p1', 'p2', false, <any>null);
+      > = <any>executeHandleCommunicationResponse(
+        asker.playerId,
+        sender.playerId,
+        false,
+        <any>null
+      );
 
       jest.advanceTimersByTime(0);
 
       const response = await result.responseMessage;
 
-      expect(response.recipientId).toBe('p2');
+      expect(response.recipientId).toBe(sender.playerId);
 
       jest.useRealTimers();
     });
 
     it('should remove pending communication request immediately', () => {
-      communicationRequestsStore.addPendingRequest('p1', 'p2');
+      communicationRequestsStore.addPendingRequest(asker.playerId, sender.playerId);
 
-      executeHandleCommunicationResponse('p1', 'p2', false, <any>null);
+      executeHandleCommunicationResponse(asker.playerId, sender.playerId, false, <any>null);
 
-      expect(communicationRequestsStore.isRequestPending('p1', 'p2')).toBe(false);
+      expect(communicationRequestsStore.isRequestPending(asker.playerId, sender.playerId)).toBe(
+        false
+      );
     });
 
     it('should send message to communication requester', async () => {
-      communicationRequestsStore.addPendingRequest('p1', 'p2');
+      communicationRequestsStore.addPendingRequest(asker.playerId, sender.playerId);
 
       const result: ValidMessageResult<
         ResponseSentMessage
-      > = <any>executeHandleCommunicationResponse('p1', 'p2', false, <any>null);
+      > = <any>executeHandleCommunicationResponse(
+        asker.playerId,
+        sender.playerId,
+        false,
+        <any>null
+      );
 
       await result.responseMessage;
 
       const responseToAskingPlayer: RejectedCommunicationResponseToSender = {
         type: 'COMMUNICATION_RESPONSE',
         senderId: GAME_MASTER_ID,
-        recipientId: 'p1',
+        recipientId: asker.playerId,
         payload: {
           accepted: false,
-          senderPlayerId: 'p2'
+          senderPlayerId: sender.playerId
         }
       };
 
       expect(sendMessage).toHaveBeenCalledTimes(1);
       expect(sendMessage).toHaveBeenCalledWith(responseToAskingPlayer);
+    });
+
+    it('should mark communication response as invalid when the asker is a Leader', () => {
+      communicationRequestsStore.addPendingRequest(asker.playerId, sender.playerId);
+      asker.isLeader = true;
+
+      const result = executeHandleCommunicationResponse(
+        asker.playerId,
+        sender.playerId,
+        false,
+        <any>null
+      );
+
+      expect(result.valid).toBe(false);
+    });
+
+    it('should mark communication response as invalid when the sender is a Leader', () => {
+      communicationRequestsStore.addPendingRequest(asker.playerId, sender.playerId);
+      sender.isLeader = true;
+
+      const result = executeHandleCommunicationResponse(
+        asker.playerId,
+        sender.playerId,
+        false,
+        <any>null
+      );
+
+      expect(result.valid).toBe(false);
     });
   });
 
@@ -163,25 +226,27 @@ describe('[GM] handleCommunicationResponse', () => {
     });
 
     it('should remove pending communication request after delay', async () => {
-      communicationRequestsStore.addPendingRequest('p1', 'p2');
+      communicationRequestsStore.addPendingRequest(asker.playerId, sender.playerId);
 
       const result: ValidMessageResult<
         ResponseSentMessage
-      > = <any>executeHandleCommunicationResponse('p1', 'p2', true, <any>null);
+      > = <any>executeHandleCommunicationResponse(asker.playerId, sender.playerId, true, <any>null);
 
       jest.advanceTimersByTime(actionDelays.communicationAccept);
 
       await result.responseMessage;
 
-      expect(communicationRequestsStore.isRequestPending('p1', 'p2')).toBe(false);
+      expect(communicationRequestsStore.isRequestPending(asker.playerId, sender.playerId)).toBe(
+        false
+      );
     });
 
     it('should send message to communication requester', async () => {
-      communicationRequestsStore.addPendingRequest('p1', 'p2');
+      communicationRequestsStore.addPendingRequest(asker.playerId, sender.playerId);
 
       const result: ValidMessageResult<
         ResponseSentMessage
-      > = <any>executeHandleCommunicationResponse('p1', 'p2', true, <any>null);
+      > = <any>executeHandleCommunicationResponse(asker.playerId, sender.playerId, true, <any>null);
 
       jest.advanceTimersByTime(actionDelays.communicationAccept);
 
@@ -190,11 +255,11 @@ describe('[GM] handleCommunicationResponse', () => {
       const responseToAskingPlayer: AcceptedCommunicationResponseToSender = {
         type: 'COMMUNICATION_RESPONSE',
         senderId: GAME_MASTER_ID,
-        recipientId: 'p1',
+        recipientId: asker.playerId,
         payload: {
           accepted: true,
           boardInfo: <any>null,
-          senderPlayerId: 'p2'
+          senderPlayerId: sender.playerId
         }
       };
 
@@ -203,9 +268,9 @@ describe('[GM] handleCommunicationResponse', () => {
     });
 
     it('should not send the response to communication requester before action delay', () => {
-      communicationRequestsStore.addPendingRequest('p1', 'p2');
+      communicationRequestsStore.addPendingRequest(asker.playerId, sender.playerId);
 
-      executeHandleCommunicationResponse('p1', 'p2', true, <any>null);
+      executeHandleCommunicationResponse(asker.playerId, sender.playerId, true, <any>null);
 
       jest.advanceTimersByTime(actionDelays.communicationAccept - 1);
 
@@ -213,26 +278,26 @@ describe('[GM] handleCommunicationResponse', () => {
     });
 
     it('should resolve the response after action delay', async () => {
-      communicationRequestsStore.addPendingRequest('p1', 'p2');
+      communicationRequestsStore.addPendingRequest(asker.playerId, sender.playerId);
 
       const result: ValidMessageResult<
         ResponseSentMessage
-      > = <any>executeHandleCommunicationResponse('p1', 'p2', true, <any>null);
+      > = <any>executeHandleCommunicationResponse(asker.playerId, sender.playerId, true, <any>null);
 
       jest.advanceTimersByTime(actionDelays.communicationAccept);
 
       const response = await result.responseMessage;
 
-      expect(response.recipientId).toBe('p2');
+      expect(response.recipientId).toBe(sender.playerId);
     });
 
     it('should not resolve the response before action delay', () => {
-      communicationRequestsStore.addPendingRequest('p1', 'p2');
+      communicationRequestsStore.addPendingRequest(asker.playerId, sender.playerId);
       let resolved = false;
 
       const result: ValidMessageResult<
         ResponseSentMessage
-      > = <any>executeHandleCommunicationResponse('p1', 'p2', true, <any>null);
+      > = <any>executeHandleCommunicationResponse(asker.playerId, sender.playerId, true, <any>null);
 
       result.responseMessage.then(() => {
         resolved = true;
