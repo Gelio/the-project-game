@@ -49,12 +49,27 @@ namespace Player
         public void Start()
         {
             GetGameInfo();
-            ConnectToServer();
-            WaitForGameStart();
-            RefreshBoardState(); // -- gives us info about all teammates' (+ ours) initial position
-            logger.Debug($"Player's init position: {X} {Y}");
-            GoalAreaDirection = Y < Game.BoardSize.GoalArea ? Consts.Up : Consts.Down;
-            Play();
+
+            int roundNum = 0;
+            while (true)
+            {
+                ConnectToServer();
+                WaitForGameStart();
+                RefreshBoardState(); // -- gives us info about all teammates' (+ ours) initial position
+                logger.Debug($"Player's init position: {X} {Y}");
+                GoalAreaDirection = Y < Game.BoardSize.GoalArea ? Consts.Up : Consts.Down;
+                try
+                {
+                    Play();
+                }
+                catch (GameAlreadyFinishedException e)
+                {
+                    RoundFinished(e.Message);
+                    if (roundNum == Game.MaxRounds)
+                        break;
+                    roundNum++;
+                }
+            }
         }
 
         public void GetGameInfo()
@@ -464,15 +479,13 @@ namespace Player
             TaskArea = 2
         }
 
-        public void GameAlreadyFinished(string receivedMessageSerialized)
+        public void RoundFinished(string receivedMessageSerialized)
         {
             var received = JsonConvert.DeserializeObject<Message<GameFinishedPayload>>(receivedMessageSerialized);
             var winnerTeam = (received.Payload.Team1Score > received.Payload.Team2Score) ? "Team 1" : "Team 2";
             string message = $"Cannot perform the planned action. Game has already finished.\n" +
                 $"Scores:\n\tTeam 1: {received.Payload.Team1Score}\n\tTeam 2: {received.Payload.Team2Score}\n" +
                 $"Congratulations {winnerTeam}! WOOP WOOP!\n";
-
-            throw new GameAlreadyFinishedException(message);
         }
 
         /// <summary>

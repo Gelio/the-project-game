@@ -56,7 +56,9 @@ namespace Player
                     return JsonConvert.DeserializeObject<Message<P>>(serializedMessage);
                 }
                 if (message.Type == Consts.GameFinished)
-                    throw new GameAlreadyFinishedException();
+                {
+                    throw new GameAlreadyFinishedException(serializedMessage);
+                }
                 if (message.Type == Consts.CommunicationRequest)
                 {
                     var request = JsonConvert.DeserializeObject<Message<CommunicationPayload>>(serializedMessage);
