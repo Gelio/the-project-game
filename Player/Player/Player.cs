@@ -150,23 +150,22 @@ namespace Player
                     {
                         logger.Info("Testing the piece");
                         TestPiece();
-                    }
-                    if (!HeldPiece.IsSham)
-                    {
-                        if (IsInGoalArea() && Board[GetCurrentBoardIndex()].GoalStatus == GoalStatusEnum.NoInfo)
+                        if (HeldPiece.IsSham)
                         {
-                            logger.Info("Trying to place down piece");
-                            (var result, var resultEnum) = PlaceDownPiece();
+                            logger.Info("The piece was a sham -- deleting the piece");
+                            DeletePiece();
                         }
-                        else
-                            Move(PickSweepingGoalAreaDirection());
+                    }
+
+                    if (IsInGoalArea() && Board[GetCurrentBoardIndex()].GoalStatus == GoalStatusEnum.NoInfo)
+                    {
+                        logger.Info("Trying to place down piece");
+                        (var result, var resultEnum) = PlaceDownPiece();
                     }
                     else
                     {
-                        logger.Info("Deleting the piece");
-                        DeletePiece();
-                        PrintBoard();
-                        continue;
+                        if (!Move(PickSweepingGoalAreaDirection()))
+                            Move(PickRandomMovementDirection());
                     }
 
                 }
@@ -179,8 +178,8 @@ namespace Player
                 else // Find a piece
                 {
                     Discover();
-                    string direction = PickClosestPieceDirection();
-                    Move(direction);
+                    if (!Move(PickClosestPieceDirection()))
+                        Move(PickRandomMovementDirection());
                 }
             }
         }
