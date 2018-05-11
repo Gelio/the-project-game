@@ -11,5 +11,10 @@ namespace Player.Messages.Responses
         public IList<PlayerPositionDTO> PlayerPositions;
         public int Team1Score;
         public int Team2Score;
+
+        public string PayloadType()
+        {
+            return Common.Consts.RefreshStateResponse;
+        }
     }
 }

@@ -25,6 +25,14 @@ namespace Player.Common
         public static string PickupPieceResponse = "PICK_UP_PIECE_RESPONSE";
         public static string PlaceDownPieceRequest = "PLACE_DOWN_PIECE_REQUEST";
         public static string PlaceDownPieceResponse = "PLACE_DOWN_PIECE_RESPONSE";
+        public static string CommunicationRequest = "COMMUNICATION_REQUEST";
+        public static string CommunicationResponse = "COMMUNICATION_RESPONSE";
+        public static string RequestSent = "REQUEST_SENT";
+        public static string ResponseSent = "RESPONSE_SENT";
+        public static string TestPieceRequest = "TEST_PIECE_REQUEST";
+        public static string TestPieceResponse = "TEST_PIECE_RESPONSE";
+        public static string DeletePieceRequest = "DELETE_PIECE_REQUEST";
+        public static string DeletePieceResponse = "DELETE_PIECE_RESPONSE";
 
         public const string Up = "up";
         public const string Down = "down";

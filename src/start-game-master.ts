@@ -1,3 +1,5 @@
+import * as blessed from 'blessed';
+
 import { LoggerFactory } from './common/logging/LoggerFactory';
 
 import { createBlessedScreen } from './createBlessedScreen';
@@ -9,7 +11,7 @@ import { UIController } from './game-master/ui/UIController';
 const config = require('./game-master.config.json');
 
 const screen = createBlessedScreen();
-const uiController = new UIController(screen);
+const uiController = new UIController(screen, blessed.box);
 
 const loggerFactory = new LoggerFactory();
 loggerFactory.logLevel = 'verbose';

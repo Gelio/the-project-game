@@ -11,5 +11,9 @@ namespace Player.Messages.Requests
         [JsonProperty("senderPlayerId")]
         public string SenderPlayerId;
 
+        public string PayloadType()
+        {
+            return Common.Consts.CommunicationRequest;
+        }
     }
 }

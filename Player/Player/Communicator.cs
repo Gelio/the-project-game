@@ -1,6 +1,6 @@
 using System;
-using System.Net.Sockets;
 using System.Net;
+using System.Net.Sockets;
 using Player.Interfaces;
 
 namespace Player
@@ -9,7 +9,7 @@ namespace Player
     {
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private const int MAX_MSG_LEN = 10000;
+        private const int MAX_MSG_LEN = 10000000;
         private TcpClient _tcpClient;
         private string _serverHostName;
         private int _serverPort;
@@ -81,7 +81,11 @@ namespace Player
 
             // Initialize buffer and read the actual message
             var buffer = new byte[messageLen];
-            stream.Read(buffer, 0, messageLen);
+            int read = 0;
+            while (read != messageLen)
+            {
+                read += stream.Read(buffer, read, messageLen - read);
+            }
 
             logger.Trace("Received: {0}", System.Text.Encoding.UTF8.GetString(buffer));
 

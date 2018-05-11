@@ -1,20 +1,16 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using Moq;
-using Newtonsoft.Json;
 using NUnit.Framework;
 using Player.Common;
 using Player.GameObjects;
 using Player.Interfaces;
-using Player.Messages.DTO;
 using Player.Messages.Responses;
 
 
 namespace Player.Tests.PieceTests
 {
     [TestFixture]
-    class PickUpPieceTests
+    class DeletePieceTests
     {
         static string _assignedPlayerId = Guid.NewGuid().ToString();
         PlayerConfig _playerConfig;
@@ -49,53 +45,48 @@ namespace Player.Tests.PieceTests
         }
 
         [Test]
-        public void PickUpPieceSuccess()
+        public void DeletePieceSuccess()
         {
-            var assignedX = 12;
-            var assignedY = 3;
-
-            var msg2 = new Message<PickUpPieceResponsePayload>()
+            var msg2 = new Message<DeletePieceResponsePayload>()
             {
-                Type = Common.Consts.PickupPieceResponse,
+                Type = Common.Consts.DeletePieceResponse,
                 SenderId = Common.Consts.GameMasterId,
-                RecipientId = _assignedPlayerId,
-                Payload = new PickUpPieceResponsePayload()
+                RecipientId = _assignedPlayerId               
             };
 
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Returns(new Message<ActionValidPayload>());
-            _messageProvider.Setup(x => x.Receive<PickUpPieceResponsePayload>()).Returns(msg2);
+            _messageProvider.Setup(x => x.Receive<DeletePieceResponsePayload>()).Returns(msg2);
 
             // ------------------------
 
             var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
             {
                 Id = _assignedPlayerId,
-                X = assignedX,
-                Y = assignedY,
                 Game = _game
             };
 
-            for (int i = 0; i < _game.BoardSize.X * (_game.BoardSize.GoalArea * 2 + _game.BoardSize.TaskArea); i++)
+            var piece = new Piece()
             {
-                player.Board.Add(new Tile());
-            }
-            player.Board[player.X + player.Game.BoardSize.X * player.Y].Piece = new Piece();
-            var result = player.PickUpPiece();
+                IsSham = false
+            };
+
+            player.HeldPiece = piece;
+
+            var result = player.DeletePiece();
 
             // ------------------------
 
             Assert.That(result, Is.True);
-            Assert.That(player.HeldPiece, Is.Not.Null);
-            Assert.That(player.Board[player.X + player.Game.BoardSize.X * player.Y].Piece, Is.Null);
+            Assert.That(player.HeldPiece, Is.Null);
         }
 
         [Test]
-        public void PickUpPieceActionInvalid()
+        public void DeletePieceActionInvalid()
         {
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Throws(new ActionInvalidException());
 
             var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object);
-            var result = player.PickUpPiece();
+            var result = player.DeletePiece();
 
             Assert.That(result, Is.False);
         }

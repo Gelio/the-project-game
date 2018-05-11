@@ -7,9 +7,9 @@ namespace Player.GameObjects
         public string PlayerId;
         public Piece Piece;
         public int DistanceToClosestPiece;
-        public long? Timestamp;
+        public long Timestamp;
         public GoalStatusEnum GoalStatus;
-        public bool HasInfo => Timestamp != null;
+        public bool HasInfo => Timestamp != 0;
     }
 
     public enum GoalStatusEnum

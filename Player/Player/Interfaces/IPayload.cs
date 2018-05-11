@@ -6,5 +6,6 @@ namespace Player.Interfaces
 {
     public interface IPayload
     {
+        string PayloadType();
     }
 }

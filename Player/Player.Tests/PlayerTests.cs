@@ -1,15 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Moq;
+using Newtonsoft.Json;
 using NUnit;
 using NUnit.Framework;
-using Moq;
 using Player.Common;
-using Player.Interfaces;
-using Newtonsoft.Json;
-using Player.Messages.Responses;
-using Player.Messages.DTO;
 using Player.GameObjects;
+using Player.Interfaces;
+using Player.Messages.DTO;
+using Player.Messages.Responses;
+
 
 namespace Player.Tests
 {
@@ -19,6 +20,8 @@ namespace Player.Tests
         Mock<ICommunicator> _communicator;
         PlayerConfig _playerConfig;
         Mock<IGameService> _gameService;
+        Mock<IMessageProvider> _messageProvider;
+
 
         [SetUp]
         public void Setup()
@@ -33,44 +36,26 @@ namespace Player.Tests
                 TeamNumber = 1
             };
             _gameService = new Mock<IGameService>();
-
+            _messageProvider = new Mock<IMessageProvider>();
         }
-
-        // [Test]
-        // public void ConnectsToServer()
-        // {
-        //     // Give
-        //     string expectedMessage = Consts.PLAYER_ACCEPTED;
-        //     _communicator.Setup(x => x.Receive()).Returns(expectedMessage);
-
-        //     var player = new Player(_communicator.Object, _playerConfig, _gameService.Object);
-
-        //     // When
-        //     player.ConnectToServer();
-
-        //     // Then
-        //     Assert.That(player.IsConnected, Is.EqualTo(true));
-        // }
 
         [Test]
         public void ConnectsToServerPlayerRejectedException()
         {
-            // Give
-            string expectedMessage = Consts.PLAYER_REJECTED;
-            _communicator.Setup(x => x.Receive()).Returns(expectedMessage);
+            _messageProvider.Setup(x => x.AssertPlayerStatus(_playerConfig.Timeout)).Throws(new PlayerRejectedException());
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object);
-
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object);
             Assert.Throws<PlayerRejectedException>(() => player.ConnectToServer());
         }
 
         [Test]
-        public void WaitForGameStartSucceeds()
+        public void WaitForGameStartEventuallySucceeds()
         {
             // Give
             var expectedTeamMembersIds = new List<string> { "a", "b", "c", "d" };
             var expectedLeaderId = "c";
-            var message = new Message<GameStartedPayload>
+
+            var msg3 = new Message<GameStartedPayload>
             {
                 Type = Common.Consts.GameStarted,
                 Payload = new GameStartedPayload
@@ -93,9 +78,13 @@ namespace Player.Tests
                     }
                 }
             };
-            string expectedMessage = JsonConvert.SerializeObject(message);
-            _communicator.Setup(x => x.Receive()).Returns(expectedMessage);
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object);
+
+            _messageProvider.SetupSequence(x => x.Receive<GameStartedPayload>())
+                            .Throws(new WrongPayloadException())
+                            .Throws(new WrongPayloadException())
+                            .Returns(msg3);
+
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object);
 
             // When
             player.WaitForGameStart();
@@ -176,11 +165,11 @@ namespace Player.Tests
 
             _gameService.Setup(x => x.GetGamesList()).Returns(gamesList);
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object);
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object);
             player.GetGameInfo();
 
             Assert.That(player.Game, Is.Not.Null);
-            Assert.That(player.Game.Name, Is.EqualTo(player.GameName));
+            Assert.That(player.Game.Name, Is.EqualTo(_playerConfig.GameName));
         }
 
         [Test]
@@ -190,11 +179,8 @@ namespace Player.Tests
 
             _gameService.Setup(x => x.GetGamesList()).Returns(gamesList);
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object);
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object);
             Assert.Throws<OperationCanceledException>(() => player.GetGameInfo());
         }
-
-
-
     }
 }
