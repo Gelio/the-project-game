@@ -146,13 +146,29 @@ namespace Player
 
                 if (HeldPiece != null)
                 {
-                    if (IsInGoalArea() && Board[GetCurrentBoardIndex()].GoalStatus == GoalStatusEnum.NoInfo)
+                    if (!HeldPiece.WasTested)
                     {
-                        logger.Info("Trying to place down piece");
-                        (var result, var resultEnum) = PlaceDownPiece();
+                        logger.Info("Testing the piece");
+                        TestPiece();
+                    }
+                    if (!HeldPiece.IsSham)
+                    {
+                        if (IsInGoalArea() && Board[GetCurrentBoardIndex()].GoalStatus == GoalStatusEnum.NoInfo)
+                        {
+                            logger.Info("Trying to place down piece");
+                            (var result, var resultEnum) = PlaceDownPiece();
+                        }
+                        else
+                            Move(PickSweepingGoalAreaDirection());
                     }
                     else
-                        Move(PickSweepingGoalAreaDirection());
+                    {
+                        logger.Info("Deleting the piece");
+                        DeletePiece();
+                        PrintBoard();
+                        continue;
+                    }
+
                 }
                 else if (Board[GetCurrentBoardIndex()].DistanceToClosestPiece == 0) // We stand on a piece
                 {
@@ -391,6 +407,7 @@ namespace Player
 
             HeldPiece = Board[X + Game.BoardSize.X * Y].Piece;
             Board[X + Game.BoardSize.X * Y].Piece = null;
+            Board[X + Game.BoardSize.X * Y].DistanceToClosestPiece = int.MaxValue;
 
             logger.Info("Picked up piece @ ({}, {})", X, Y);
             return true;
@@ -590,6 +607,46 @@ namespace Player
                 }
                 Console.WriteLine();
             }
+        }
+
+        public bool TestPiece()
+        {
+            _messageProvider.SendMessage(new Message<IPayload>()
+            {
+                Type = Consts.TestPieceRequest,
+                SenderId = Id,
+                Payload = new TestPiecePayload()
+            });
+            if (!GetActionStatus()) { return false; }
+            var received = _messageProvider.Receive<TestPieceResponsePayload>();
+            if (received.Payload == null)
+                throw new NoPayloadException();
+
+            HeldPiece.WasTested = true;
+            HeldPiece.IsSham = received.Payload.IsSham;
+
+            string pieceResult = received.Payload.IsSham ? "a sham" : "valid";
+
+            logger.Info($"Held piece is {pieceResult}!");
+
+            return true;
+        }
+
+        public bool DeletePiece()
+        {
+            _messageProvider.SendMessage(new Message<IPayload>()
+            {
+                Type = Consts.DeletePieceRequest,
+                SenderId = Id,
+                Payload = new TestPiecePayload()
+            });
+            if (!GetActionStatus()) { return false; }
+            var received = _messageProvider.Receive<DeletePieceResponsePayload>();
+
+            HeldPiece = null;
+            logger.Info("Piece deleted");
+
+            return true;
         }
     }
 }

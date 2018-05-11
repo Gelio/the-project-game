@@ -9,7 +9,7 @@ namespace Player.Messages.Responses
 
         public string PayloadType()
         {
-            throw new NotImplementedException();
+            return Common.Consts.TestPieceResponse;
         }
     }
 }
