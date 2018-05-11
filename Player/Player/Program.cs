@@ -98,7 +98,7 @@ namespace Player
             }
             catch (Exception e)
             {
-                logger.Fatal(e);
+                logger.Fatal(e.Message);
                 return;
             }
 
@@ -115,31 +115,31 @@ namespace Player
             }
             catch (PlayerRejectedException e)
             {
-                logger.Fatal(e, "Connection rejected:");
+                logger.Fatal("Connection rejected: " + e.Message);
                 player.Disconnect();
                 return;
             }
             catch (OperationCanceledException e)
             {
-                logger.Fatal(e);
+                logger.Fatal(e.Message);
                 player.Disconnect();
                 return;
             }
             catch (TimeoutException e)
             {
-                logger.Fatal(e);
+                logger.Fatal(e.Message);
                 player.Disconnect();
                 return;
             }
             catch (SocketException e)
             {
-                logger.Fatal(e.Message, "Connection failed:");
+                logger.Fatal("Connection failed: " + e.Message);
                 player.Disconnect();
                 return;
             }
             catch (IOException e)
             {
-                logger.Fatal(e);
+                logger.Fatal(e.Message);
                 player.Disconnect();
                 return;
             }
