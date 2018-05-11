@@ -1,0 +1,27 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`[GM] Board (piece) addPiece should throw an error when piece is added on position where another piece already exists 1`] = `"Piece already exists at that position"`;
+
+exports[`[GM] Board (piece) addPiece should throw an error when piece is added twice 1`] = `"Piece already added"`;
+
+exports[`[GM] Board (piece) movePiece should throw an error when piece is moved to already taken position 1`] = `"Cannot move a piece on a tile which already has one"`;
+
+exports[`[GM] Board (piece) movePiece should throw an error when piece position does not match the one on the board 1`] = `"Old piece position corrupted"`;
+
+exports[`[GM] Board (piece) movePiece should throw an error when piece was not added on the board before 1`] = `"Piece has not been added to the game previously"`;
+
+exports[`[GM] Board (piece) removePiece should throw an error when piece is removed from the board where it does not exist 1`] = `"Piece was not on board"`;
+
+exports[`[GM] Board (player) addPlayer should throw an error when player was already added to the board 1`] = `"Player is already added on board"`;
+
+exports[`[GM] Board (player) movePlayer should throw an error when player is not present on board 1`] = `"Player position is null"`;
+
+exports[`[GM] Board (player) movePlayer should throw an error when player position does not match the one on the board 1`] = `"Old player position corrupted"`;
+
+exports[`[GM] Board (player) movePlayer should throw an error when player tries to step on tile with another player 1`] = `"Two players cannot stand on the same tile"`;
+
+exports[`[GM] Board (tiles) should throw an error about invalid X coordinate 1`] = `"Invalid X coordinate"`;
+
+exports[`[GM] Board (tiles) should throw an error about invalid Y coordinate 1`] = `"Invalid Y coordinate"`;
+
+exports[`[GM] Board setRandomPlayerPosition should throw when there is no position for new player 1`] = `"No free position for player"`;

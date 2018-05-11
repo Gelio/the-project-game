@@ -182,7 +182,6 @@ export class Board {
   }
 
   public getDistanceToClosestPiece(tilePosition: Point): number {
-    // TODO: test the logic below
     const piecesLayingOnBoard = this.pieces.filter(piece => !piece.isPickedUp);
 
     if (piecesLayingOnBoard.length === 0) {
