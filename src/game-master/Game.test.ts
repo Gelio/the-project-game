@@ -156,7 +156,7 @@ describe('[GM] Game', () => {
       sendIngameMessageSpy.mockRestore();
     });
 
-    it('should reject invalid message', () => {
+    it('should reject message when the game is not in progress', () => {
       const message: DiscoveryRequest = {
         senderId: player.playerId,
         type: 'DISCOVERY_REQUEST',
@@ -171,6 +171,29 @@ describe('[GM] Game', () => {
         senderId: GAME_MASTER_ID,
         payload: {
           reason: 'Game is not in progress'
+        }
+      };
+
+      expect(sendIngameMessageSpy).toHaveBeenCalledWith(actionInvalidMessage);
+    });
+
+    it('should reject message with unknown type', () => {
+      game.start();
+
+      const message = {
+        senderId: player.playerId,
+        type: 'TELEPORT_REQUEST',
+        payload: undefined
+      };
+
+      game.handleMessage(message);
+
+      const actionInvalidMessage: ActionInvalidMessage = {
+        type: 'ACTION_INVALID',
+        recipientId: message.senderId,
+        senderId: GAME_MASTER_ID,
+        payload: {
+          reason: 'Unknown message type: TELEPORT_REQUEST'
         }
       };
 
@@ -433,9 +456,15 @@ describe('[GM] Game', () => {
         }
       };
 
+      const originalImplementation = communicator.waitForSpecificMessage;
+
       communicator.waitForSpecificMessage = jest.fn(() => Promise.resolve(message));
 
-      return expect(game.register()).rejects.toMatchSnapshot();
+      return expect(game.register())
+        .rejects.toMatchSnapshot()
+        .then(() => {
+          communicator.waitForSpecificMessage = originalImplementation;
+        });
     });
   });
 
