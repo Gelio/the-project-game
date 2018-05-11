@@ -267,44 +267,53 @@ describe('[GM] Board', () => {
       board = new Board(customBoardSize, pointsLimit);
     });
 
-    it('should return valid distance (2) to the closest piece', () => {
+    it('should return valid distance (4) to the closest piece', () => {
       const piece = new Piece();
       piece.isPickedUp = false;
-      piece.position = new Point(1, 1);
+      piece.position = new Point(3, 6);
       board.addPiece(piece);
 
-      expect(board.getDistanceToClosestPiece(new Point(0, 0))).toBe(2);
+      expect(board.getDistanceToClosestPiece(new Point(0, 5))).toBe(4);
     });
 
     it('should return valid distance (1) to the closest piece', () => {
       const piece = new Piece();
       piece.isPickedUp = false;
-      piece.position = new Point(1, 0);
+      piece.position = new Point(4, 5);
       board.addPiece(piece);
 
-      expect(board.getDistanceToClosestPiece(new Point(0, 0))).toBe(1);
+      expect(board.getDistanceToClosestPiece(new Point(4, 6))).toBe(1);
     });
 
-    it('should return valid distance (14) to the closest piece', () => {
+    it('should return valid distance (4) to the closest piece', () => {
       const piece = new Piece();
       piece.isPickedUp = false;
-      piece.position = new Point(4, 14);
+      piece.position = new Point(4, 9);
       board.addPiece(piece);
 
-      expect(board.getDistanceToClosestPiece(new Point(4, 0))).toBe(14);
+      expect(board.getDistanceToClosestPiece(new Point(4, 5))).toBe(4);
     });
 
     it('should return valid distance (0) to the closest piece', () => {
       const piece = new Piece();
       piece.isPickedUp = false;
-      piece.position = new Point(3, 3);
+      piece.position = new Point(3, 7);
       board.addPiece(piece);
 
       expect(board.getDistanceToClosestPiece(piece.position)).toBe(0);
     });
 
     it('should return -1 as distance when there is no piece available', () => {
-      expect(board.getDistanceToClosestPiece(new Point(0, 0))).toBe(-1);
+      expect(board.getDistanceToClosestPiece(new Point(4, 8))).toBe(-1);
+    });
+
+    it('should return -1 as distance when checked tile is in team area', () => {
+      const piece = new Piece();
+      piece.isPickedUp = false;
+      piece.position = new Point(3, 0);
+      board.addPiece(piece);
+
+      expect(board.getDistanceToClosestPiece(new Point(3, 0))).toBe(-1);
     });
   });
 
