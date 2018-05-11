@@ -147,9 +147,13 @@ describe('[GM] Game', () => {
   });
 
   describe('handleMessage', () => {
-    let spy: any;
+    let sendIngameMessageSpy: any;
     beforeEach(() => {
-      spy = jest.spyOn(game, 'sendIngameMessage');
+      sendIngameMessageSpy = jest.spyOn(game, 'sendIngameMessage');
+    });
+
+    afterEach(() => {
+      sendIngameMessageSpy.mockRestore();
     });
 
     it('should reject invalid message', () => {
@@ -170,7 +174,7 @@ describe('[GM] Game', () => {
         }
       };
 
-      expect(spy).toHaveBeenCalledWith(actionInvalidMessage);
+      expect(sendIngameMessageSpy).toHaveBeenCalledWith(actionInvalidMessage);
     });
 
     describe('message with valid action', () => {
@@ -187,7 +191,7 @@ describe('[GM] Game', () => {
           payload: undefined
         };
 
-        const promise = game.handleMessage(message);
+        const responsePromise = game.handleMessage(message);
 
         const actionValidMessage: ActionValidMessage = {
           type: 'ACTION_VALID',
@@ -207,12 +211,12 @@ describe('[GM] Game', () => {
           }
         };
 
-        expect(spy).toHaveBeenCalledWith(actionValidMessage);
+        expect(sendIngameMessageSpy).toHaveBeenCalledWith(actionValidMessage);
         jest.advanceTimersByTime(actionDelays.test);
-        await promise;
+        await responsePromise;
 
-        expect(spy).toHaveBeenCalledTimes(2);
-        expect(spy).toHaveBeenLastCalledWith(responseMessage);
+        expect(sendIngameMessageSpy).toHaveBeenCalledTimes(2);
+        expect(sendIngameMessageSpy).toHaveBeenLastCalledWith(responseMessage);
 
         jest.useRealTimers();
       });
@@ -229,7 +233,7 @@ describe('[GM] Game', () => {
         };
 
         game.handleMessage(message);
-        expect(updateUIFn).toBeCalled();
+        expect(updateUIFn).toHaveBeenCalled();
       });
     });
   });
@@ -363,7 +367,7 @@ describe('[GM] Game', () => {
 
     game.addPlayer(anotherPlayer);
 
-    expect(updateUIFn).toBeCalled();
+    expect(updateUIFn).toHaveBeenCalled();
   });
 
   it('should remove the player from the game', () => {
@@ -409,10 +413,14 @@ describe('[GM] Game', () => {
         }
       };
 
+      const originalImplementation = communicator.waitForSpecificMessage;
+
       communicator.waitForSpecificMessage = jest.fn(() => Promise.resolve(responseMessage));
       game.register();
 
-      expect(communicator.sendMessage).toBeCalledWith(message);
+      expect(communicator.sendMessage).toHaveBeenCalledWith(message);
+
+      communicator.waitForSpecificMessage = originalImplementation;
     });
 
     it('should throw when cannot register the game', () => {
@@ -426,7 +434,8 @@ describe('[GM] Game', () => {
       };
 
       communicator.waitForSpecificMessage = jest.fn(() => Promise.resolve(message));
-      expect(game.register()).rejects.toMatchSnapshot();
+
+      return expect(game.register()).rejects.toMatchSnapshot();
     });
   });
 
@@ -450,10 +459,14 @@ describe('[GM] Game', () => {
         }
       };
 
+      const originalImplementation = communicator.waitForSpecificMessage;
+
       communicator.waitForSpecificMessage = jest.fn(() => Promise.resolve(responseMessage));
       game.unregister();
 
-      expect(communicator.sendMessage).toBeCalledWith(message);
+      expect(communicator.sendMessage).toHaveBeenCalledWith(message);
+
+      communicator.waitForSpecificMessage = originalImplementation;
     });
 
     it('should throw when cannot unregister the game', () => {
@@ -466,8 +479,15 @@ describe('[GM] Game', () => {
         }
       };
 
+      const originalImplementation = communicator.waitForSpecificMessage;
+
       communicator.waitForSpecificMessage = jest.fn(() => Promise.resolve(message));
-      expect(game.unregister()).rejects.toMatchSnapshot();
+
+      return expect(game.unregister())
+        .rejects.toMatchSnapshot()
+        .then(() => {
+          communicator.waitForSpecificMessage = originalImplementation;
+        });
     });
   });
 
@@ -495,7 +515,7 @@ describe('[GM] Game', () => {
         }
       };
 
-      expect(communicator.sendMessage).toBeCalledWith(message);
+      expect(communicator.sendMessage).toHaveBeenCalledWith(message);
     });
   });
 
@@ -515,7 +535,7 @@ describe('[GM] Game', () => {
         }
       };
 
-      expect(communicator.sendMessage).toBeCalledWith(message);
+      expect(communicator.sendMessage).toHaveBeenCalledWith(message);
     });
   });
 
