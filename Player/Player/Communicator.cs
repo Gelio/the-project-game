@@ -56,7 +56,6 @@ namespace Player
             // Send 4-byte message length
             var messageLen = BitConverter.GetBytes(IPAddress.HostToNetworkOrder((Int32)buffer.Length));
             stream.Write(messageLen, 0, 4/*messageLen.Length*/);
-            Console.WriteLine("Message Len: {0}", buffer.Length);
 
             // Send actual message
             stream.Write(buffer, 0, buffer.Length);
@@ -83,11 +82,14 @@ namespace Player
             // Initialize buffer and read the actual message
             var buffer = new byte[messageLen];
             Console.WriteLine("Message Len: {0}", messageLen);
-            stream.Read(buffer, 0, messageLen);
 
-            //logger.Trace("Received: {0}", System.Text.Encoding.UTF8.GetString(buffer));
+            int read = 0;
+            while (read != messageLen)
+            {
+                read += stream.Read(buffer, read, messageLen - read);
+            }
 
-            Console.WriteLine("Received: {0}", System.Text.Encoding.UTF8.GetString(buffer));
+            logger.Trace("Received: {0}", System.Text.Encoding.UTF8.GetString(buffer));
 
             return System.Text.Encoding.UTF8.GetString(buffer);
         }
