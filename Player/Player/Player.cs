@@ -28,6 +28,8 @@ namespace Player
         public string GoalAreaDirection;
         public GameInfo Game;
 
+        private Dictionary<string, bool> WaitingForResponse;
+
         // TODO: Remove ICommunicator dependency
         private ICommunicator _communicator;
         private IGameService _gameService;
@@ -41,6 +43,7 @@ namespace Player
             _messageProvider = messageProvider;
             _playerConfig = playerConfig;
             Id = Guid.NewGuid().ToString();
+            WaitingForResponse = new Dictionary<string, bool>();
         }
 
         public void Start()
@@ -87,7 +90,9 @@ namespace Player
                 }
             });
             _messageProvider.AssertPlayerStatus(_playerConfig.Timeout);
-            logger.Info("Player connected to server");
+            logger.Info($"Player ({Id}) connected to server");
+            logger.Debug($"Team no.: {_playerConfig.TeamNumber}");
+            logger.Debug($"Is leader: {_playerConfig.IsLeader}");
         }
 
         public void Disconnect()
@@ -113,6 +118,7 @@ namespace Player
 
             TeamMembersIds = message.Payload.TeamInfo[_playerConfig.TeamNumber].Players;
             TeamMembersIds.Remove(Id);
+            TeamMembersIds.ToList().ForEach(id => WaitingForResponse.Add(id, false));
             LeaderId = message.Payload.TeamInfo[_playerConfig.TeamNumber].LeaderId;
             logger.Info("The game has started!");
         }
@@ -122,7 +128,22 @@ namespace Player
             PrintBoard();
             while (true)
             {
-                //logger.Debug("Player's position: {} {}", X, Y);
+                Task.Delay(3000);
+                RefreshBoardState();
+                UpdateBoard();
+                if (_messageProvider.HasPendingRequests)
+                {
+                    Discover();
+                    var senderId = _messageProvider.GetPendingRequest().Payload.SenderPlayerId;
+                    SendCommunicationResponse(senderId);
+                }
+                if (_playerConfig.IsLeader)
+                {
+                    var targetId = TeamMembersIds.FirstOrDefault();
+                    if (targetId != null && !WaitingForResponse[targetId])
+                        SendCommunicationRequest(targetId);
+                }
+
                 if (HeldPiece != null)
                 {
                     if (!HeldPiece.WasTested)
@@ -263,6 +284,7 @@ namespace Player
                     Board[tileDTO.X + Game.BoardSize.X * tileDTO.Y].Piece = new Piece();
                 }
             }
+            logger.Info($"Discovered {received.Payload.Tiles.Count} tiles");
             return true;
         }
 
@@ -320,6 +342,8 @@ namespace Player
 
             if (!gotOwnInfo)
                 throw new InvalidOperationException("No info about player");
+
+            logger.Debug($"Player's position: ({X}, {Y})");
             return true;
         }
 
@@ -455,9 +479,9 @@ namespace Player
         /// <summary>
         /// Sent to another player to initiate the communication. After receiving REQUEST_SENT from GM can do sth else.
         /// </summary>
-        /// <param name="recipientId"></param>
+        /// <param name="otherId"></param>
         /// <returns>True if received REQUEST_SENT message, False in case of ACTION_INVALID message</returns>
-        public bool SendCommunicationRequest(string recipientId)
+        public bool SendCommunicationRequest(string otherId)
         {
             _messageProvider.SendMessage(new Message<IPayload>()
             {
@@ -465,29 +489,29 @@ namespace Player
                 SenderId = Id,
                 Payload = new CommunicationPayload
                 {
-                    TargetPlayerId = recipientId
+                    TargetPlayerId = otherId
                 }
             });
             if (!GetActionStatus()) { return false; }
+            WaitingForResponse[otherId] = true;
             _messageProvider.Receive<RequestSentPayload>();
+            logger.Info($"Communication request sent to {otherId}");
             return true;
         }
 
-        public bool SendCommunicationResponse(string senderId)
+        public bool SendCommunicationResponse(string otherId)
         {
             // here logic for the will of responding to others - that's why it is separated from the previous method for now
             var r = new Random();
             int willThePoorGuyGetDataFromMe = r.Next(0, 1);
 
-            if (senderId == LeaderId || willThePoorGuyGetDataFromMe == 1)
+            if (otherId == LeaderId || willThePoorGuyGetDataFromMe == 1)
             {
-                logger.Info("Imma sending a response");
-                return AcceptCommunication(senderId);
+                return AcceptCommunication(otherId);
             }
             else
             {
-                logger.Info("No cake for you");
-                return RejectCommunication(senderId);
+                return RejectCommunication(otherId);
             }
         }
 
@@ -496,7 +520,7 @@ namespace Player
         /// </summary>
         /// <param name="recipientId"></param>
         /// <returns></returns>
-        public bool AcceptCommunication(string recipientId)
+        public bool AcceptCommunication(string otherId)
         {
             // haven't checked how the mapping works, therefore it's written how it is now
             List<TileCommunicationDTO> boardToSend = new List<TileCommunicationDTO>();
@@ -512,22 +536,23 @@ namespace Player
                 SenderId = Id,
                 Payload = new CommunicationResponsePayload
                 {
-                    TargetPlayerId = recipientId,
+                    TargetPlayerId = otherId,
                     Accepted = true,
                     Board = boardToSend
                 }
             });
             if (!GetActionStatus()) { return false; }
             _messageProvider.Receive<ResponseSentPayload>();
+            logger.Info($"Communication response sent to {otherId}");
             return true;
         }
 
         /// <summary>
         /// U ain't got no time to respond to some weak players
         /// </summary>
-        /// <param name="recipientId"></param>
+        /// <param name="otherId"></param>
         /// <returns></returns>
-        public bool RejectCommunication(string recipientId)
+        public bool RejectCommunication(string otherId)
         {
             _messageProvider.SendMessage(new Message<IPayload>()
             {
@@ -535,12 +560,13 @@ namespace Player
                 SenderId = Id,
                 Payload = new CommunicationResponsePayload
                 {
-                    TargetPlayerId = recipientId,
+                    TargetPlayerId = otherId,
                     Accepted = false,
                 }
             });
             if (!GetActionStatus()) { return false; }
             _messageProvider.Receive<ResponseSentPayload>();
+            logger.Info($"Rejected communication request from {otherId}");
             return true;
         }
 
@@ -551,11 +577,16 @@ namespace Player
         {
             while (_messageProvider.HasPendingResponses)
             {
-                var receivedBoard = _messageProvider.GetPendingResponse().Payload.Board;
+                var receivedMessage = _messageProvider.GetPendingResponse();
+                var receivedBoard = receivedMessage.Payload.Board;
+                var otherId = receivedMessage.Payload.SenderPlayerId;
+
+                WaitingForResponse[otherId] = false;
+                logger.Debug($"Updating board using info from {otherId}");
 
                 for (int i = 0; i < receivedBoard.Count; i++)
                 {
-                    if (!Board[i].Timestamp.HasValue || receivedBoard[i].TimeStamp > Board[i].Timestamp)
+                    if (/* receivedBoard[i].TimeStamp != 0 && */ receivedBoard[i].TimeStamp > Board[i].Timestamp)
                     {
                         AutoMapper.Mapper.Map<TileCommunicationDTO, Tile>(receivedBoard[i], Board[i]);
                     }
@@ -571,7 +602,7 @@ namespace Player
             {
                 for (int x = 0; x < Game.BoardSize.X; x++, i++)
                 {
-                    var character = Board[i].DistanceToClosestPiece == int.MaxValue ? "-" : "+";
+                    var character = Board[i].HasInfo == false ? " " : "+";
                     Console.Write($"[{character}]");
                 }
                 Console.WriteLine();

@@ -26,7 +26,7 @@ export interface AcceptedCommunicationResponseFromRecipient
 export interface AcceptedCommunicationResponseToSenderPayload {
   senderPlayerId: PlayerId;
   accepted: true;
-  boardInfo: BoardInfo;
+  board: BoardInfo;
 }
 
 /**

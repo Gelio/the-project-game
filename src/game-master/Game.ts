@@ -32,7 +32,7 @@ import { UIController } from './ui/UIController';
 import { PlayerMessageHandler } from './game-logic/PlayerMessageHandler';
 
 import { Communicator } from '../common/Communicator';
-import { GAME_MASTER_ID } from '../common/EntityIds';
+import { COMMUNICATION_SERVER_ID, GAME_MASTER_ID } from '../common/EntityIds';
 import { getGameStartedMessagePayload } from '../common/getGameStartedMessagePayload';
 
 import { PeriodicPieceGeneratorFactory } from './board-generation/createPeriodicPieceGenerator';
@@ -47,11 +47,11 @@ export class Game {
   public readonly scoreboard: Scoreboard;
 
   private readonly logger: LoggerInstance;
-  private readonly communicationRequestsStore: CommunicationRequestsStore;
   private readonly periodicPieceGenerator: PeriodicPieceGenerator;
   private readonly playerMessageHandler: PlayerMessageHandler;
   private readonly communicator: Communicator;
   private readonly uiController: UIController;
+  private readonly updateUI: Function;
   private _state = GameState.Registered;
 
   public get state() {
@@ -64,7 +64,8 @@ export class Game {
     uiController: UIController,
     communicator: Communicator,
     periodicPieceGeneratorFactory: PeriodicPieceGeneratorFactory,
-    onPointsLimitReached: Function
+    onPointsLimitReached: Function,
+    updateUI: Function
   ) {
     this.definition = gameDefinition;
     this.board = new Board(this.definition.boardSize, this.definition.goalLimit);
@@ -73,6 +74,7 @@ export class Game {
     this.uiController = uiController;
     this.playersContainer = new PlayersContainer();
     this.communicator = communicator;
+    this.updateUI = updateUI;
     this.periodicPieceGenerator = periodicPieceGeneratorFactory(this.board);
 
     this.playerMessageHandler = new PlayerMessageHandler(
@@ -85,7 +87,7 @@ export class Game {
         sendMessage: this.sendIngameMessage.bind(this),
         onPointsLimitReached
       },
-      this.communicationRequestsStore
+      new CommunicationRequestsStore()
     );
   }
 
@@ -109,8 +111,6 @@ export class Game {
   }
 
   public async handleMessage(message: Message<any>) {
-    // TODO: add unit tests
-
     const result = this.processPlayerMessage(message);
     if (!result.valid) {
       const actionInvalidMessage: ActionInvalidMessage = {
@@ -134,7 +134,7 @@ export class Game {
       }
     };
 
-    this.uiController.updateBoard(this.board);
+    this.updateUI();
     this.sendIngameMessage(actionValidMessage);
     this.sendIngameMessage(await result.responseMessage);
   }
@@ -180,7 +180,6 @@ export class Game {
   }
 
   public handlePlayerDisconnectedMessage(message: PlayerDisconnectedMessage) {
-    // TODO: add unit tests for this method
     // NOTE: it is possible that the player should be removed from the board
     const disconnectedPlayer = this.playersContainer.getPlayerById(message.payload.playerId);
 
@@ -206,16 +205,24 @@ export class Game {
   }
 
   public addPlayer(player: Player) {
-    if (player.position === undefined) {
-      this.board.setRandomPlayerPosition(player);
-    }
     this.playersContainer.addPlayer(player);
     this.board.addPlayer(player);
-    this.updateBoard();
+    this.updateUI();
+  }
+
+  public sendIngameMessage(message: Message<any>): void {
+    if (this.state !== GameState.InProgress) {
+      this.logger.verbose(
+        `Message ${message.type} will not be sent because the game is not in progress`
+      );
+
+      return;
+    }
+
+    return this.communicator.sendMessage(message);
   }
 
   public async register() {
-    // TODO: unit tests
     const registerGameMessage: RegisterGameRequest = {
       type: 'REGISTER_GAME_REQUEST',
       senderId: GAME_MASTER_ID,
@@ -235,10 +242,9 @@ export class Game {
   }
 
   public async unregister() {
-    // TODO: unit tests
     const unregisterGameRequest: UnregisterGameRequest = {
-      senderId: 'GAME_MASTER',
-      recipientId: 'COMMUNICATION_SERVER',
+      senderId: GAME_MASTER_ID,
+      recipientId: COMMUNICATION_SERVER_ID,
       type: 'UNREGISTER_GAME_REQUEST',
       payload: {
         gameName: this.definition.name
@@ -257,7 +263,6 @@ export class Game {
   }
 
   public tryAcceptPlayer(message: PlayerHelloMessage) {
-    // TODO: add unit tests
     const teamPlayers = this.playersContainer.getPlayersFromTeam(message.payload.teamId);
 
     if (this.state === GameState.InProgress) {
@@ -306,25 +311,7 @@ export class Game {
     this.addPlayer(newPlayer);
   }
 
-  private updateBoard() {
-    this.uiController.updateBoard(this.board);
-  }
-
-  private sendIngameMessage(message: Message<any>): void {
-    if (this.state !== GameState.InProgress) {
-      this.logger.verbose(
-        `Message ${message.type} will not be sent because the game is not in progress`
-      );
-
-      return;
-    }
-
-    return this.communicator.sendMessage(message);
-  }
-
   private sendGameStartedMessageToPlayers() {
-    // TODO: add test to check if this message is sent to all players
-
     const gameStartedMessagePayload = getGameStartedMessagePayload(this.playersContainer);
     this.playersContainer.getConnectedPlayers().forEach(player => {
       const message: GameStartedMessage = {
@@ -339,8 +326,6 @@ export class Game {
   }
 
   private sendGameFinishedMessageToPlayers() {
-    // TODO: add test to check if this message is sent to all players
-
     const gameFinishedMessagePayload: GameFinishedMessagePayload = {
       team1Score: this.scoreboard.team1Score,
       team2Score: this.scoreboard.team2Score
