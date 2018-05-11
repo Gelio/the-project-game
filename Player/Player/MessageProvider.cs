@@ -56,7 +56,9 @@ namespace Player
                     return JsonConvert.DeserializeObject<Message<P>>(serializedMessage);
                 }
                 if (message.Type == Consts.GameFinished)
-                    throw new GameAlreadyFinishedException();
+                {
+                    throw new GameAlreadyFinishedException(serializedMessage);
+                }
                 if (message.Type == Consts.CommunicationRequest)
                 {
                     var request = JsonConvert.DeserializeObject<Message<CommunicationPayload>>(serializedMessage);
@@ -113,6 +115,25 @@ namespace Player
 
         }
 
+
+        public void SendMessageWithTimeout(Message<IPayload> message, int timeout)
+        {
+            CheckConnection();
+            var serializedMessage = JsonConvert.SerializeObject(message);
+
+            Task sendTask;
+            try
+            {
+                sendTask = Task.Run(() => _communicator.Send(serializedMessage));
+                if (!sendTask.Wait(timeout))
+                    throw new TimeoutException($"Did not send after {timeout}ms");
+            }
+            catch (AggregateException e)
+            {
+                throw e.InnerException;
+            }
+
+        }
         public void SendMessage(Message<IPayload> message)
         {
             CheckConnection();

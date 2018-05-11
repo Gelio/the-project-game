@@ -46,15 +46,60 @@ namespace Player
             WaitingForResponse = new Dictionary<string, bool>();
         }
 
+        private void ResetState()
+        {
+            Board.Clear();
+            for (int i = 0; i < Game.BoardSize.X * (Game.BoardSize.GoalArea * 2 + Game.BoardSize.TaskArea); i++)
+            {
+                Board.Add(new Tile()
+                {
+                    DistanceToClosestPiece = int.MaxValue,
+                    GoalStatus = GoalStatusEnum.NoInfo
+                });
+            }
+            HeldPiece = null;
+            WaitingForResponse.Clear();
+        }
+
         public void Start()
         {
             GetGameInfo();
-            ConnectToServer();
-            WaitForGameStart();
-            RefreshBoardState(); // -- gives us info about all teammates' (+ ours) initial position
-            logger.Debug($"Player's init position: {X} {Y}");
-            GoalAreaDirection = Y < Game.BoardSize.GoalArea ? Consts.Up : Consts.Down;
-            Play();
+            while (true)
+            {
+                ResetState();
+
+                int tries = 3;
+                while (true)
+                {
+                    try
+                    {
+                        ConnectToServer();
+                        break;
+                    }
+                    catch (PlayerRejectedException)
+                    {
+                        tries--;
+                    }
+                    if (tries == 0)
+                        throw new GameAlreadyFinishedException("Game over");
+                }
+
+                WaitForGameStart();
+                RefreshBoardState(); // -- gives us info about all teammates' (+ ours) initial position
+                logger.Debug($"Player's init position: {X} {Y}");
+                GoalAreaDirection = Y < Game.BoardSize.GoalArea ? Consts.Up : Consts.Down;
+                try
+                {
+                    Play();
+                }
+                catch (GameAlreadyFinishedException e)
+                {
+                    RoundFinished(e.Message);
+
+                    logger.Info($"Waiting {_playerConfig.Timeout}s for new round...");
+                    Task.Delay(_playerConfig.Timeout).Wait();
+                }
+            }
         }
 
         public void GetGameInfo()
@@ -65,20 +110,11 @@ namespace Player
             {
                 throw new OperationCanceledException("Game not found");
             }
-
-            for (int i = 0; i < Game.BoardSize.X * (Game.BoardSize.GoalArea * 2 + Game.BoardSize.TaskArea); i++)
-            {
-                Board.Add(new Tile()
-                {
-                    DistanceToClosestPiece = int.MaxValue,
-                    GoalStatus = GoalStatusEnum.NoInfo
-                });
-            }
         }
 
         public void ConnectToServer()
         {
-            _messageProvider.SendMessage(new Message<IPayload>
+            _messageProvider.SendMessageWithTimeout(new Message<IPayload>
             {
                 Type = Consts.PlayerHelloRequest,
                 SenderId = Id,
@@ -88,7 +124,7 @@ namespace Player
                     TeamId = _playerConfig.TeamNumber,
                     IsLeader = _playerConfig.IsLeader,
                 }
-            });
+            }, _playerConfig.Timeout);
             _messageProvider.AssertPlayerStatus(_playerConfig.Timeout);
             logger.Info($"Player ({Id}) connected to server");
             logger.Debug($"Team no.: {_playerConfig.TeamNumber}");
@@ -125,21 +161,24 @@ namespace Player
 
         public void Play()
         {
-            PrintBoard();
+            // PrintBoard();
             while (true)
             {
-                Task.Delay(3000);
                 RefreshBoardState();
                 UpdateBoard();
                 if (_messageProvider.HasPendingRequests)
                 {
-                    Discover();
+                    // Discover();
                     var senderId = _messageProvider.GetPendingRequest().Payload.SenderPlayerId;
+
                     SendCommunicationResponse(senderId);
+                    if (_playerConfig.IsLeader)
+                        SendCommunicationRequest(senderId);
                 }
                 if (_playerConfig.IsLeader)
                 {
-                    var targetId = TeamMembersIds.FirstOrDefault();
+                    var index = new Random().Next(0, TeamMembersIds.Count - 1);
+                    var targetId = TeamMembersIds[index];
                     if (targetId != null && !WaitingForResponse[targetId])
                         SendCommunicationRequest(targetId);
                 }
@@ -150,23 +189,23 @@ namespace Player
                     {
                         logger.Info("Testing the piece");
                         TestPiece();
-                    }
-                    if (!HeldPiece.IsSham)
-                    {
-                        if (IsInGoalArea() && Board[GetCurrentBoardIndex()].GoalStatus == GoalStatusEnum.NoInfo)
+                        if (HeldPiece.IsSham)
                         {
-                            logger.Info("Trying to place down piece");
-                            (var result, var resultEnum) = PlaceDownPiece();
+                            logger.Info("The piece was a sham -- deleting the piece");
+                            DeletePiece();
                         }
-                        else
-                            Move(PickSweepingGoalAreaDirection());
+                    }
+
+                    if (IsInGoalArea() && Board[GetCurrentBoardIndex()].GoalStatus == GoalStatusEnum.NoInfo)
+                    {
+                        logger.Info("Trying to place down piece");
+                        (var result, var resultEnum) = PlaceDownPiece();
+                        SendCommunicationRequest(LeaderId);
                     }
                     else
                     {
-                        logger.Info("Deleting the piece");
-                        DeletePiece();
-                        PrintBoard();
-                        continue;
+                        if (!Move(PickSweepingGoalAreaDirection()))
+                            Move(PickRandomMovementDirection());
                     }
 
                 }
@@ -179,8 +218,8 @@ namespace Player
                 else // Find a piece
                 {
                     Discover();
-                    string direction = PickClosestPieceDirection();
-                    Move(direction);
+                    if (!Move(PickClosestPieceDirection()))
+                        Move(PickRandomMovementDirection());
                 }
             }
         }
@@ -427,20 +466,21 @@ namespace Player
             if (received.Payload == null)
                 throw new NoPayloadException();
 
-            Board[GetCurrentBoardIndex()].Piece = HeldPiece;
+            var piece = HeldPiece;
             HeldPiece = null;
+            Board[GetCurrentBoardIndex()].Piece = null;
+
             if (!received.Payload.DidCompleteGoal.HasValue
                  && (Y < Game.BoardSize.GoalArea
                 || Y >= Game.BoardSize.GoalArea + Game.BoardSize.TaskArea))
             {
-                Board[GetCurrentBoardIndex()].Piece.HasInfo = true;
-                Board[GetCurrentBoardIndex()].Piece.IsSham = true;
                 logger.Info("The piece was a sham!");
                 return (true, PlaceDownPieceResult.Sham);
             }
             else if (!received.Payload.DidCompleteGoal.HasValue)
             {
                 logger.Info("Placed a piece in Task Area");
+                Board[GetCurrentBoardIndex()].Piece = piece;
                 return (true, PlaceDownPieceResult.TaskArea);
             }
             else if (!received.Payload.DidCompleteGoal.Value)
@@ -465,15 +505,13 @@ namespace Player
             TaskArea = 2
         }
 
-        public void GameAlreadyFinished(string receivedMessageSerialized)
+        public void RoundFinished(string receivedMessageSerialized)
         {
             var received = JsonConvert.DeserializeObject<Message<GameFinishedPayload>>(receivedMessageSerialized);
             var winnerTeam = (received.Payload.Team1Score > received.Payload.Team2Score) ? "Team 1" : "Team 2";
-            string message = $"Cannot perform the planned action. Game has already finished.\n" +
-                $"Scores:\n\tTeam 1: {received.Payload.Team1Score}\n\tTeam 2: {received.Payload.Team2Score}\n" +
+            string message = $"Scores:\n\tTeam 1: {received.Payload.Team1Score}\n\tTeam 2: {received.Payload.Team2Score}\n" +
                 $"Congratulations {winnerTeam}! WOOP WOOP!\n";
-
-            throw new GameAlreadyFinishedException(message);
+            logger.Info(message);
         }
 
         /// <summary>
@@ -591,7 +629,7 @@ namespace Player
                         AutoMapper.Mapper.Map<TileCommunicationDTO, Tile>(receivedBoard[i], Board[i]);
                     }
                 }
-                PrintBoard();
+                // PrintBoard();
             }
         }
 
