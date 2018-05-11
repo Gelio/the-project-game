@@ -12,5 +12,7 @@ namespace Player.Interfaces
         Message<P> Receive<P>() where P : IPayload, new();
         bool AssertPlayerStatus(int timeout);
         void SendMessage(Message<IPayload> message);
+        void SendMessageWithTimeout(Message<IPayload> message, int timeout);
+
     }
 }

@@ -133,7 +133,7 @@ namespace Player
             }
             catch (SocketException e)
             {
-                logger.Fatal(e, "Connection failed:");
+                logger.Fatal(e.Message, "Connection failed:");
                 player.Disconnect();
                 return;
             }

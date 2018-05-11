@@ -81,8 +81,6 @@ namespace Player
 
             // Initialize buffer and read the actual message
             var buffer = new byte[messageLen];
-            Console.WriteLine("Message Len: {0}", messageLen);
-
             int read = 0;
             while (read != messageLen)
             {
