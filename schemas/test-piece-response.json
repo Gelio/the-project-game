@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "TestPieceResponse",
+  "description": "Message sent to Player who wanted to test the currently held piece",
+  "properties": {
+    "type": {
+      "const": "TEST_PIECE_RESPONSE"
+    },
+    "senderId": {
+      "const": "GAME_MASTER"
+    },
+    "recipientId": {
+      "$ref": "definitions.json#/playerId"
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "isSham": {
+          "type": "boolean"
+        }
+      },
+      "required": ["isSham"]
+    }
+  },
+  "required": ["type", "senderId", "recipientId", "payload"]
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "TestPieceRequest",
+  "description": "Message sent by Player who wants to test the currently held piece",
+  "properties": {
+    "type": {
+      "const": "TEST_PIECE_REQUEST"
+    },
+    "senderId": {
+      "$ref": "definitions.json#/playerId"
+    }
+  },
+  "required": ["type", "senderId"]
+}
