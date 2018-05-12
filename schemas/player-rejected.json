@@ -5,7 +5,7 @@
   "type": "object",
   "title": "PlayerRejected",
   "description":
-    "Cannot accept player due to maximum number of players in a team or leader already connected",
+    "Sent when cannot accept player due to maximum number of players in a team or leader already connected",
 
   "definitions": {
     "playerId": {
@@ -30,7 +30,9 @@
         "reason": {
           "type": "string"
         }
-      }
+      },
+      "required": ["reason"]
     }
-  }
+  },
+  "required": ["type", "senderId", "recipientId", "payload"]
 }
