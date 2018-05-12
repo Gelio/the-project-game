@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "MoveResponse",
+  "description": "Message sent to Player who wanted to perform Move action",
+  "properties": {
+    "type": {
+      "const": "MOVE_RESPONSE"
+    },
+    "senderId": {
+      "const": "GAME_MASTER"
+    },
+    "recipientId": {
+      "$ref": "definitions.json#/playerId"
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "timestamp": {
+          "type": "string"
+        },
+        "distanceToPiece": {
+          "type": "integer",
+          "minimum": -1
+        }
+      },
+      "required": ["direction", "distanceToPiece"]
+    }
+  },
+  "required": ["type", "senderId", "recipientId", "payload"]
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "MoveRequest",
+  "description": "Message sent by Player who wants to perform Move action",
+  "properties": {
+    "type": {
+      "const": "MOVE_REQUEST"
+    },
+    "senderId": {
+      "$ref": "definitions.json#/playerId"
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "direction": {
+          "type": "string",
+          "enum": ["up", "down", "left", "right"]
+        }
+      },
+      "required": ["direction"]
+    }
+  },
+  "required": ["type", "senderId", "payload"]
+}
