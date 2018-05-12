@@ -1,0 +1,36 @@
+{
+  "$id": "https://github.com/Gelio/the-project-game",
+  "$schema": "http://json-schema.org/draft-07/schema",
+
+  "type": "object",
+  "title": "PlayerRejected",
+  "description":
+    "Cannot accept player due to maximum number of players in a team or leader already connected",
+
+  "definitions": {
+    "playerId": {
+      "type": "string"
+    }
+  },
+
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": ["PLAYER_REJECTED"]
+    },
+    "senderId": {
+      "enum": ["GAME_MASTER"]
+    },
+    "recipientId": {
+      "$ref": "#/definitions/playerId"
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "reason": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
