@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "GameFinished",
+  "description": "Message sent to Player when the game is finished",
+  "properties": {
+    "type": {
+      "const": "GAME_FINISHED"
+    },
+    "senderId": {
+      "const": "GAME_MASTER"
+    },
+    "recipientId": {
+      "$ref": "definitions.json#/playerId"
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "team1Score": {
+          "type": "integer"
+        },
+        "team2Score": {
+          "type": "integer"
+        }
+      },
+      "required": ["team1Score", "team2Score"]
+    }
+  },
+  "required": ["type", "senderId", "recipientId", "payload"]
+}
