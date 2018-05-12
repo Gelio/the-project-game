@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "GameStarted",
+  "description": "Message sent to Player when both teams are full and the game is started",
+  "properties": {
+    "type": {
+      "const": "GAME_STARTED"
+    },
+    "senderId": {
+      "const": "GAME_MASTER"
+    },
+    "recipientId": {
+      "$ref": "definitions.json#/playerId"
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "teamInfo": {
+          "type": "object",
+          "properties": {
+            "1": {
+              "type": "object",
+              "properties": {
+                "players": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "leaderId": {
+                  "type": "string"
+                }
+              },
+              "required": ["players", "leaderId"]
+            },
+            "2": {
+              "type": "object",
+              "properties": {
+                "players": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "leaderId": {
+                  "type": "string"
+                }
+              },
+              "required": ["players", "leaderId"]
+            }
+          },
+          "required": ["1", "2"]
+        }
+      },
+      "required": ["teamInfo"]
+    }
+  },
+  "required": ["type", "senderId", "recipientId", "payload"]
+}
