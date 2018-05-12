@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "PickUpPieceResponse",
+  "description": "Message sent to Player who wanted to pick up the piece he was standing on",
+  "properties": {
+    "type": {
+      "const": "PICK_UP_PIECE_RESPONSE"
+    },
+    "senderId": {
+      "const": "GAME_MASTER"
+    },
+    "recipientId": {
+      "$ref": "definitions.json#/playerId"
+    }
+  },
+  "required": ["type", "senderId", "recipientId"]
+}
