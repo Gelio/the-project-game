@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+
+  "type": "object",
+  "title": "RefreshStateResponse",
+
+  "definitions": {
+    "playerPosition": {
+      "type": "object",
+      "properties": {
+        "playerId": {
+          "$ref": "player-id.json#/definitions/playerId"
+        },
+        "x": {
+          "type": "integer"
+        },
+        "y": {
+          "type": "integer"
+        }
+      },
+      "required": ["playerId", "x", "y"]
+    }
+  },
+
+  "properties": {
+    "type": {
+      "enum": ["ACTION_VALID"]
+    },
+    "senderId": {
+      "enum": ["GAME_MASTER"]
+    },
+    "recipientId": {
+      "$ref": "player-id.json#/definitions/playerId"
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "timestamp": {
+          "type": "integer"
+        },
+        "currentPositionDistanceToClosestPiece": {
+          "type": "integer"
+        },
+        "playerPositions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/playerPosition"
+          }
+        },
+        "team1Score": {
+          "type": "integer"
+        },
+        "team2Score": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "timestamp",
+        "currentPositionDistanceToClosestPiece",
+        "playerPositions",
+        "team1Score",
+        "team2Score"
+      ]
+    }
+  },
+  "required": ["type", "senderId", "recipientId", "payload"]
+}

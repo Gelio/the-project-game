@@ -1,16 +1,9 @@
 {
-  "$id": "https://github.com/Gelio/the-project-game",
   "$schema": "http://json-schema.org/draft-07/schema",
 
   "type": "object",
   "title": "PlayerHello",
   "description": "Initial message from Player sent when connecting to GM",
-
-  "definitions": {
-    "playerId": {
-      "type": "string"
-    }
-  },
 
   "properties": {
     "type": {
@@ -18,7 +11,7 @@
       "enum": ["PLAYER_HELLO"]
     },
     "senderId": {
-      "$ref": "#/definitions/playerId"
+      "$ref": "player-id.json#/definitions/playerId"
     },
     "payload": {
       "type": "object",

@@ -1,16 +1,9 @@
 {
-  "$id": "https://github.com/Gelio/the-project-game",
   "$schema": "http://json-schema.org/draft-07/schema",
 
   "type": "object",
   "title": "ActionValid",
   "description": "Sent from GM to Player when requested action is valid",
-
-  "definitions": {
-    "playerId": {
-      "type": "string"
-    }
-  },
 
   "properties": {
     "type": {
@@ -20,7 +13,7 @@
       "enum": ["GAME_MASTER"]
     },
     "recipientId": {
-      "$ref": "#/definitions/playerId"
+      "$ref": "player-id.json#/definitions/playerId"
     },
     "payload": {
       "type": "object",

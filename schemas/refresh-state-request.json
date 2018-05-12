@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+
+  "type": "object",
+  "title": "RefreshStateRequest",
+
+  "properties": {
+    "type": {
+      "enum": ["REFRESH_STATE_REQUEST"]
+    },
+    "senderId": {
+      "$ref": "player-id.json#/definitions/playerId"
+    }
+  },
+  "required": ["type", "senderId"]
+}
