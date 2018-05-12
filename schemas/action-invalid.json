@@ -1,0 +1,35 @@
+{
+  "$id": "https://github.com/Gelio/the-project-game",
+  "$schema": "http://json-schema.org/draft-07/schema",
+
+  "type": "object",
+  "title": "ActionInvalid",
+  "description": "Sent from GM to Player when requested action is not valid",
+
+  "definitions": {
+    "playerId": {
+      "type": "string"
+    }
+  },
+
+  "properties": {
+    "type": {
+      "enum": ["ACTION_INVALID"]
+    },
+    "senderId": {
+      "enum": ["GAME_MASTER"]
+    },
+    "recipientId": {
+      "$ref": "#/definitions/playerId"
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "reason": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "required": ["type", "senderId", "recipientId"]
+}
