@@ -1,0 +1,39 @@
+{
+  "$id": "https://github.com/Gelio/the-project-game",
+  "$schema": "http://json-schema.org/draft-07/schema",
+
+  "type": "object",
+  "title": "PlayerHello",
+  "description": "Initial message from Player sent when connecting to GM",
+
+  "definitions": {
+    "playerId": {
+      "type": "string"
+    }
+  },
+
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": ["PLAYER_HELLO"]
+    },
+    "senderId": {
+      "$ref": "#/definitions/playerId"
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "game": {
+          "type": "string",
+          "title": "Game name"
+        },
+        "teamId": {
+          "enum": [1, 2]
+        },
+        "isLeader": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}
