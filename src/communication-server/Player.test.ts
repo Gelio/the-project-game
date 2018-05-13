@@ -1,3 +1,5 @@
+import { LoggerInstance } from 'winston';
+
 import { Communicator } from '../common/Communicator';
 import { createMockCommunicator } from '../common/createMockCommunicator';
 import { LoggerFactory } from '../common/logging/LoggerFactory';
@@ -16,6 +18,7 @@ describe('[CS] Player', () => {
   let player: Player;
   let playerInfo: PlayerInfo;
   let messageValidator: SimpleMessageValidator;
+  let logger: LoggerInstance;
   const gameName = 'aa';
 
   beforeEach(() => {
@@ -28,8 +31,9 @@ describe('[CS] Player', () => {
     loggerFactory.logLevel = 'error';
 
     messageValidator = jest.fn(() => true);
+    messageValidator.errors = [];
 
-    const logger = loggerFactory.createEmptyLogger();
+    logger = loggerFactory.createEmptyLogger();
     playerInfo = {
       gameName,
       id: 'player1',
@@ -67,6 +71,22 @@ describe('[CS] Player', () => {
 
     playerCommunicator.emit('message', message);
     expect(gameMasterCommunicator.sendMessage).not.toHaveBeenCalled();
+  });
+
+  it('should validate incoming messages', () => {
+    const message = {};
+    playerCommunicator.emit('message', message);
+
+    expect(messageValidator).toHaveBeenCalledWith(message);
+  });
+
+  it('should log a warning when the incoming message is invalid', () => {
+    (<jest.Mock>messageValidator).mockImplementation(() => false);
+    spyOn(logger, 'warn');
+
+    playerCommunicator.emit('message', {});
+
+    expect(logger.warn).toHaveBeenCalled();
   });
 
   // TODO: add tests for message validation
