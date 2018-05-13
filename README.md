@@ -116,6 +116,14 @@ npm run lint:tslint
 
 to trigger only one type of linter.
 
+## Validating messages
+
+Use the following command to validate messages:
+
+```bash
+npm run validate-message -- file1.json [file2.json ...]
+```
+
 ## Development
 
 [Prettier](https://github.com/prettier/prettier) is installed as a formatter. Along with tslint,
