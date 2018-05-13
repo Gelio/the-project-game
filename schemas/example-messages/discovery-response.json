@@ -1,0 +1,54 @@
+{
+  "$schema": "../discovery-response.json",
+
+  "type": "DISCOVERY_RESPONSE",
+  "senderId": "GAME_MASTER",
+  "recipientId": "uuid",
+  "payload": {
+    "timestamp": 1515941821,
+    "tiles": [
+      {
+        "x": 5,
+        "y": 3,
+        "playerId": "p5",
+        "piece": true,
+        "distanceToClosestPiece": 0
+      },
+      {
+        "x": 6,
+        "y": 3,
+        "playerId": "p4",
+        "piece": false,
+        "distanceToClosestPiece": 1
+      },
+      {
+        "x": 7,
+        "y": 3,
+        "playerId": "p3",
+        "piece": false,
+        "distanceToClosestPiece": 2
+      },
+      {
+        "x": 5,
+        "y": 2,
+        "playerId": "p2",
+        "piece": false,
+        "distanceToClosestPiece": 1
+      },
+      {
+        "x": 6,
+        "y": 2,
+        "playerId": "p1",
+        "piece": false,
+        "distanceToClosestPiece": 2
+      },
+      {
+        "x": 6,
+        "y": 2,
+        "playerId": "p1",
+        "piece": false,
+        "distanceToClosestPiece": 2
+      }
+    ]
+  }
+}
