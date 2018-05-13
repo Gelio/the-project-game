@@ -1,5 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://the-project-game.net/schema/delete-piece-response.json",
   "type": "object",
   "title": "DeletePieceResponse",
   "description": "Message sent to Player who wanted to delete the currently held piece",

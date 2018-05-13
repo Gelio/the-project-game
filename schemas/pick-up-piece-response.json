@@ -1,5 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://the-project-game.net/schema/pick-up-piece-response.json",
   "type": "object",
   "title": "PickUpPieceResponse",
   "description": "Message sent to Player who wanted to pick up the piece he was standing on",

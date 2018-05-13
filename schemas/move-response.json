@@ -1,5 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://the-project-game.net/schema/move-response.json",
   "type": "object",
   "title": "MoveResponse",
   "description": "Message sent to Player who wanted to perform Move action",
