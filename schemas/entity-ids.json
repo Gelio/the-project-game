@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+
+  "title": "entity-ids",
+
+  "definitions": {
+    "playerId": {
+      "type": "string"
+    },
+    "gameMasterId": {
+      "const": "GAME_MASTER"
+    }
+  }
+}
