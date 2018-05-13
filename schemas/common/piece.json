@@ -13,7 +13,6 @@
           "type": "boolean"
         }
       },
-      "additionalProperties": false,
       "required": ["isSham", "wasTested"]
     }
   }
