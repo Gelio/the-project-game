@@ -106,6 +106,7 @@ describe('[CS] CommunicationServer', () => {
     logger = loggerFactory.createEmptyLogger();
 
     messageValidator = jest.fn(() => true);
+    messageValidator.errors = [];
 
     communicationServer = new CommunicationServer(options, messageRouter, logger, messageValidator);
   });
@@ -405,6 +406,33 @@ describe('[CS] CommunicationServer', () => {
       });
     });
 
-    // TODO: add tests on validating messages
+    it('should validate incoming messages', async () => {
+      const message = getPlayerHelloMessage('abc');
+
+      const communicator = await createConnectedCommunicator();
+
+      communicator.sendMessage(message);
+
+      await createDelay(100);
+      expect(messageValidator).toHaveBeenCalledWith(message);
+
+      communicator.destroy();
+    });
+
+    it('should log a warning when incoming message is invalid', async () => {
+      const message = getPlayerHelloMessage('abc');
+
+      (<jest.Mock>messageValidator).mockImplementation(() => false);
+      spyOn(logger, 'warn');
+
+      const communicator = await createConnectedCommunicator();
+
+      communicator.sendMessage(message);
+
+      await createDelay(100);
+      expect(logger.warn).toHaveBeenCalled();
+
+      communicator.destroy();
+    });
   });
 });

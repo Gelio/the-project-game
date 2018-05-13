@@ -133,6 +133,15 @@ export class CommunicationServer implements Service {
   }
 
   private handleClientsFirstMessage(communicator: Communicator, message: Message<any>) {
+    if (!this.messageValidator(message)) {
+      this.logger.warn(`Invalid message received from ${communicator.address}`);
+
+      const stringifiedErrors = JSON.stringify(this.messageValidator.errors, null, 2);
+      this.logger.verbose(stringifiedErrors);
+
+      return;
+    }
+
     switch (message.type) {
       case 'PLAYER_HELLO':
         this.handlePlayer(communicator, <PlayerHelloMessage>message);
