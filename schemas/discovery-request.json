@@ -18,6 +18,5 @@
     }
   },
 
-  "additionalProperties": false,
   "required": ["type", "senderId", "recipientId"]
 }

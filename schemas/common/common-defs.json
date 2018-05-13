@@ -7,6 +7,10 @@
       "type": "integer",
       "minimum": 1
     },
+    "nonNegativeInteger": {
+      "type": "integer",
+      "minimum": 0
+    },
     "nonNegativeNumber": {
       "type": "number",
       "minimum": 0

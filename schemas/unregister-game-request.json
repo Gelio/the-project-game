@@ -22,11 +22,9 @@
           "type": "string"
         }
       },
-      "additionalProperties": false,
       "required": ["gameName"]
     }
   },
 
-  "additionalProperties": false,
   "required": ["type", "senderId", "recipientId", "payload"]
 }

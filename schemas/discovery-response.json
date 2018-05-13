@@ -18,48 +18,52 @@
     "payload": {
       "type": "object",
       "properties": {
-        "tiles": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "x": {
-                "type": "number",
-                "minimum": 0
-              },
-              "y": {
-                "type": "number",
-                "minimum": 0
-              },
-              "playerId": {
-                "$ref": "common/entity-ids.json#/definitions/playerId"
-              },
-              "piece": {
-                "type": "boolean"
-              },
-              "distanceToClosestPiece": {
-                "type": "number",
-                "minimum": -1
-              }
-            },
-
-            "additionalProperties": false,
-            "required": ["x", "y", "playerId", "piece", "distanceToClosestPiece"]
-          },
-          "minItems": 4,
-          "maxItems": 9,
-          "uniqueItems": true
-        },
         "timestamp": {
-          "type": "number"
+          "$ref": "common/common-defs.json#/definitions/nonNegativeNumber"
+        },
+        "tiles": {
+          "$ref": "#/definitions/tiles"
         }
       },
 
-      "additionalProperties": false,
       "required": ["tiles", "timestamp"]
     }
   },
 
-  "additionalProperties": false,
+  "definitions": {
+    "tiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "$ref": "common/common-defs.json#/definitions/nonNegativeInteger"
+          },
+          "y": {
+            "$ref": "common/common-defs.json#/definitions/nonNegativeInteger"
+          },
+          "playerId": {
+            "anyOf": [
+              { "type": "null" },
+              { "$ref": "common/entity-ids.json#/definitions/playerId" }
+            ]
+          },
+          "piece": {
+            "type": "boolean"
+          },
+          "distanceToClosestPiece": {
+            "type": "number",
+            "minimum": -1
+          }
+        },
+
+        "required": ["x", "y", "playerId", "piece", "distanceToClosestPiece"]
+      },
+      "minItems": 4,
+      "maxItems": 9,
+      "uniqueItems": true
+    }
+  },
+
   "required": ["type", "senderId", "recipientId", "payload"]
 }

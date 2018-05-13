@@ -22,11 +22,9 @@
           "type": "boolean"
         }
       },
-      "additionalProperties": false,
       "required": ["unregistered"]
     }
   },
 
-  "additionalProperties": false,
   "required": ["type", "senderId", "recipientId", "payload"]
 }
