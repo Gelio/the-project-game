@@ -15,5 +15,6 @@
     }
   },
 
-  "required": ["type", "senderId"]
+  "required": ["type", "senderId"],
+  "additionalProperties": false
 }
