@@ -8,7 +8,7 @@
       "const": "GAME_STARTED"
     },
     "senderId": {
-      "const": "GAME_MASTER"
+      "$ref": "definitions.json#/gameMasterId"
     },
     "recipientId": {
       "$ref": "definitions.json#/playerId"

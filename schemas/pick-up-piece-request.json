@@ -9,6 +9,9 @@
     },
     "senderId": {
       "$ref": "definitions.json#/playerId"
+    },
+    "payload": {
+      "const": "null"
     }
   },
   "required": ["type", "senderId"]

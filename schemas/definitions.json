@@ -2,6 +2,9 @@
   "definitions": {
     "playerId": {
       "type": "string"
+    },
+    "gameMasterId": {
+      "const": "GAME_MASTER"
     }
   }
 }

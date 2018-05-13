@@ -8,10 +8,13 @@
       "const": "PICK_UP_PIECE_RESPONSE"
     },
     "senderId": {
-      "const": "GAME_MASTER"
+      "$ref": "definitions.json#/gameMasterId"
     },
     "recipientId": {
       "$ref": "definitions.json#/playerId"
+    },
+    "payload": {
+      "const": "null"
     }
   },
   "required": ["type", "senderId", "recipientId"]

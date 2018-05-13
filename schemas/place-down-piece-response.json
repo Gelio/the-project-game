@@ -9,7 +9,7 @@
       "const": "PLACE_DOWN_PIECE_RESPONSE"
     },
     "senderId": {
-      "const": "GAME_MASTER"
+      "$ref": "definitions.json#/gameMasterId"
     },
     "recipientId": {
       "$ref": "definitions.json#/playerId"
