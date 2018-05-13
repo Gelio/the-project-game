@@ -1,0 +1,7 @@
+{
+  "$schema": "../request-sent.json",
+
+  "type": "REQUEST_SENT",
+  "senderId": "GAME_MASTER",
+  "recipientId": "asked"
+}
