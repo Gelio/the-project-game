@@ -23,7 +23,6 @@
           "type": "integer"
         }
       },
-      "additionalProperties": false,
       "required": ["distanceToPiece", "hasCompletedGoal", "piece", "playerId", "timestamp"]
     }
   }
