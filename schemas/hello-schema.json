@@ -8,10 +8,10 @@
   "properties": {
     "type": {
       "type": "string",
-      "enum": ["PLAYER_HELLO"]
+      "const": "PLAYER_HELLO"
     },
     "senderId": {
-      "$ref": "player-id.json#/definitions/playerId"
+      "$ref": "common/entity-ids.json#/definitions/playerId"
     },
     "payload": {
       "type": "object",

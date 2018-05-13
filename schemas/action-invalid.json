@@ -7,13 +7,13 @@
 
   "properties": {
     "type": {
-      "enum": ["ACTION_INVALID"]
+      "const": "ACTION_INVALID"
     },
     "senderId": {
-      "enum": ["GAME_MASTER"]
+      "$ref": "common/entity-ids.json#/definitions/gameMasterId"
     },
     "recipientId": {
-      "$ref": "player-id.json#/definitions/playerId"
+      "$ref": "common/entity-ids.json#/definitions/playerId"
     },
     "payload": {
       "type": "object",

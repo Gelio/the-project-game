@@ -6,10 +6,10 @@
 
   "properties": {
     "type": {
-      "enum": ["REFRESH_STATE_REQUEST"]
+      "const": "REFRESH_STATE_REQUEST"
     },
     "senderId": {
-      "$ref": "player-id.json#/definitions/playerId"
+      "$ref": "common/entity-ids.json#/definitions/playerId"
     }
   },
   "required": ["type", "senderId"]

@@ -9,7 +9,7 @@
       "type": "object",
       "properties": {
         "playerId": {
-          "$ref": "player-id.json#/definitions/playerId"
+          "$ref": "common/entity-ids.json#/definitions/playerId"
         },
         "x": {
           "type": "integer"
@@ -24,13 +24,13 @@
 
   "properties": {
     "type": {
-      "enum": ["ACTION_VALID"]
+      "const": "ACTION_VALID"
     },
     "senderId": {
-      "enum": ["GAME_MASTER"]
+      "$ref": "common/entity-ids.json#/definitions/gameMasterId"
     },
     "recipientId": {
-      "$ref": "player-id.json#/definitions/playerId"
+      "$ref": "common/entity-ids.json#/definitions/playerId"
     },
     "payload": {
       "type": "object",

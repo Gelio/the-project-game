@@ -9,13 +9,13 @@
   "properties": {
     "type": {
       "type": "string",
-      "enum": ["PLAYER_REJECTED"]
+      "const": "PLAYER_REJECTED"
     },
     "senderId": {
-      "enum": ["GAME_MASTER"]
+      "$ref": "common/entity-ids.json#/definitions/gameMasterId"
     },
     "recipientId": {
-      "$ref": "player-id.json#/definitions/playerId"
+      "$ref": "common/entity-ids.json#/definitions/playerId"
     },
     "payload": {
       "type": "object",
