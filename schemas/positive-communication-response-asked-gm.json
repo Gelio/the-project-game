@@ -1,54 +1,20 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://the-project-game.net/schema/positive-communication-response-asked-gm.json",
   "type": "object",
-
-  "definitions": {
-    "piece": {
-      "type": "object",
-      "properties": {
-        "isSham": {
-          "type": "boolean",
-          "wasTested": "boolean"
-        }
-      },
-      "minProperties": 2
-    },
-    "tile": {
-      "type": "object",
-      "properties": {
-        "distanceToPiece": {
-          "type": "integer",
-          "minimum": -1
-        },
-        "hasCompletedGoal": {
-          "type": "boolean"
-        },
-        "piece": {
-          "oneOf": [{ "type": "null" }, { "$ref": "#/definitions/piece" }]
-        },
-        "playerId": {
-          "oneOf": [{ "type": "null" }, { "$ref": "entity-ids.json#/definitions/playerId" }]
-        },
-        "timestamp": {
-          "type": "integer"
-        }
-      },
-      "minProperties": 5
-    }
-  },
 
   "properties": {
     "type": {
       "const": "COMMUNICATION_RESPONSE"
     },
     "senderId": {
-      "$ref": "entity-ids.json#/definitions/playerId"
+      "$ref": "common/entity-ids.json#/definitions/playerId"
     },
     "payload": {
       "type": "object",
       "properties": {
         "targetPlayerId": {
-          "$ref": "entity-ids.json#/definitions/playerId"
+          "$ref": "common/entity-ids.json#/definitions/playerId"
         },
         "accepted": {
           "const": true
@@ -56,13 +22,15 @@
         "board": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/tile"
+            "$ref": "common/tile.json#/definitions/tile"
           },
           "minItems": 1
         }
       },
-      "minProperties": 3
+      "additionalProperties": false,
+      "required": ["targetPlayerId", "accepted", "board"]
     }
   },
-  "minProperties": 3
+  "additionalProperties": false,
+  "required": ["type", "senderId", "payload"]
 }
