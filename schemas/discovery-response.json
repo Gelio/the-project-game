@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://the-project-game.net/schema/discovery-response.json",
+
+  "type": "object",
+  "title": "DiscoveryResponse",
+
+  "properties": {
+    "type": {
+      "const": "DISCOVERY_RESPONSE"
+    },
+    "senderId": {
+      "$ref": "common/entity-ids.json#/definitions/gameMasterId"
+    },
+    "recipientId": {
+      "$ref": "common/entity-ids.json#/definitions/playerId"
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "tiles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": 0
+              },
+              "y": {
+                "type": "number",
+                "minimum": 0
+              },
+              "playerId": {
+                "$ref": "common/entity-ids.json#/definitions/playerId"
+              },
+              "piece": {
+                "type": "boolean"
+              },
+              "distanceToClosestPiece": {
+                "type": "number",
+                "minimum": -1
+              }
+            },
+
+            "additionalProperties": false,
+            "required": ["x", "y", "playerId", "piece", "distanceToClosestPiece"]
+          },
+          "minItems": 4,
+          "maxItems": 9,
+          "uniqueItems": true
+        },
+        "timestamp": {
+          "type": "number"
+        }
+      },
+
+      "additionalProperties": false,
+      "required": ["tiles", "timestamp"]
+    }
+  },
+
+  "additionalProperties": false,
+  "required": ["type", "senderId", "recipientId", "payload"]
+}
