@@ -1,7 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://the-project-game.net/schema/communication-request-asker-gm.json",
+
   "type": "object",
+  "title": "CommunicationRequestAskerGm",
+  "description": "Communication request from asker to Game Master",
 
   "properties": {
     "type": {
