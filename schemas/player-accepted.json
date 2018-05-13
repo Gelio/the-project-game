@@ -7,7 +7,6 @@
 
   "properties": {
     "type": {
-      "type": "string",
       "const": "PLAYER_ACCEPTED"
     },
     "senderId": {

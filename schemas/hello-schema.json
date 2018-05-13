@@ -7,7 +7,6 @@
 
   "properties": {
     "type": {
-      "type": "string",
       "const": "PLAYER_HELLO"
     },
     "senderId": {
@@ -17,8 +16,8 @@
       "type": "object",
       "properties": {
         "game": {
-          "type": "string",
-          "title": "Game name"
+          "title": "The name of the chosen game",
+          "type": "string"
         },
         "teamId": {
           "enum": [1, 2]

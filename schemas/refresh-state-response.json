@@ -12,10 +12,10 @@
           "$ref": "common/entity-ids.json#/definitions/playerId"
         },
         "x": {
-          "type": "integer"
+          "$ref": "common-defs.json#/definitions/nonNegativeInteger"
         },
         "y": {
-          "type": "integer"
+          "$ref": "common-defs.json#/definitions/nonNegativeInteger"
         }
       },
       "required": ["playerId", "x", "y"]
@@ -36,10 +36,10 @@
       "type": "object",
       "properties": {
         "timestamp": {
-          "type": "integer"
+          "$ref": "common-defs.json#/definitions/nonNegativeInteger"
         },
         "currentPositionDistanceToClosestPiece": {
-          "type": "integer"
+          "$ref": "common-defs.json#/definitions/nonNegativeInteger"
         },
         "playerPositions": {
           "type": "array",
@@ -48,10 +48,10 @@
           }
         },
         "team1Score": {
-          "type": "integer"
+          "$ref": "common-defs.json#/definitions/nonNegativeInteger"
         },
         "team2Score": {
-          "type": "integer"
+          "$ref": "common-defs.json#/definitions/nonNegativeInteger"
         }
       },
       "required": [

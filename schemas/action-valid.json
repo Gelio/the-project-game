@@ -19,7 +19,7 @@
       "type": "object",
       "properties": {
         "delay": {
-          "type": "integer"
+          "$ref": "common-defs.json#/definitions/nonNegativeInteger"
         }
       },
       "required": ["delay"]

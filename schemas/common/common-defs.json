@@ -10,6 +10,10 @@
     "nonNegativeNumber": {
       "type": "number",
       "minimum": 0
+    },
+    "nonNegativeInteger": {
+      "type": "integer",
+      "minimum": 0
     }
   }
 }
