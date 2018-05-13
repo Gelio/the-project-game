@@ -9,10 +9,10 @@
       "const": "DELETE_PIECE_RESPONSE"
     },
     "senderId": {
-      "$ref": "definitions.json#/gameMasterId"
+      "$ref": "common/entity-ids.json#/definitions/gameMasterId"
     },
     "recipientId": {
-      "$ref": "definitions.json#/playerId"
+      "$ref": "common/entity-ids.json#/definitions/playerId"
     },
     "payload": {
       "const": "null"

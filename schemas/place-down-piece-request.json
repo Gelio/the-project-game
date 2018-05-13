@@ -9,7 +9,7 @@
       "const": "PLACE_DOWN_PIECE_REQUEST"
     },
     "senderId": {
-      "$ref": "definitions.json#/playerId"
+      "$ref": "common/entity-ids.json#/definitions/playerId"
     },
     "payload": {
       "const": "null"

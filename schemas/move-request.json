@@ -9,7 +9,7 @@
       "const": "MOVE_REQUEST"
     },
     "senderId": {
-      "$ref": "definitions.json#/playerId"
+      "$ref": "common/entity-ids.json#/definitions/playerId"
     },
     "payload": {
       "type": "object",
