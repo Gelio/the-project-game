@@ -39,7 +39,7 @@ describe('[GM] handleRefreshStateRequest', () => {
     player = new Player();
     player.isBusy = true;
     player.playerId = 'player1';
-    player.position = new Point(0, 0);
+    board.addPlayer(player);
 
     playersContainer = new PlayersContainer();
     playersContainer.addPlayer(player);
@@ -114,10 +114,12 @@ describe('[GM] handleRefreshStateRequest', () => {
     });
 
     it('should contain valid distance to closest piece', async () => {
+      board.movePlayer(player, new Point(2, 10));
+
       const piece = new Piece();
       piece.isPickedUp = false;
       piece.isSham = true;
-      piece.position = new Point(1, 1);
+      piece.position = new Point(0, 10);
       board.addPiece(piece);
 
       const result = executeHandler();

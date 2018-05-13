@@ -39,7 +39,8 @@ describe('[GM] handleDiscoveryRequest', () => {
     player = new Player();
     player.isBusy = true;
     player.playerId = 'player1';
-    player.position = new Point(0, 0);
+    board.addPlayer(player);
+    board.movePlayer(player, new Point(0, 10));
 
     const loggerFactory = new LoggerFactory();
     loggerFactory.logLevel = 'error';
@@ -240,42 +241,54 @@ describe('[GM] handleDiscoveryRequest', () => {
       payload.tiles.forEach(tile => expect(tile.distanceToClosestPiece).toBe(-1));
     });
 
-    it("should contain valid distances to closest piece (when it's nearby)", async () => {
-      player.position = new Point(0, 0);
+    it('should set distances to closest piece to -1 when standing in team area', async () => {
+      board.movePlayer(player, new Point(0, 0));
 
+      const result = executeHandler();
+      jest.advanceTimersByTime(actionDelays.discover);
+
+      const { payload } = await result.responseMessage;
+
+      payload.tiles.forEach(tile => expect(tile.distanceToClosestPiece).toBe(-1));
+    });
+
+    it("should contain valid distances to closest piece (when it's nearby)", async () => {
       const piece = new Piece();
       piece.isPickedUp = false;
       piece.isSham = true;
-      piece.position = new Point(1, 1);
+      piece.position = new Point(0, 11);
       board.addPiece(piece);
 
       const result = executeHandler();
       jest.advanceTimersByTime(actionDelays.discover);
 
       const { payload } = await result.responseMessage;
-      expect(getTileInfo(payload.tiles, 0, 0).distanceToClosestPiece).toBe(2);
-      expect(getTileInfo(payload.tiles, 0, 1).distanceToClosestPiece).toBe(1);
-      expect(getTileInfo(payload.tiles, 1, 0).distanceToClosestPiece).toBe(1);
-      expect(getTileInfo(payload.tiles, 1, 1).distanceToClosestPiece).toBe(0);
+
+      expect(getTileInfo(payload.tiles, 0, 9).distanceToClosestPiece).toBe(-1);
+      expect(getTileInfo(payload.tiles, 0, 10).distanceToClosestPiece).toBe(1);
+      expect(getTileInfo(payload.tiles, 0, 11).distanceToClosestPiece).toBe(0);
+      expect(getTileInfo(payload.tiles, 1, 9).distanceToClosestPiece).toBe(-1);
+      expect(getTileInfo(payload.tiles, 1, 10).distanceToClosestPiece).toBe(2);
+      expect(getTileInfo(payload.tiles, 1, 11).distanceToClosestPiece).toBe(1);
     });
 
     it("should contain valid distances to closest piece (when it's far away)", async () => {
-      player.position = new Point(0, 0);
-
       const piece = new Piece();
       piece.isPickedUp = false;
       piece.isSham = true;
-      piece.position = new Point(5, 5);
+      piece.position = new Point(5, 15);
       board.addPiece(piece);
 
       const result = executeHandler();
       jest.advanceTimersByTime(actionDelays.discover);
 
       const { payload } = await result.responseMessage;
-      expect(getTileInfo(payload.tiles, 0, 0).distanceToClosestPiece).toBe(10);
-      expect(getTileInfo(payload.tiles, 0, 1).distanceToClosestPiece).toBe(9);
-      expect(getTileInfo(payload.tiles, 1, 0).distanceToClosestPiece).toBe(9);
-      expect(getTileInfo(payload.tiles, 1, 1).distanceToClosestPiece).toBe(8);
+      expect(getTileInfo(payload.tiles, 0, 9).distanceToClosestPiece).toBe(-1);
+      expect(getTileInfo(payload.tiles, 0, 10).distanceToClosestPiece).toBe(10);
+      expect(getTileInfo(payload.tiles, 0, 11).distanceToClosestPiece).toBe(9);
+      expect(getTileInfo(payload.tiles, 1, 9).distanceToClosestPiece).toBe(-1);
+      expect(getTileInfo(payload.tiles, 1, 10).distanceToClosestPiece).toBe(9);
+      expect(getTileInfo(payload.tiles, 1, 11).distanceToClosestPiece).toBe(8);
     });
   });
 });
