@@ -18,14 +18,14 @@
       "type": "object",
       "properties": {
         "timestamp": {
-          "type": "string"
+          "type": "number"
         },
         "distanceToPiece": {
           "type": "integer",
           "minimum": -1
         }
       },
-      "required": ["direction", "distanceToPiece"]
+      "required": ["timestamp", "distanceToPiece"]
     }
   },
   "required": ["type", "senderId", "recipientId", "payload"]
