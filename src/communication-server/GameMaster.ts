@@ -11,6 +11,7 @@ import { UnregisterGameResponse } from '../interfaces/responses/UnregisterGameRe
 
 import { Game } from './Game';
 import { MessageRouter } from './MessageRouter';
+import { SimpleMessageValidator } from './SimpleMessageValidator';
 
 export class GameMaster extends CustomEventEmitter {
   public readonly game: Game;
@@ -18,12 +19,14 @@ export class GameMaster extends CustomEventEmitter {
 
   private readonly messageRouter: MessageRouter;
   private readonly logger: LoggerInstance;
+  private readonly messageValidator: SimpleMessageValidator;
 
   constructor(
     communicator: Communicator,
     messageRouter: MessageRouter,
     logger: LoggerInstance,
-    game: Game
+    game: Game,
+    messageValidator: SimpleMessageValidator
   ) {
     super();
 
@@ -31,6 +34,7 @@ export class GameMaster extends CustomEventEmitter {
     this.messageRouter = messageRouter;
     this.logger = logger;
     this.game = game;
+    this.messageValidator = messageValidator;
 
     this.handleMessage = this.handleMessage.bind(this);
     this.onDisconnected = this.onDisconnected.bind(this);
@@ -70,6 +74,16 @@ export class GameMaster extends CustomEventEmitter {
   }
 
   private handleMessage(message: MessageWithRecipient<any>) {
+    if (!this.messageValidator(message)) {
+      const gameName = this.game.gameDefinition.name;
+      this.logger.warn(`Invalid message received from GM handling game "${gameName}"`);
+
+      const stringifiedErrors = JSON.stringify(this.messageValidator.errors, null, 2);
+      this.logger.verbose(stringifiedErrors);
+
+      return;
+    }
+
     if (message.type === REQUEST_TYPE.UNREGISTER_GAME_REQUEST) {
       this.onGameFinished();
 

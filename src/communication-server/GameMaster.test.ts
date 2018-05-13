@@ -8,12 +8,14 @@ import { UnregisterGameRequest } from '../interfaces/requests/UnregisterGameRequ
 import { Game } from './Game';
 import { GameMaster } from './GameMaster';
 import { MessageRouter } from './MessageRouter';
+import { SimpleMessageValidator } from './SimpleMessageValidator';
 
 describe('[CS] GameMaster', () => {
   let communicator: Communicator;
   let messageRouter: MessageRouter;
   let game: Game;
   let gameMaster: GameMaster;
+  let messageValidator: SimpleMessageValidator;
   const gameName = 'aa';
 
   beforeEach(() => {
@@ -36,7 +38,9 @@ describe('[CS] GameMaster', () => {
       }
     });
 
-    gameMaster = new GameMaster(communicator, messageRouter, logger, game);
+    messageValidator = jest.fn(() => true);
+
+    gameMaster = new GameMaster(communicator, messageRouter, logger, game, messageValidator);
   });
 
   afterEach(() => {
