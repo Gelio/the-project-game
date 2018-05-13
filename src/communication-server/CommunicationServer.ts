@@ -173,7 +173,13 @@ export class CommunicationServer implements Service {
     communicator.removeAllListeners('message');
 
     const game = new Game(registerGameRequest.payload.game);
-    const gameMaster = new GameMaster(communicator, this.messageRouter, this.logger, game);
+    const gameMaster = new GameMaster(
+      communicator,
+      this.messageRouter,
+      this.logger,
+      game,
+      this.messageValidator
+    );
     this.gameMasters.set(game.gameDefinition.name, gameMaster);
 
     gameMaster.once('disconnect', this.handleGameMasterDisconnection.bind(this, gameMaster));
@@ -296,7 +302,13 @@ export class CommunicationServer implements Service {
       id: helloMessage.senderId,
       isLeader: helloMessage.payload.isLeader
     };
-    const player = new Player(communicator, this.messageRouter, this.logger, playerInfo);
+    const player = new Player(
+      communicator,
+      this.messageRouter,
+      this.logger,
+      playerInfo,
+      this.messageValidator
+    );
 
     if (helloMessage.payload.teamId === 1) {
       gameMaster.game.team1Players.push(player);

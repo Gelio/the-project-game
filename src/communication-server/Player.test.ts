@@ -7,6 +7,7 @@ import { Message } from '../interfaces/Message';
 import { MessageRouter } from './MessageRouter';
 import { Player } from './Player';
 import { PlayerInfo } from './PlayerInfo';
+import { SimpleMessageValidator } from './SimpleMessageValidator';
 
 describe('[CS] Player', () => {
   let playerCommunicator: Communicator;
@@ -14,6 +15,7 @@ describe('[CS] Player', () => {
   let messageRouter: MessageRouter;
   let player: Player;
   let playerInfo: PlayerInfo;
+  let messageValidator: SimpleMessageValidator;
   const gameName = 'aa';
 
   beforeEach(() => {
@@ -25,6 +27,8 @@ describe('[CS] Player', () => {
     const loggerFactory = new LoggerFactory();
     loggerFactory.logLevel = 'error';
 
+    messageValidator = jest.fn(() => true);
+
     const logger = loggerFactory.createEmptyLogger();
     playerInfo = {
       gameName,
@@ -32,7 +36,7 @@ describe('[CS] Player', () => {
       isLeader: true,
       teamId: 1
     };
-    player = new Player(playerCommunicator, messageRouter, logger, playerInfo);
+    player = new Player(playerCommunicator, messageRouter, logger, playerInfo, messageValidator);
     player.init();
   });
 
@@ -64,6 +68,8 @@ describe('[CS] Player', () => {
     playerCommunicator.emit('message', message);
     expect(gameMasterCommunicator.sendMessage).not.toHaveBeenCalled();
   });
+
+  // TODO: add tests for message validation
 
   describe('destroy', () => {
     it('should unregister the player from MessageRouter', () => {

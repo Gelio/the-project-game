@@ -7,6 +7,7 @@ import { Message } from '../interfaces/Message';
 
 import { MessageRouter } from './MessageRouter';
 import { PlayerInfo } from './PlayerInfo';
+import { SimpleMessageValidator } from './SimpleMessageValidator';
 
 export class Player extends CustomEventEmitter {
   public readonly communicator: Communicator;
@@ -14,6 +15,7 @@ export class Player extends CustomEventEmitter {
 
   private readonly messageRouter: MessageRouter;
   private readonly logger: LoggerInstance;
+  private readonly messageValidator: SimpleMessageValidator;
 
   public get id() {
     return this.info.id;
@@ -23,7 +25,8 @@ export class Player extends CustomEventEmitter {
     communicator: Communicator,
     messageRouter: MessageRouter,
     logger: LoggerInstance,
-    playerInfo: PlayerInfo
+    playerInfo: PlayerInfo,
+    messageValidator: SimpleMessageValidator
   ) {
     super();
 
@@ -31,6 +34,7 @@ export class Player extends CustomEventEmitter {
     this.messageRouter = messageRouter;
     this.logger = logger;
     this.info = playerInfo;
+    this.messageValidator = messageValidator;
 
     this.handleMessage = this.handleMessage.bind(this);
     this.destroy = this.destroy.bind(this);
@@ -81,7 +85,16 @@ export class Player extends CustomEventEmitter {
   }
 
   private handleMessage(message: Message<any>) {
-    if (!this.isMessageValid(message)) {
+    if (!this.messageValidator(message)) {
+      this.logger.warn(`Invalid message received from player ${this.id}`);
+
+      const stringifiedErrors = JSON.stringify(this.messageValidator.errors, null, 2);
+      this.logger.verbose(stringifiedErrors);
+
+      return;
+    }
+
+    if (this.id !== message.senderId) {
       this.logger.warn(
         `Received message with sender ID ${message.senderId} but player ID is ${this.id}`
       );
@@ -90,10 +103,6 @@ export class Player extends CustomEventEmitter {
     }
 
     this.messageRouter.sendMessageToGameMaster(this.info.gameName, message);
-  }
-
-  private isMessageValid(message: Message<any>) {
-    return this.id === message.senderId;
   }
 
   private unbindListeners() {
