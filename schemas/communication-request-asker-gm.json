@@ -17,10 +17,8 @@
           "$ref": "common/entity-ids.json#/definitions/playerId"
         }
       },
-      "additionalProperties": false,
       "required": ["targetPlayerId"]
     }
   },
-  "additionalProperties": false,
   "required": ["type", "senderId", "payload"]
 }

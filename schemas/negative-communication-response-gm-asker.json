@@ -23,10 +23,8 @@
           "const": false
         }
       },
-      "additionalProperties": false,
       "required": ["senderPlayerId", "accepted"]
     }
   },
-  "additionalProperties": false,
   "required": ["type", "senderId", "recipientId", "payload"]
 }

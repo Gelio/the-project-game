@@ -30,10 +30,8 @@
           "minItems": 1
         }
       },
-      "additionalProperties": false,
       "required": ["senderPlayerId", "accepted", "board"]
     }
   },
-  "additionalProperties": false,
   "required": ["type", "senderId", "recipientId", "payload"]
 }

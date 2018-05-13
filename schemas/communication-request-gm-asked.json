@@ -20,10 +20,8 @@
           "$ref": "common/entity-ids.json#/definitions/playerId"
         }
       },
-      "additionalProperties": false,
       "required": ["senderPlayerId"]
     }
   },
-  "additionalProperties": false,
   "required": ["type", "senderId", "recipientId", "payload"]
 }

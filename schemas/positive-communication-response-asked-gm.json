@@ -27,10 +27,8 @@
           "minItems": 1
         }
       },
-      "additionalProperties": false,
       "required": ["targetPlayerId", "accepted", "board"]
     }
   },
-  "additionalProperties": false,
   "required": ["type", "senderId", "payload"]
 }

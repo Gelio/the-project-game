@@ -20,10 +20,8 @@
           "const": false
         }
       },
-      "additionalProperties": false,
       "required": ["targetPlayerId", "accepted"]
     }
   },
-  "additionalProperties": false,
   "required": ["type", "senderId", "payload"]
 }

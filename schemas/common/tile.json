@@ -11,13 +11,13 @@
           "minimum": -1
         },
         "hasCompletedGoal": {
-          "oneOf": [{ "type": "null" }, { "type": "boolean" }]
+          "anyOf": [{ "type": "null" }, { "type": "boolean" }]
         },
         "piece": {
-          "oneOf": [{ "type": "null" }, { "$ref": "common/piece.json#/definitions/piece" }]
+          "anyOf": [{ "type": "null" }, { "$ref": "common/piece.json#/definitions/piece" }]
         },
         "playerId": {
-          "oneOf": [{ "type": "null" }, { "$ref": "common/entity-ids.json#/definitions/playerId" }]
+          "anyOf": [{ "type": "null" }, { "$ref": "common/entity-ids.json#/definitions/playerId" }]
         },
         "timestamp": {
           "type": "integer"
