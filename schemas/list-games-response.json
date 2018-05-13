@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+
+  "type": "object",
+  "title": "ListGamesResponse",
+  "description": "Response containing the list of games",
+
+  "properties": {
+    "type": {
+      "const": "LIST_GAMES_RESPONSE"
+    },
+    "senderId": {
+      "$ref": "common/entity-ids.json#/definitions/communicationServerId"
+    },
+    "recipientId": {
+      "$ref": "common/entity-ids.json#/definitions/playerId"
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "games": {
+          "type": "array",
+          "items": {
+            "$ref": "common/game-definition.json"
+          }
+        }
+      },
+      "required": ["games"]
+    }
+  },
+
+  "required": ["type", "senderId", "recipientId", "payload"]
+}
