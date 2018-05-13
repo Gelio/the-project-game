@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+
+  "properties": {
+    "type": {
+      "const": "COMMUNICATION_REQUEST"
+    },
+    "senderId": {
+      "$ref": "entity-ids.json#/definitions/gameMasterId"
+    },
+    "recipientId": {
+      "$ref": "entity-ids.json#/definitions/playerId"
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "senderPlayerId": {
+          "$ref": "entity-ids.json#/definitions/playerId"
+        }
+      },
+      "required": ["senderPlayerId"]
+    }
+  },
+  "required": ["type", "senderId", "recipientId", "payload"]
+}
