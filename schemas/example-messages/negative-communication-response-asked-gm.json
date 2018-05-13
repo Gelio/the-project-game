@@ -1,0 +1,10 @@
+{
+  "$schema": "../negative-communication-response-asked-gm.json",
+
+  "type": "COMMUNICATION_RESPONSE",
+  "senderId": "asked",
+  "payload": {
+    "targetPlayerId": "asker",
+    "accepted": false
+  }
+}
