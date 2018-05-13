@@ -1,5 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://the-project-game.net/schema/communication-request-asker-gm.json",
   "type": "object",
 
   "properties": {
@@ -7,17 +8,19 @@
       "const": "COMMUNICATION_REQUEST"
     },
     "senderId": {
-      "$ref": "entity-ids.json#/definitions/playerId"
+      "$ref": "common/entity-ids.json#/definitions/playerId"
     },
     "payload": {
       "type": "object",
       "properties": {
         "targetPlayerId": {
-          "$ref": "entity-ids.json#/definitions/playerId"
+          "$ref": "common/entity-ids.json#/definitions/playerId"
         }
       },
+      "additionalProperties": false,
       "required": ["targetPlayerId"]
     }
   },
+  "additionalProperties": false,
   "required": ["type", "senderId", "payload"]
 }
