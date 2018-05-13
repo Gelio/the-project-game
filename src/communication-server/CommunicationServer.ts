@@ -31,6 +31,7 @@ import { RegisterGameResponse } from '../interfaces/responses/RegisterGameRespon
 
 import { registerUncaughtExceptionHandler } from '../registerUncaughtExceptionHandler';
 import { PlayerInfo } from './PlayerInfo';
+import { SimpleMessageValidator } from './SimpleMessageValidator';
 
 export interface CommunicationServerOptions {
   hostname: string;
@@ -47,16 +48,19 @@ export class CommunicationServer implements Service {
   private readonly messageRouter: MessageRouter;
   private readonly communicators: Communicator[] = [];
   private readonly gameMasters: Map<string, GameMaster> = new Map();
+  private readonly messageValidator: SimpleMessageValidator;
 
   constructor(
     options: CommunicationServerOptions,
     messageRouter: MessageRouter,
-    logger: LoggerInstance
+    logger: LoggerInstance,
+    messageValidator: SimpleMessageValidator
   ) {
     this.options = options;
     this.server = createServer(this.handleNewClient.bind(this));
     this.messageRouter = messageRouter;
     this.logger = logger;
+    this.messageValidator = messageValidator;
   }
 
   public init() {

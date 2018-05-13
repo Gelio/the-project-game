@@ -10,6 +10,7 @@ import { LoggerFactory } from '../common/logging/LoggerFactory';
 import { CommunicationServer, CommunicationServerOptions } from './CommunicationServer';
 
 import { MessageRouter } from './MessageRouter';
+import { SimpleMessageValidator } from './SimpleMessageValidator';
 
 import { Message } from '../interfaces/Message';
 import { PlayerAcceptedMessage } from '../interfaces/messages/PlayerAcceptedMessage';
@@ -75,6 +76,7 @@ describe('[CS] CommunicationServer', () => {
   let messageRouter: MessageRouter;
   let communicationServer: CommunicationServer;
   let logger: LoggerInstance;
+  let messageValidator: SimpleMessageValidator;
 
   function connectSocketToServer(): Promise<Socket> {
     return new Promise(resolve => {
@@ -103,7 +105,9 @@ describe('[CS] CommunicationServer', () => {
 
     logger = loggerFactory.createEmptyLogger();
 
-    communicationServer = new CommunicationServer(options, messageRouter, logger);
+    messageValidator = jest.fn(() => true);
+
+    communicationServer = new CommunicationServer(options, messageRouter, logger, messageValidator);
   });
 
   afterEach(() => {
@@ -400,5 +404,7 @@ describe('[CS] CommunicationServer', () => {
         expect((<RegisterGameResponse>response).payload.registered).toBe(true);
       });
     });
+
+    // TODO: add tests on validating messages
   });
 });
