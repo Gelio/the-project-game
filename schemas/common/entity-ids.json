@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://the-project-game.net/schema/common/entity-ids.json",
+  "definitions": {
+    "playerId": {
+      "type": "string"
+    },
+    "gameMasterId": {
+      "const": "GAME_MASTER"
+    },
+    "communicationServerId": {
+      "const": "COMMUNICATION_SERVER"
+    }
+  }
+}
