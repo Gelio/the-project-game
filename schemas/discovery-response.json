@@ -43,7 +43,7 @@
             "$ref": "common/common-defs.json#/definitions/nonNegativeInteger"
           },
           "playerId": {
-            "anyOf": [
+            "oneOf": [
               { "type": "null" },
               { "$ref": "common/entity-ids.json#/definitions/playerId" }
             ]

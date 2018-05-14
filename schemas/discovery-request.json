@@ -10,13 +10,10 @@
     "senderId": {
       "$ref": "common/entity-ids.json#/definitions/playerId"
     },
-    "recipientId": {
-      "$ref": "common/entity-ids.json#/definitions/gameMasterId"
-    },
     "payload": {
       "const": "null"
     }
   },
 
-  "required": ["type", "senderId", "recipientId"]
+  "required": ["type", "senderId"]
 }
