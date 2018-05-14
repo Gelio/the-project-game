@@ -7,7 +7,7 @@ export interface RegisterGameRequestPayload {
   game: GameDefinition;
 }
 
-export interface RegisterGameRequest extends Message<GameDefinition> {
+export interface RegisterGameRequest extends Message<RegisterGameRequestPayload> {
   type: 'REGISTER_GAME_REQUEST';
   senderId: GameMasterId;
 }

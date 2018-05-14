@@ -226,7 +226,9 @@ export class Game {
     const registerGameMessage: RegisterGameRequest = {
       type: 'REGISTER_GAME_REQUEST',
       senderId: GAME_MASTER_ID,
-      payload: this.definition
+      payload: {
+        game: this.definition
+      }
     };
 
     this.logger.info('Registering the game');

@@ -150,7 +150,7 @@ export class CommunicationServer implements Service {
   }
 
   private handleGameMaster(communicator: Communicator, registerGameRequest: RegisterGameRequest) {
-    if (this.gameMasters.has(registerGameRequest.payload.name)) {
+    if (this.gameMasters.has(registerGameRequest.payload.game.name)) {
       const failedResponse: RegisterGameResponse = {
         type: 'REGISTER_GAME_RESPONSE',
         senderId: COMMUNICATION_SERVER_ID,
@@ -168,7 +168,7 @@ export class CommunicationServer implements Service {
     // Stop listening for the client's initial message
     communicator.removeAllListeners('message');
 
-    const game = new Game(registerGameRequest.payload);
+    const game = new Game(registerGameRequest.payload.game);
     const gameMaster = new GameMaster(communicator, this.messageRouter, this.logger, game);
     this.gameMasters.set(game.gameDefinition.name, gameMaster);
 
