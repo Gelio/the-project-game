@@ -19,7 +19,7 @@
       "type": "object",
       "properties": {
         "didCompleteGoal": {
-          "type": "boolean"
+          "oneOf": [{ "type": "null" }, { "type": "boolean" }]
         }
       },
       "required": ["didCompleteGoal"]

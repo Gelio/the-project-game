@@ -18,7 +18,7 @@
       "type": "object",
       "properties": {
         "timestamp": {
-          "type": "number"
+          "$ref": "common/common-defs.json#/definitions/nonNegativeInteger"
         },
         "distanceToPiece": {
           "type": "integer",

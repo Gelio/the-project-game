@@ -18,10 +18,10 @@
       "type": "object",
       "properties": {
         "team1Score": {
-          "type": "integer"
+          "$ref": "common/common-defs.json#/definitions/nonNegativeInteger"
         },
         "team2Score": {
-          "type": "integer"
+          "$ref": "common/common-defs.json#/definitions/nonNegativeInteger"
         }
       },
       "required": ["team1Score", "team2Score"]
