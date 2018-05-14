@@ -11,10 +11,10 @@
       "minimum": -1
     },
     "hasCompletedGoal": {
-      "anyOf": [{ "type": "null" }, { "type": "boolean" }]
+      "oneOf": [{ "type": "null" }, { "type": "boolean" }]
     },
     "piece": {
-      "anyOf": [{ "type": "null" }, { "$ref": "common/piece.json#" }]
+      "oneOf": [{ "type": "null" }, { "$ref": "common/piece.json#" }]
     },
     "playerId": {
       "oneOf": [{ "type": "null" }, { "$ref": "common/entity-ids.json#/definitions/playerId" }]
