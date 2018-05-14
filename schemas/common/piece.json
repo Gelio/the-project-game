@@ -2,18 +2,16 @@
   "$schema": "http://json-schema.org/draft-07/schema",
   "$id": "http://the-project-game.net/schema/common/piece.json",
 
-  "definitions": {
-    "piece": {
-      "type": "object",
-      "properties": {
-        "isSham": {
-          "type": "boolean"
-        },
-        "wasTested": {
-          "type": "boolean"
-        }
-      },
-      "required": ["isSham", "wasTested"]
+  "type": "object",
+  "title": "Piece",
+
+  "properties": {
+    "isSham": {
+      "type": "boolean"
+    },
+    "wasTested": {
+      "type": "boolean"
     }
-  }
+  },
+  "required": ["isSham", "wasTested"]
 }

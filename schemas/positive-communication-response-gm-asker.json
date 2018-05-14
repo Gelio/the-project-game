@@ -28,7 +28,7 @@
         "board": {
           "type": "array",
           "items": {
-            "$ref": "common/tile.json#/definitions/tile"
+            "$ref": "common/tile.json#"
           },
           "minItems": 1
         }

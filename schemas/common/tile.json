@@ -2,28 +2,26 @@
   "$schema": "http://json-schema.org/draft-07/schema",
   "$id": "http://the-project-game.net/schema/common/tile.json",
 
-  "definitions": {
-    "tile": {
-      "type": "object",
-      "properties": {
-        "distanceToPiece": {
-          "type": "integer",
-          "minimum": -1
-        },
-        "hasCompletedGoal": {
-          "anyOf": [{ "type": "null" }, { "type": "boolean" }]
-        },
-        "piece": {
-          "anyOf": [{ "type": "null" }, { "$ref": "common/piece.json#/definitions/piece" }]
-        },
-        "playerId": {
-          "anyOf": [{ "type": "null" }, { "$ref": "common/entity-ids.json#/definitions/playerId" }]
-        },
-        "timestamp": {
-          "type": "integer"
-        }
-      },
-      "required": ["distanceToPiece", "hasCompletedGoal", "piece", "playerId", "timestamp"]
+  "type": "object",
+  "title": "Tile",
+
+  "properties": {
+    "distanceToPiece": {
+      "type": "integer",
+      "minimum": -1
+    },
+    "hasCompletedGoal": {
+      "anyOf": [{ "type": "null" }, { "type": "boolean" }]
+    },
+    "piece": {
+      "anyOf": [{ "type": "null" }, { "$ref": "common/piece.json#" }]
+    },
+    "playerId": {
+      "oneOf": [{ "type": "null" }, { "$ref": "common/entity-ids.json#/definitions/playerId" }]
+    },
+    "timestamp": {
+      "type": "integer"
     }
-  }
+  },
+  "required": ["distanceToPiece", "hasCompletedGoal", "piece", "playerId", "timestamp"]
 }
