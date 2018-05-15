@@ -220,9 +220,12 @@ namespace Player
                     Discover();
                     if (IsInGoalArea())
                     {
-                        if (_playerConfig.TeamNumber == 1)
-                            Move("down");
-                        else Move("up");
+                        string dir = _playerConfig.TeamNumber == 1 ? "down" : "up";
+                        
+                        if(!Move(dir))
+                        {
+                            Move(PickRandomMovementHorizontalDirection());
+                        }
                     }
                     // go to the task area, then proceed to move to the closest piece
                     else if (!Move(PickClosestPieceDirection()))
@@ -263,6 +266,12 @@ namespace Player
         {
             string[] directions = { Consts.Up, Consts.Down, Consts.Left, Consts.Right };
             return directions[new Random().Next(0, 4)];
+        }
+
+        private string PickRandomMovementHorizontalDirection()
+        {
+            string[] directions = { Consts.Left, Consts.Right };
+            return directions[new Random().Next(0, 2)];
         }
 
         private string PickSweepingGoalAreaDirection()
