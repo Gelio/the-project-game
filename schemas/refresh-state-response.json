@@ -24,7 +24,7 @@
 
   "properties": {
     "type": {
-      "const": "ACTION_VALID"
+      "const": "REFRESH_STATE_RESPONSE"
     },
     "senderId": {
       "$ref": "common/entity-ids.json#/definitions/gameMasterId"
@@ -39,7 +39,8 @@
           "$ref": "common-defs.json#/definitions/nonNegativeInteger"
         },
         "currentPositionDistanceToClosestPiece": {
-          "$ref": "common-defs.json#/definitions/nonNegativeInteger"
+          "type": "integer",
+          "minimum": -1
         },
         "playerPositions": {
           "type": "array",

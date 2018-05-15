@@ -22,9 +22,8 @@
         "reason": {
           "type": "string"
         }
-      },
-      "required": ["reason"]
+      }
     }
   },
-  "required": ["type", "senderId", "recipientId", "payload"]
+  "required": ["type", "senderId", "recipientId"]
 }
