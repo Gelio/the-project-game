@@ -3,12 +3,15 @@
   "version": "1.2.0",
   "description": "",
   "dependencies": {
+    "ajv": "^6.5.0",
     "blessed": "^0.1.81",
+    "glob": "^7.1.2",
     "network-byte-order": "^0.2.0",
     "winston": "^3.0.0-rc1"
   },
   "devDependencies": {
     "@types/blessed": "^0.1.9",
+    "@types/glob": "^5.0.35",
     "@types/jest": "^22.2.0",
     "@types/node": "^9.4.7",
     "@types/winston": "^2.3.8",
@@ -36,7 +39,8 @@
     "lint": "npm run lint:tsc && npm run lint:tslint",
     "lint:tsc": "tsc --noEmit",
     "lint:tslint": "tslint -c tslint.json \"src/**/*.ts\"",
-    "lint:tslint:type-check": "tslint -c tslint.json -p tsconfig.json \"src/**/*.ts\""
+    "lint:tslint:type-check": "tslint -c tslint.json -p tsconfig.json \"src/**/*.ts\"",
+    "validate-message": "ts-node tools/validate-message.ts"
   },
   "keywords": [],
   "author": "",
