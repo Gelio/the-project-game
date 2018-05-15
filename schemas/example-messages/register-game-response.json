@@ -1,0 +1,10 @@
+{
+  "$schema": "../register-game-response.json",
+
+  "type": "REGISTER_GAME_RESPONSE",
+  "senderId": "COMMUNICATION_SERVER",
+  "recipientId": "GAME_MASTER",
+  "payload": {
+    "registered": true
+  }
+}
