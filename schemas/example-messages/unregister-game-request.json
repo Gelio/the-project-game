@@ -1,0 +1,10 @@
+{
+  "$schema": "../unregister-game-request.json",
+
+  "type": "UNREGISTER_GAME_REQUEST",
+  "senderId": "GAME_MASTER",
+  "recipientId": "COMMUNICATION_SERVER",
+  "payload": {
+    "gameName": "abcd"
+  }
+}
