@@ -11,7 +11,7 @@
       "minimum": -1
     },
     "hasCompletedGoal": {
-      "oneOf": [{ "type": "null" }, { "type": "boolean" }]
+      "type": "boolean"
     },
     "piece": {
       "oneOf": [{ "type": "null" }, { "$ref": "common/piece.json#" }]
@@ -23,5 +23,5 @@
       "type": "integer"
     }
   },
-  "required": ["distanceToPiece", "hasCompletedGoal", "piece", "playerId", "timestamp"]
+  "required": ["distanceToPiece", "piece", "playerId", "timestamp"]
 }
