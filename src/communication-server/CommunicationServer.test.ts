@@ -27,19 +27,21 @@ function getRegisterGameRequest(): RegisterGameRequest {
     senderId: GAME_MASTER_ID,
     type: 'REGISTER_GAME_REQUEST',
     payload: {
-      teamSizes: {
-        1: 5,
-        2: 5
-      },
-      boardSize: {
-        goalArea: 20,
-        taskArea: 20,
-        x: 20
-      },
-      delays: <any>{},
-      description: 'Test',
-      goalLimit: 10,
-      name: 'aaa'
+      game: {
+        teamSizes: {
+          1: 5,
+          2: 5
+        },
+        boardSize: {
+          goalArea: 20,
+          taskArea: 20,
+          x: 20
+        },
+        delays: <any>{},
+        description: 'Test',
+        goalLimit: 10,
+        name: 'aaa'
+      }
     }
   };
 }
@@ -180,7 +182,7 @@ describe('[CS] CommunicationServer', () => {
       const response = await gmCommunicator.waitForAnyMessage();
 
       expect(messageRouter.registerGameMasterCommunicator).toHaveBeenCalledWith(
-        registerGameRequest.payload.name,
+        registerGameRequest.payload.game.name,
         jasmine.any(Object)
       );
       expect(response.type).toEqual('REGISTER_GAME_RESPONSE');
@@ -254,7 +256,7 @@ describe('[CS] CommunicationServer', () => {
       });
 
       it('should pass messages between Player and GM', async () => {
-        const playerHelloMessage = getPlayerHelloMessage(registerGameRequest.payload.name);
+        const playerHelloMessage = getPlayerHelloMessage(registerGameRequest.payload.game.name);
         playerCommunicator.sendMessage(playerHelloMessage);
 
         const receivedPlayerHelloMessage = await gmCommunicator.waitForAnyMessage();
@@ -268,7 +270,7 @@ describe('[CS] CommunicationServer', () => {
       });
 
       it('should not register player when he is rejected', async () => {
-        const playerHelloMessage = getPlayerHelloMessage(registerGameRequest.payload.name);
+        const playerHelloMessage = getPlayerHelloMessage(registerGameRequest.payload.game.name);
         playerCommunicator.sendMessage(playerHelloMessage);
         await gmCommunicator.waitForAnyMessage();
 
@@ -289,7 +291,7 @@ describe('[CS] CommunicationServer', () => {
       });
 
       it("should notify GM about Player's disconnection", async () => {
-        const playerHelloMessage = getPlayerHelloMessage(registerGameRequest.payload.name);
+        const playerHelloMessage = getPlayerHelloMessage(registerGameRequest.payload.game.name);
         playerCommunicator.sendMessage(playerHelloMessage);
         await gmCommunicator.waitForAnyMessage();
 
@@ -319,7 +321,7 @@ describe('[CS] CommunicationServer', () => {
 
         const registeredGame = receivedListGamesResponse.payload.games[0];
 
-        expect(registeredGame).toEqual(registerGameRequest.payload);
+        expect(registeredGame).toEqual(registerGameRequest.payload.game);
       });
 
       it('should return empty games list after GM disconnects', async () => {
@@ -340,7 +342,7 @@ describe('[CS] CommunicationServer', () => {
       });
 
       it('should disconnect a player after his GM disconnects', async done => {
-        const playerHelloMessage = getPlayerHelloMessage(registerGameRequest.payload.name);
+        const playerHelloMessage = getPlayerHelloMessage(registerGameRequest.payload.game.name);
         playerCommunicator.sendMessage(playerHelloMessage);
         await gmCommunicator.waitForAnyMessage();
 
@@ -354,7 +356,7 @@ describe('[CS] CommunicationServer', () => {
       });
 
       it('should not disconnect a player after the game finished', async () => {
-        const playerHelloMessage = getPlayerHelloMessage(registerGameRequest.payload.name);
+        const playerHelloMessage = getPlayerHelloMessage(registerGameRequest.payload.game.name);
         playerCommunicator.sendMessage(playerHelloMessage);
         await gmCommunicator.waitForAnyMessage();
 
@@ -367,7 +369,7 @@ describe('[CS] CommunicationServer', () => {
           senderId: GAME_MASTER_ID,
           recipientId: COMMUNICATION_SERVER_ID,
           payload: {
-            gameName: registerGameRequest.payload.name
+            gameName: registerGameRequest.payload.game.name
           }
         };
         gmCommunicator.sendMessage(unregisterGameRequest);
@@ -385,7 +387,7 @@ describe('[CS] CommunicationServer', () => {
           senderId: GAME_MASTER_ID,
           recipientId: COMMUNICATION_SERVER_ID,
           payload: {
-            gameName: registerGameRequest.payload.name
+            gameName: registerGameRequest.payload.game.name
           }
         };
         gmCommunicator.sendMessage(unregisterGameRequest);
