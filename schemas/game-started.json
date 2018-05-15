@@ -9,11 +9,11 @@
           "type": "array",
           "minItems": 1,
           "items": {
-            "type": "string"
+            "$ref": "common/entity-ids.json#/definitions/playerId"
           }
         },
         "leaderId": {
-          "type": "string"
+          "$ref": "common/entity-ids.json#/definitions/playerId"
         }
       },
       "required": ["players", "leaderId"]

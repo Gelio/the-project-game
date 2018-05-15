@@ -19,10 +19,9 @@
       "type": "object",
       "properties": {
         "didCompleteGoal": {
-          "oneOf": [{ "type": "null" }, { "type": "boolean" }]
+          "type": "boolean"
         }
-      },
-      "required": ["didCompleteGoal"]
+      }
     }
   },
   "required": ["type", "senderId", "recipientId", "payload"]
