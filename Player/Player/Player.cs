@@ -53,7 +53,7 @@ namespace Player
             {
                 Board.Add(new Tile()
                 {
-                    DistanceToClosestPiece = int.MaxValue,
+                    DistanceToClosestPiece = -1,
                     GoalStatus = GoalStatusEnum.NoInfo
                 });
             }
@@ -218,7 +218,14 @@ namespace Player
                 else // Find a piece
                 {
                     Discover();
-                    if (!Move(PickClosestPieceDirection()))
+                    if (IsInGoalArea())
+                    {
+                        if (_playerConfig.TeamNumber == 1)
+                            Move("down");
+                        else Move("up");
+                    }
+                    // go to the task area, then proceed to move to the closest piece
+                    else if (!Move(PickClosestPieceDirection()))
                         Move(PickRandomMovementDirection());
                 }
             }
@@ -235,7 +242,7 @@ namespace Player
                         continue;
                     int index = X + dx + Game.BoardSize.X * (Y + dy);
                     logger.Debug("dx: {}, dy: {}, index: {}", dx, dy, index);
-                    if (Board[index].DistanceToClosestPiece < bestDistance)
+                    if (Board[index].DistanceToClosestPiece != -1 && Board[index].DistanceToClosestPiece < bestDistance)
                     {
                         bestDistance = Board[index].DistanceToClosestPiece;
                         bestDx = dx;
@@ -296,6 +303,7 @@ namespace Player
 
         private int GetCurrentBoardIndex() => X + Game.BoardSize.X * Y;
         private bool IsInGoalArea() => (Y < Game.BoardSize.GoalArea || Y >= Game.BoardSize.GoalArea + Game.BoardSize.TaskArea);
+
         public bool Discover()
         {
             _messageProvider.SendMessage(new Message<IPayload>()
@@ -446,7 +454,7 @@ namespace Player
 
             HeldPiece = Board[X + Game.BoardSize.X * Y].Piece;
             Board[X + Game.BoardSize.X * Y].Piece = null;
-            Board[X + Game.BoardSize.X * Y].DistanceToClosestPiece = int.MaxValue;
+            Board[X + Game.BoardSize.X * Y].DistanceToClosestPiece = -1;
 
             logger.Info("Picked up piece @ ({}, {})", X, Y);
             return true;
