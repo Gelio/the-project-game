@@ -3,5 +3,5 @@
 
   "type": "REQUEST_SENT",
   "senderId": "GAME_MASTER",
-  "recipientId": "asked"
+  "recipientId": "asking"
 }
