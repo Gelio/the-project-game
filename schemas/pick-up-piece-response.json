@@ -13,9 +13,6 @@
     },
     "recipientId": {
       "$ref": "common/entity-ids.json#/definitions/playerId"
-    },
-    "payload": {
-      "const": "null"
     }
   },
   "required": ["type", "senderId", "recipientId"]
