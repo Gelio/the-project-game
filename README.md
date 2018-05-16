@@ -56,6 +56,12 @@ npm run game-master
 
 The terminal you ran the command in should now display GM UI.
 
+To get info on command line arguments, run:
+
+```bash
+npm run game-master -- -h
+```
+
 ### Players
 
 The configuration of each Player is read from the same file inside current working directory (`player.config.json`),
