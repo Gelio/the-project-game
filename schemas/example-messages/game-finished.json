@@ -1,0 +1,11 @@
+{
+  "$schema": "../game-finished.json",
+
+  "type": "GAME_FINISHED",
+  "senderId": "GAME_MASTER",
+  "recipientId": "123e4567-e89b-12d3-a456-426655440000",
+  "payload": {
+    "team1Score": 21,
+    "team2Score": 19
+  }
+}

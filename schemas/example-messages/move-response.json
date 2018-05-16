@@ -1,0 +1,11 @@
+{
+  "$schema": "../move-response.json",
+
+  "type": "MOVE_RESPONSE",
+  "senderId": "GAME_MASTER",
+  "recipientId": "123e4567-e89b-12d3-a456-426655440000",
+  "payload": {
+    "timestamp": 1515941821,
+    "distanceToPiece": 5
+  }
+}

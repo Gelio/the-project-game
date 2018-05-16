@@ -1,0 +1,6 @@
+{
+  "$schema": "../place-down-piece-request.json",
+
+  "type": "PLACE_DOWN_PIECE_REQUEST",
+  "senderId": "123e4567-e89b-12d3-a456-426655440000"
+}

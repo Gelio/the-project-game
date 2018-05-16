@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://the-project-game.net/schema/delete-piece-request.json",
+  "type": "object",
+  "title": "DeletePieceRequest",
+  "description": "Message sent by Player who wants to delete the currently held piece",
+  "properties": {
+    "type": {
+      "const": "DELETE_PIECE_REQUEST"
+    },
+    "senderId": {
+      "$ref": "common/entity-ids.json#/definitions/playerId"
+    },
+    "payload": {
+      "const": "null"
+    }
+  },
+  "required": ["type", "senderId"]
+}

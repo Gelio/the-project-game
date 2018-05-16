@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://the-project-game.net/schema/game-finished.json",
+  "type": "object",
+  "title": "GameFinished",
+  "description": "Message sent to Player when the game is finished",
+  "properties": {
+    "type": {
+      "const": "GAME_FINISHED"
+    },
+    "senderId": {
+      "$ref": "common/entity-ids.json#/definitions/gameMasterId"
+    },
+    "recipientId": {
+      "$ref": "common/entity-ids.json#/definitions/playerId"
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "team1Score": {
+          "$ref": "common/common-defs.json#/definitions/nonNegativeInteger"
+        },
+        "team2Score": {
+          "$ref": "common/common-defs.json#/definitions/nonNegativeInteger"
+        }
+      },
+      "required": ["team1Score", "team2Score"]
+    }
+  },
+  "required": ["type", "senderId", "recipientId", "payload"]
+}
