@@ -37,6 +37,12 @@ npm run communication-server
 
 The Communication Server should log to the console, that it is up and running.
 
+To get info on command line arguments, run:
+
+```bash
+npm run communication-server -- -h
+```
+
 ### Game Master
 
 Game Master's configuration is in `src/game-master.config.json`. Make sure the hostname
