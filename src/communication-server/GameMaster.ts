@@ -5,6 +5,8 @@ import { CustomEventEmitter } from '../common/CustomEventEmitter';
 import { COMMUNICATION_SERVER_ID, GAME_MASTER_ID } from '../common/EntityIds';
 import { REQUEST_TYPE } from '../common/REQUEST_TYPE';
 
+import { stringifySchemaValidationErrors } from '../common/logging/stringifySchemaValidationErrors';
+
 import { Message } from '../interfaces/Message';
 import { MessageWithRecipient } from '../interfaces/MessageWithRecipient';
 import { UnregisterGameResponse } from '../interfaces/responses/UnregisterGameResponse';
@@ -78,7 +80,10 @@ export class GameMaster extends CustomEventEmitter {
       const gameName = this.game.gameDefinition.name;
       this.logger.warn(`Invalid message received from GM handling game "${gameName}"`);
 
-      const stringifiedErrors = JSON.stringify(this.messageValidator.errors, null, 2);
+      this.logger.verbose('Message:');
+      this.logger.verbose(JSON.stringify(message));
+
+      const stringifiedErrors = stringifySchemaValidationErrors(this.messageValidator.errors || []);
       this.logger.verbose(stringifiedErrors);
 
       return;

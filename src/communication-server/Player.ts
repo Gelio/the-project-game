@@ -3,6 +3,8 @@ import { LoggerInstance } from 'winston';
 import { Communicator } from '../common/Communicator';
 import { CustomEventEmitter } from '../common/CustomEventEmitter';
 
+import { stringifySchemaValidationErrors } from '../common/logging/stringifySchemaValidationErrors';
+
 import { Message } from '../interfaces/Message';
 
 import { MessageRouter } from './MessageRouter';
@@ -88,7 +90,10 @@ export class Player extends CustomEventEmitter {
     if (!this.messageValidator(message)) {
       this.logger.warn(`Invalid message received from player ${this.id}`);
 
-      const stringifiedErrors = JSON.stringify(this.messageValidator.errors, null, 2);
+      this.logger.verbose('Message:');
+      this.logger.verbose(JSON.stringify(message));
+
+      const stringifiedErrors = stringifySchemaValidationErrors(this.messageValidator.errors || []);
       this.logger.verbose(stringifiedErrors);
 
       return;

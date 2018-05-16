@@ -3,8 +3,9 @@ import { LoggerInstance } from 'winston';
 
 import { Communicator } from '../common/Communicator';
 import { COMMUNICATION_SERVER_ID, GAME_MASTER_ID } from '../common/EntityIds';
-
 import { REQUEST_TYPE } from '../common/REQUEST_TYPE';
+
+import { stringifySchemaValidationErrors } from '../common/logging/stringifySchemaValidationErrors';
 
 import { Game } from './Game';
 import { GameMaster } from './GameMaster';
@@ -136,7 +137,10 @@ export class CommunicationServer implements Service {
     if (!this.messageValidator(message)) {
       this.logger.warn(`Invalid message received from ${communicator.address}`);
 
-      const stringifiedErrors = JSON.stringify(this.messageValidator.errors, null, 2);
+      this.logger.verbose('Message:');
+      this.logger.verbose(JSON.stringify(message));
+
+      const stringifiedErrors = stringifySchemaValidationErrors(this.messageValidator.errors || []);
       this.logger.verbose(stringifiedErrors);
 
       return;
