@@ -1,5 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://the-project-game.net/schema/refresh-state-response.json",
 
   "type": "object",
   "title": "RefreshStateResponse",
@@ -12,10 +13,10 @@
           "$ref": "common/entity-ids.json#/definitions/playerId"
         },
         "x": {
-          "$ref": "common-defs.json#/definitions/nonNegativeInteger"
+          "$ref": "common/common-defs.json#/definitions/nonNegativeInteger"
         },
         "y": {
-          "$ref": "common-defs.json#/definitions/nonNegativeInteger"
+          "$ref": "common/common-defs.json#/definitions/nonNegativeInteger"
         }
       },
       "required": ["playerId", "x", "y"]
@@ -36,7 +37,7 @@
       "type": "object",
       "properties": {
         "timestamp": {
-          "$ref": "common-defs.json#/definitions/nonNegativeInteger"
+          "$ref": "common/common-defs.json#/definitions/nonNegativeInteger"
         },
         "currentPositionDistanceToClosestPiece": {
           "type": "integer",
@@ -49,10 +50,10 @@
           }
         },
         "team1Score": {
-          "$ref": "common-defs.json#/definitions/nonNegativeInteger"
+          "$ref": "common/common-defs.json#/definitions/nonNegativeInteger"
         },
         "team2Score": {
-          "$ref": "common-defs.json#/definitions/nonNegativeInteger"
+          "$ref": "common/common-defs.json#/definitions/nonNegativeInteger"
         }
       },
       "required": [
