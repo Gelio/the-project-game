@@ -107,6 +107,21 @@ describe('Communicator', () => {
 
       expect(eventEmitted).toBe(true);
     });
+
+    it('should ignore any errors when writing the data to the socket', () => {
+      /**
+       * NOTE: this test simulates writing to a closed socket
+       * For instance, when the client disconnects before the message is sent.
+       */
+
+      socket.write = () => {
+        throw new Error('Error while writing');
+      };
+
+      const message = createTestMessage();
+
+      expect(() => communicator.sendMessage(message)).not.toThrow();
+    });
   });
 
   describe('waitForAnyMessage', () => {
