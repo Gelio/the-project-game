@@ -60,10 +60,18 @@ export class Communicator extends CustomEventEmitter {
     this.logger.silly(`Sending message ${message.type} (${serializedMessage.length})`);
 
     htonl(this.messageLengthArray, 0, serializedMessage.length);
-    this.socket.write(this.messageLengthBuffer);
-    this.socket.write(serializedMessage, 'utf8');
 
-    this.eventEmitter.emit('messageSent', message);
+    try {
+      this.socket.write(this.messageLengthBuffer);
+      this.socket.write(serializedMessage, 'utf8');
+
+      this.eventEmitter.emit('messageSent', message);
+    } catch (error) {
+      this.logger.error(
+        `Error while trying to write to ${this.socket.localAddress}:${this.socket.localPort}`
+      );
+      this.logger.debug(JSON.stringify(error));
+    }
   }
 
   public waitForAnyMessage(): Promise<Message<any>> {
