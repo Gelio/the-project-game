@@ -13,6 +13,6 @@ namespace Player.GameObjects
         public int Test;
         public int CommunicationRequest;
         public int CommunicationAccept;
-        public int TryPiece;
+        public int Place;
     }
 }

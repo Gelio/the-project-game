@@ -186,8 +186,17 @@ namespace Player
                         TestPiece();
                         if (HeldPiece.IsSham)
                         {
-                            logger.Info("The piece was a sham -- deleting the piece");
-                            DeletePiece();
+                            if (Game.Delays.Destroy < Game.Delays.Place)
+                            {
+                                logger.Info("The piece was a sham -- deleting the piece");
+                                DeletePiece();
+                            }
+                            else
+                            {
+                                logger.Info("The piece was a sham -- putting the piece down");
+                                PlaceDownPiece();
+                            }
+
                         }
                     }
 
@@ -195,7 +204,8 @@ namespace Player
                     {
                         logger.Info("Trying to place down piece");
                         (var result, var resultEnum) = PlaceDownPiece();
-                        SendCommunicationRequest(LeaderId);
+                        if (Id != LeaderId)
+                            SendCommunicationRequest(LeaderId);
                     }
                     else
                     {
