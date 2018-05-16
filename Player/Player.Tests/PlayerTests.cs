@@ -127,7 +127,7 @@ namespace Player.Tests
                         Test = 3000,
                         CommunicationAccept = 4000,
                         CommunicationRequest = 4000,
-                        TryPiece = 4000
+                        Place = 4000
                     }
                 },
                 new GameInfo
@@ -157,7 +157,7 @@ namespace Player.Tests
                         Test = 3000,
                         CommunicationAccept = 4000,
                         CommunicationRequest = 4000,
-                        TryPiece = 4000
+                        Place = 4000
                     }
                 },
 
