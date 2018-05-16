@@ -220,9 +220,9 @@ namespace Player
                     Discover();
                     if (IsInGoalArea())
                     {
-                        string dir = _playerConfig.TeamNumber == 1 ? "down" : "up";
-                        
-                        if(!Move(dir))
+                        string dir = GoalAreaDirection == "up" ? "down" : "up";
+
+                        if (!Move(dir))
                         {
                             Move(PickRandomMovementHorizontalDirection());
                         }
