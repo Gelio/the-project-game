@@ -186,17 +186,8 @@ namespace Player
                         TestPiece();
                         if (HeldPiece.IsSham)
                         {
-                            if (Game.Delays.Destroy < Game.Delays.Place)
-                            {
-                                logger.Info("The piece was a sham -- deleting the piece");
-                                DeletePiece();
-                            }
-                            else
-                            {
-                                logger.Info("The piece was a sham -- putting the piece down");
-                                PlaceDownPiece();
-                            }
-
+                            // NOTE: could PlaceDown() if it has lower delay, but it requires heuristics to skip low distances nearby
+                            logger.Info("The piece was a sham -- deleting the piece");
                         }
                     }
 
@@ -222,18 +213,17 @@ namespace Player
                 }
                 else // Find a piece
                 {
-                    Discover();
+                    // go to the task area...
                     if (Board.IsGoalArea(X, Y))
                     {
                         string dir = GoalAreaDirection == "up" ? "down" : "up";
-
                         if (!Move(dir))
-                        {
                             Move(PickRandomMovementHorizontalDirection());
-                        }
+                        continue;
                     }
-                    // go to the task area, then proceed to move to the closest piece
-                    else if (!Move(PickClosestPieceDirection()))
+                    // ...then look around and proceed to move to the closest piece
+                    Discover();
+                    if (!Move(PickClosestPieceDirection()))
                         Move(PickRandomMovementDirection());
                 }
             }
