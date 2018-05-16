@@ -39,16 +39,14 @@ describe('[GM] Board', () => {
       });
 
       it('should throw an error when piece is added twice', () => {
-        expect(board.addPiece.bind(board, piece)).toThrowError('Piece already added');
+        expect(board.addPiece.bind(board, piece)).toThrowErrorMatchingSnapshot();
       });
 
       it('should throw an error when piece is added on position where another piece already exists', () => {
         const samePositionPiece = new Piece();
         samePositionPiece.position = piecePosition;
 
-        expect(board.addPiece.bind(board, samePositionPiece)).toThrowError(
-          'Piece already exists at that position'
-        );
+        expect(board.addPiece.bind(board, samePositionPiece)).toThrowErrorMatchingSnapshot();
       });
 
       it('should not add a piece on the board when it is picked up', () => {
@@ -71,7 +69,7 @@ describe('[GM] Board', () => {
       it('should throw an error when piece is removed from the board where it does not exist', () => {
         board.removePiece(piece);
 
-        expect(board.removePiece.bind(board, piece)).toThrowError('Piece was not on board');
+        expect(board.removePiece.bind(board, piece)).toThrowErrorMatchingSnapshot();
       });
 
       it('should not remove piece if it is picked up', () => {
@@ -104,9 +102,7 @@ describe('[GM] Board', () => {
 
         board.addPiece(samePositionPiece);
 
-        expect(board.movePiece.bind(board, piece, newPiecePosition)).toThrowError(
-          'Cannot move a piece on a tile which already has one'
-        );
+        expect(board.movePiece.bind(board, piece, newPiecePosition)).toThrowErrorMatchingSnapshot();
       });
 
       it('should throw an error when piece was not added on the board before', () => {
@@ -114,17 +110,15 @@ describe('[GM] Board', () => {
         const newPiecePosition = new Point(piecePosition.x + 1, piecePosition.y);
         pieceNotAddedToGame.position = newPiecePosition;
 
-        expect(board.movePiece.bind(board, pieceNotAddedToGame, newPiecePosition)).toThrowError(
-          'Piece has not been added to the game previously'
-        );
+        expect(
+          board.movePiece.bind(board, pieceNotAddedToGame, newPiecePosition)
+        ).toThrowErrorMatchingSnapshot();
       });
 
       it('should throw an error when piece position does not match the one on the board', () => {
         piece.position = new Point(piecePosition.x + 1, piecePosition.y);
 
-        expect(board.movePiece.bind(board, piece, piecePosition)).toThrowError(
-          'Old piece position corrupted'
-        );
+        expect(board.movePiece.bind(board, piece, piecePosition)).toThrowErrorMatchingSnapshot();
       });
     });
 
@@ -158,9 +152,7 @@ describe('[GM] Board', () => {
         board.addPlayer(player);
         const playerPosition = player.position;
 
-        expect(board.addPlayer.bind(board, player)).toThrowError(
-          'Player is already added on board'
-        );
+        expect(board.addPlayer.bind(board, player)).toThrowErrorMatchingSnapshot();
         expect(player.position).toBe(playerPosition);
       });
     });
@@ -168,7 +160,8 @@ describe('[GM] Board', () => {
     describe('movePlayer', () => {
       it('should move player to new position', () => {
         board.addPlayer(player);
-        // FIXME: set `newPosition` based on player's position
+
+        board.movePlayer(player, new Point(1, 1));
         const newPosition = new Point(1, 2);
 
         board.movePlayer(player, newPosition);
@@ -178,22 +171,19 @@ describe('[GM] Board', () => {
 
       it('should throw an error when player position does not match the one on the board', () => {
         board.addPlayer(player);
-        // FIXME: set `newPosition` based on player's position
+        board.movePlayer(player, new Point(1, 1));
+
         const newPosition = new Point(2, 4);
 
         player.position = newPosition;
 
-        expect(board.movePlayer.bind(board, player, newPosition)).toThrowError(
-          'Old player position corrupted'
-        );
+        expect(board.movePlayer.bind(board, player, newPosition)).toThrowErrorMatchingSnapshot();
       });
 
       it('should throw an error when player is not present on board', () => {
         const newPosition = new Point(2, 4);
 
-        expect(board.movePlayer.bind(board, player, newPosition)).toThrowError(
-          'Player position is null'
-        );
+        expect(board.movePlayer.bind(board, player, newPosition)).toThrowErrorMatchingSnapshot();
       });
 
       it('should throw an error when player tries to step on tile with another player', () => {
@@ -202,9 +192,9 @@ describe('[GM] Board', () => {
         const playerTwo = new Player();
         board.addPlayer(playerTwo);
 
-        expect(board.movePlayer.bind(board, player, playerTwo.position)).toThrowError(
-          'Two players cannot stand on the same tile'
-        );
+        expect(
+          board.movePlayer.bind(board, player, playerTwo.position)
+        ).toThrowErrorMatchingSnapshot();
       });
     });
 
@@ -228,13 +218,13 @@ describe('[GM] Board', () => {
     it('should throw an error about invalid X coordinate', () => {
       const point: Point = new Point(30, 1);
 
-      expect(board.getTileAtPosition.bind(board, point)).toThrowError('Invalid X coordinate');
+      expect(board.getTileAtPosition.bind(board, point)).toThrowErrorMatchingSnapshot();
     });
 
     it('should throw an error about invalid Y coordinate', () => {
       const point: Point = new Point(29, 40);
 
-      expect(board.getTileAtPosition.bind(board, point)).toThrowError('Invalid Y coordinate');
+      expect(board.getTileAtPosition.bind(board, point)).toThrowErrorMatchingSnapshot();
     });
 
     it('should return the tile if position is valid', () => {
@@ -263,6 +253,88 @@ describe('[GM] Board', () => {
       expect(() => {
         board.getTileTeamId(tile);
       }).toThrow();
+    });
+  });
+
+  describe('getDistanceToClosestPiece', () => {
+    const customBoardSize: BoardSize = {
+      x: 5,
+      goalArea: 5,
+      taskArea: 5
+    };
+
+    beforeEach(() => {
+      board = new Board(customBoardSize, pointsLimit);
+    });
+
+    it('should return valid distance (4) to the closest piece', () => {
+      const piece = new Piece();
+      piece.isPickedUp = false;
+      piece.position = new Point(3, 6);
+      board.addPiece(piece);
+
+      expect(board.getDistanceToClosestPiece(new Point(0, 5))).toBe(4);
+    });
+
+    it('should return valid distance (1) to the closest piece', () => {
+      const piece = new Piece();
+      piece.isPickedUp = false;
+      piece.position = new Point(4, 5);
+      board.addPiece(piece);
+
+      expect(board.getDistanceToClosestPiece(new Point(4, 6))).toBe(1);
+    });
+
+    it('should return valid distance (4) to the closest piece', () => {
+      const piece = new Piece();
+      piece.isPickedUp = false;
+      piece.position = new Point(4, 9);
+      board.addPiece(piece);
+
+      expect(board.getDistanceToClosestPiece(new Point(4, 5))).toBe(4);
+    });
+
+    it('should return valid distance (0) to the closest piece', () => {
+      const piece = new Piece();
+      piece.isPickedUp = false;
+      piece.position = new Point(3, 7);
+      board.addPiece(piece);
+
+      expect(board.getDistanceToClosestPiece(piece.position)).toBe(0);
+    });
+
+    it('should return -1 as distance when there is no piece available', () => {
+      expect(board.getDistanceToClosestPiece(new Point(4, 8))).toBe(-1);
+    });
+
+    it('should return -1 as distance when checked tile is in team area', () => {
+      const piece = new Piece();
+      piece.isPickedUp = false;
+      piece.position = new Point(3, 0);
+      board.addPiece(piece);
+
+      expect(board.getDistanceToClosestPiece(new Point(3, 0))).toBe(-1);
+    });
+  });
+
+  describe('setRandomPlayerPosition', () => {
+    it('should throw when there is no position for new player', () => {
+      const customBoardSize: BoardSize = {
+        x: 1,
+        goalArea: 1,
+        taskArea: 1
+      };
+      board = new Board(customBoardSize, pointsLimit);
+
+      const player = new Player();
+      player.teamId = 1;
+
+      board.addPlayer(player);
+
+      const secondPlayer = new Player();
+      secondPlayer.teamId = 1;
+
+      expect(() => board.setRandomPlayerPosition(secondPlayer)).toThrowErrorMatchingSnapshot();
     });
   });
 });

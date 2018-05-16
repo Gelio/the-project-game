@@ -1,0 +1,10 @@
+{
+  "$schema": "../player-disconnected.json",
+
+  "type": "PLAYER_DISCONNECTED",
+  "senderId": "COMMUNICATION_SERVER",
+  "recipientId": "GAME_MASTER",
+  "payload": {
+    "playerId": "uuid"
+  }
+}

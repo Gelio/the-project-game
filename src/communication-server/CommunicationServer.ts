@@ -3,8 +3,9 @@ import { LoggerInstance } from 'winston';
 
 import { Communicator } from '../common/Communicator';
 import { COMMUNICATION_SERVER_ID, GAME_MASTER_ID } from '../common/EntityIds';
-
 import { REQUEST_TYPE } from '../common/REQUEST_TYPE';
+
+import { stringifySchemaValidationErrors } from '../common/logging/stringifySchemaValidationErrors';
 
 import { Game } from './Game';
 import { GameMaster } from './GameMaster';
@@ -31,6 +32,7 @@ import { RegisterGameResponse } from '../interfaces/responses/RegisterGameRespon
 
 import { registerUncaughtExceptionHandler } from '../registerUncaughtExceptionHandler';
 import { PlayerInfo } from './PlayerInfo';
+import { SimpleMessageValidator } from './SimpleMessageValidator';
 
 export interface CommunicationServerOptions {
   hostname: string;
@@ -47,16 +49,19 @@ export class CommunicationServer implements Service {
   private readonly messageRouter: MessageRouter;
   private readonly communicators: Communicator[] = [];
   private readonly gameMasters: Map<string, GameMaster> = new Map();
+  private readonly messageValidator: SimpleMessageValidator;
 
   constructor(
     options: CommunicationServerOptions,
     messageRouter: MessageRouter,
-    logger: LoggerInstance
+    logger: LoggerInstance,
+    messageValidator: SimpleMessageValidator
   ) {
     this.options = options;
     this.server = createServer(this.handleNewClient.bind(this));
     this.messageRouter = messageRouter;
     this.logger = logger;
+    this.messageValidator = messageValidator;
   }
 
   public init() {
@@ -129,6 +134,18 @@ export class CommunicationServer implements Service {
   }
 
   private handleClientsFirstMessage(communicator: Communicator, message: Message<any>) {
+    if (!this.messageValidator(message)) {
+      this.logger.warn(`Invalid message received from ${communicator.address}`);
+
+      this.logger.verbose('Message:');
+      this.logger.verbose(JSON.stringify(message));
+
+      const stringifiedErrors = stringifySchemaValidationErrors(this.messageValidator.errors || []);
+      this.logger.verbose(stringifiedErrors);
+
+      return;
+    }
+
     switch (message.type) {
       case 'PLAYER_HELLO':
         this.handlePlayer(communicator, <PlayerHelloMessage>message);
@@ -150,7 +167,7 @@ export class CommunicationServer implements Service {
   }
 
   private handleGameMaster(communicator: Communicator, registerGameRequest: RegisterGameRequest) {
-    if (this.gameMasters.has(registerGameRequest.payload.name)) {
+    if (this.gameMasters.has(registerGameRequest.payload.game.name)) {
       const failedResponse: RegisterGameResponse = {
         type: 'REGISTER_GAME_RESPONSE',
         senderId: COMMUNICATION_SERVER_ID,
@@ -168,8 +185,14 @@ export class CommunicationServer implements Service {
     // Stop listening for the client's initial message
     communicator.removeAllListeners('message');
 
-    const game = new Game(registerGameRequest.payload);
-    const gameMaster = new GameMaster(communicator, this.messageRouter, this.logger, game);
+    const game = new Game(registerGameRequest.payload.game);
+    const gameMaster = new GameMaster(
+      communicator,
+      this.messageRouter,
+      this.logger,
+      game,
+      this.messageValidator
+    );
     this.gameMasters.set(game.gameDefinition.name, gameMaster);
 
     gameMaster.once('disconnect', this.handleGameMasterDisconnection.bind(this, gameMaster));
@@ -292,7 +315,13 @@ export class CommunicationServer implements Service {
       id: helloMessage.senderId,
       isLeader: helloMessage.payload.isLeader
     };
-    const player = new Player(communicator, this.messageRouter, this.logger, playerInfo);
+    const player = new Player(
+      communicator,
+      this.messageRouter,
+      this.logger,
+      playerInfo,
+      this.messageValidator
+    );
 
     if (helloMessage.payload.teamId === 1) {
       gameMaster.game.team1Players.push(player);

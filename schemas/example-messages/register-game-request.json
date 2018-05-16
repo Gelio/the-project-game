@@ -1,0 +1,33 @@
+{
+  "$schema": "../register-game-request.json",
+
+  "type": "REGISTER_GAME_REQUEST",
+  "senderId": "GAME_MASTER",
+  "payload": {
+    "game": {
+      "name": "Quick",
+      "description": "A quick-paced game on a small field",
+      "teamSizes": {
+        "1": 5,
+        "2": 5
+      },
+      "boardSize": {
+        "x": 15,
+        "taskArea": 10,
+        "goalArea": 2
+      },
+      "goalLimit": 10,
+      "delays": {
+        "move": 2000,
+        "pick": 500,
+        "discover": 1250,
+        "destroy": 500,
+        "test": 2000,
+        "communicationRequest": 1000,
+        "communicationAccept": 1000,
+        "tryPiece": 1000,
+        "place": 1500
+      }
+    }
+  }
+}

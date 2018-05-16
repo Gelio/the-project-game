@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://the-project-game.net/schema/action-invalid.json",
+
+  "type": "object",
+  "title": "ActionInvalid",
+  "description": "Sent from GM to Player when requested action is not valid",
+
+  "properties": {
+    "type": {
+      "const": "ACTION_INVALID"
+    },
+    "senderId": {
+      "$ref": "common/entity-ids.json#/definitions/gameMasterId"
+    },
+    "recipientId": {
+      "$ref": "common/entity-ids.json#/definitions/playerId"
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "reason": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "required": ["type", "senderId", "recipientId"]
+}

@@ -11,6 +11,7 @@ import { Tile } from './tiles/Tile';
 
 import { GoalGenerator } from '../board-generation/GoalGenerator';
 import { TileGenerator } from '../board-generation/TileGenerator';
+import { TeamAreaTile } from './tiles/TeamAreaTile';
 
 export class Board {
   public readonly size: BoardSize;
@@ -182,10 +183,11 @@ export class Board {
   }
 
   public getDistanceToClosestPiece(tilePosition: Point): number {
-    // TODO: test the logic below
     const piecesLayingOnBoard = this.pieces.filter(piece => !piece.isPickedUp);
 
-    if (piecesLayingOnBoard.length === 0) {
+    const tile = this.getTileAtPosition(tilePosition);
+
+    if (piecesLayingOnBoard.length === 0 || tile instanceof TeamAreaTile) {
       return -1;
     }
 

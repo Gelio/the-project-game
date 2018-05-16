@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://the-project-game.net/schema/positive-communication-response-gm-asker.json",
+
+  "type": "object",
+  "title": "PositiveCommunicationResponseGmAsker",
+  "description": "Positive communication response from Game Master to asker",
+
+  "properties": {
+    "type": {
+      "const": "COMMUNICATION_RESPONSE"
+    },
+    "senderId": {
+      "$ref": "common/entity-ids.json#/definitions/gameMasterId"
+    },
+    "recipientId": {
+      "$ref": "common/entity-ids.json#/definitions/playerId"
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "senderPlayerId": {
+          "$ref": "common/entity-ids.json#/definitions/playerId"
+        },
+        "accepted": {
+          "const": true
+        },
+        "board": {
+          "type": "array",
+          "items": {
+            "$ref": "common/tile.json#"
+          },
+          "minItems": 1
+        }
+      },
+      "required": ["senderPlayerId", "accepted", "board"]
+    }
+  },
+  "required": ["type", "senderId", "recipientId", "payload"]
+}

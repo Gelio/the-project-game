@@ -10,6 +10,12 @@ namespace Player.GameObjects
         public long Timestamp;
         public GoalStatusEnum GoalStatus;
         public bool HasInfo => Timestamp != 0;
+
+        public Tile()
+        {
+            DistanceToClosestPiece = -1;
+            GoalStatus = GoalStatusEnum.NoInfo;
+        }
     }
 
     public enum GoalStatusEnum

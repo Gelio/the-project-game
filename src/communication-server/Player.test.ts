@@ -1,3 +1,5 @@
+import { LoggerInstance } from 'winston';
+
 import { Communicator } from '../common/Communicator';
 import { createMockCommunicator } from '../common/createMockCommunicator';
 import { LoggerFactory } from '../common/logging/LoggerFactory';
@@ -7,6 +9,7 @@ import { Message } from '../interfaces/Message';
 import { MessageRouter } from './MessageRouter';
 import { Player } from './Player';
 import { PlayerInfo } from './PlayerInfo';
+import { SimpleMessageValidator } from './SimpleMessageValidator';
 
 describe('[CS] Player', () => {
   let playerCommunicator: Communicator;
@@ -14,6 +17,8 @@ describe('[CS] Player', () => {
   let messageRouter: MessageRouter;
   let player: Player;
   let playerInfo: PlayerInfo;
+  let messageValidator: SimpleMessageValidator;
+  let logger: LoggerInstance;
   const gameName = 'aa';
 
   beforeEach(() => {
@@ -25,14 +30,17 @@ describe('[CS] Player', () => {
     const loggerFactory = new LoggerFactory();
     loggerFactory.logLevel = 'error';
 
-    const logger = loggerFactory.createEmptyLogger();
+    messageValidator = jest.fn(() => true);
+    messageValidator.errors = [];
+
+    logger = loggerFactory.createEmptyLogger();
     playerInfo = {
       gameName,
       id: 'player1',
       isLeader: true,
       teamId: 1
     };
-    player = new Player(playerCommunicator, messageRouter, logger, playerInfo);
+    player = new Player(playerCommunicator, messageRouter, logger, playerInfo, messageValidator);
     player.init();
   });
 
@@ -64,6 +72,24 @@ describe('[CS] Player', () => {
     playerCommunicator.emit('message', message);
     expect(gameMasterCommunicator.sendMessage).not.toHaveBeenCalled();
   });
+
+  it('should validate incoming messages', () => {
+    const message = {};
+    playerCommunicator.emit('message', message);
+
+    expect(messageValidator).toHaveBeenCalledWith(message);
+  });
+
+  it('should log a warning when the incoming message is invalid', () => {
+    (<jest.Mock>messageValidator).mockImplementation(() => false);
+    spyOn(logger, 'warn');
+
+    playerCommunicator.emit('message', {});
+
+    expect(logger.warn).toHaveBeenCalled();
+  });
+
+  // TODO: add tests for message validation
 
   describe('destroy', () => {
     it('should unregister the player from MessageRouter', () => {

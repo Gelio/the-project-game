@@ -120,12 +120,9 @@ namespace Player.Tests
             var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
             {
                 Id = assignedPlayerId,
-                Game = game
+                Game = game,
+                Board = new Board(game.BoardSize)
             };
-            for (int i = 0; i < game.BoardSize.X * (game.BoardSize.GoalArea * 2 + game.BoardSize.TaskArea); i++)
-            {
-                player.Board.Add(new Tile());
-            }
 
             Assert.Throws<InvalidOperationException>(() => player.RefreshBoardState());
         }
@@ -184,24 +181,23 @@ namespace Player.Tests
             var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
             {
                 Id = assignedPlayerId,
-                Game = game
+                Game = game,
+                Board = new Board(game.BoardSize)
             };
-            for (int i = 0; i < game.BoardSize.X * (game.BoardSize.GoalArea * 2 + game.BoardSize.TaskArea); i++)
-            {
-                player.Board.Add(new Tile());
-            }
-
             var result = player.RefreshBoardState();
 
             Assert.That(result, Is.True);
-            Assert.That(player.Board.FirstOrDefault(x => x.PlayerId == assignedPlayerId).DistanceToClosestPiece, Is.EqualTo(msg2.Payload.CurrentPositionDistanceToClosestPiece));
+            (int foundX, int foundY) = player.Board.FindPlayerPosition(assignedPlayerId);
+            Assert.That(foundX, Is.Not.Negative);
+            Assert.That(foundY, Is.Not.Negative);
+            Assert.That(player.Board.At(foundX, foundY).DistanceToClosestPiece, Is.EqualTo(msg2.Payload.CurrentPositionDistanceToClosestPiece));
             Assert.That(player.X, Is.EqualTo(playerPos1.X));
             Assert.That(player.Y, Is.EqualTo(playerPos1.Y));
 
             foreach (var p in playerPositions)
             {
-                Assert.That(player.Board[p.X + game.BoardSize.X * p.Y].PlayerId, Is.EqualTo(p.PlayerId));
-                Assert.That(player.Board[p.X + game.BoardSize.X * p.Y].Timestamp, Is.EqualTo(msg2.Payload.Timestamp));
+                Assert.That(player.Board.At(p.X, p.Y).PlayerId, Is.EqualTo(p.PlayerId));
+                Assert.That(player.Board.At(p.X, p.Y).Timestamp, Is.EqualTo(msg2.Payload.Timestamp));
             }
         }
     }

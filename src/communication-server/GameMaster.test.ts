@@ -1,3 +1,5 @@
+import { LoggerInstance } from 'winston';
+
 import { Communicator } from '../common/Communicator';
 import { createMockCommunicator } from '../common/createMockCommunicator';
 import { COMMUNICATION_SERVER_ID, GAME_MASTER_ID } from '../common/EntityIds';
@@ -8,12 +10,15 @@ import { UnregisterGameRequest } from '../interfaces/requests/UnregisterGameRequ
 import { Game } from './Game';
 import { GameMaster } from './GameMaster';
 import { MessageRouter } from './MessageRouter';
+import { SimpleMessageValidator } from './SimpleMessageValidator';
 
 describe('[CS] GameMaster', () => {
   let communicator: Communicator;
   let messageRouter: MessageRouter;
   let game: Game;
   let gameMaster: GameMaster;
+  let messageValidator: SimpleMessageValidator;
+  let logger: LoggerInstance;
   const gameName = 'aa';
 
   beforeEach(() => {
@@ -23,7 +28,7 @@ describe('[CS] GameMaster', () => {
     const loggerFactory = new LoggerFactory();
     loggerFactory.logLevel = 'error';
 
-    const logger = loggerFactory.createEmptyLogger();
+    logger = loggerFactory.createEmptyLogger();
     game = new Game({
       boardSize: { goalArea: 1, taskArea: 2, x: 3 },
       delays: <any>{},
@@ -36,7 +41,10 @@ describe('[CS] GameMaster', () => {
       }
     });
 
-    gameMaster = new GameMaster(communicator, messageRouter, logger, game);
+    messageValidator = jest.fn(() => true);
+    messageValidator.errors = [];
+
+    gameMaster = new GameMaster(communicator, messageRouter, logger, game, messageValidator);
   });
 
   afterEach(() => {
@@ -113,6 +121,23 @@ describe('[CS] GameMaster', () => {
       communicator.emit('message', request);
 
       expect(gameMaster.onGameFinished).toHaveBeenCalled();
+    });
+
+    it('should validate incoming messages', () => {
+      const message = {};
+      (<jest.Mock>messageValidator).mockImplementation(() => false);
+
+      communicator.emit('message', message);
+
+      expect(messageValidator).toHaveBeenCalledWith(message);
+    });
+
+    it('should log a warning on invalid incoming message', () => {
+      (<jest.Mock>messageValidator).mockImplementation(() => false);
+      spyOn(logger, 'warn');
+      communicator.emit('message', {});
+
+      expect(logger.warn).toHaveBeenCalled();
     });
   });
 });

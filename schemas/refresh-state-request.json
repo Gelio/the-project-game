@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://the-project-game.net/schema/refresh-state-request.json",
+
+  "type": "object",
+  "title": "RefreshStateRequest",
+
+  "properties": {
+    "type": {
+      "const": "REFRESH_STATE_REQUEST"
+    },
+    "senderId": {
+      "$ref": "common/entity-ids.json#/definitions/playerId"
+    }
+  },
+  "required": ["type", "senderId"]
+}

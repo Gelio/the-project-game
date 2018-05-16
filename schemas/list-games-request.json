@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://the-project-game.net/schema/list-games-request.json",
+
+  "type": "object",
+  "title": "ListGamesRequest",
+  "description": "Message sent to the Communication Server to get the list of available games",
+
+  "properties": {
+    "type": {
+      "const": "LIST_GAMES_REQUEST"
+    },
+    "senderId": {
+      "$ref": "common/entity-ids.json#/definitions/playerId"
+    }
+  },
+
+  "required": ["type", "senderId"]
+}

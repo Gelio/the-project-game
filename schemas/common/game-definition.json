@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://the-project-game.net/schema/common/game-definition.json",
+
+  "type": "object",
+  "title": "GameDefinition",
+
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "teamSizes": {
+      "$ref": "team-sizes.json#"
+    },
+    "boardSize": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "$ref": "common-defs.json#/definitions/positiveInteger"
+        },
+        "taskArea": {
+          "$ref": "common-defs.json#/definitions/positiveInteger"
+        },
+        "goalArea": {
+          "$ref": "common-defs.json#/definitions/positiveInteger"
+        }
+      },
+      "required": ["x", "taskArea", "goalArea"]
+    },
+    "goalLimit": {
+      "$ref": "common-defs.json#/definitions/positiveInteger"
+    },
+    "delays": {
+      "$ref": "action-delays.json#"
+    }
+  },
+
+  "required": ["name", "description", "teamSizes", "boardSize", "goalLimit", "delays"]
+}

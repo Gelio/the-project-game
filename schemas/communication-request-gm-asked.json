@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://the-project-game.net/schema/communication-request-gm-asked.json",
+
+  "type": "object",
+  "title": "CommunicationRequestGmAsked",
+  "description": "Communication request from Game Master to asked player",
+
+  "properties": {
+    "type": {
+      "const": "COMMUNICATION_REQUEST"
+    },
+    "senderId": {
+      "$ref": "common/entity-ids.json#/definitions/gameMasterId"
+    },
+    "recipientId": {
+      "$ref": "common/entity-ids.json#/definitions/playerId"
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "senderPlayerId": {
+          "$ref": "common/entity-ids.json#/definitions/playerId"
+        }
+      },
+      "required": ["senderPlayerId"]
+    }
+  },
+  "required": ["type", "senderId", "recipientId", "payload"]
+}

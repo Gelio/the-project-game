@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://the-project-game.net/schema/discovery-request.json",
+  "type": "object",
+  "title": "DiscoveryRequest",
+  "properties": {
+    "type": {
+      "const": "DISCOVERY_REQUEST"
+    },
+    "senderId": {
+      "$ref": "common/entity-ids.json#/definitions/playerId"
+    }
+  },
+
+  "required": ["type", "senderId"]
+}

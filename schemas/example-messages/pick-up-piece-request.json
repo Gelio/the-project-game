@@ -1,0 +1,6 @@
+{
+  "$schema": "../pick-up-piece-request.json",
+
+  "type": "PICK_UP_PIECE_REQUEST",
+  "senderId": "123e4567-e89b-12d3-a456-426655440000"
+}

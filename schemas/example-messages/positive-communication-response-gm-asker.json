@@ -1,0 +1,30 @@
+{
+  "$schema": "../positive-communication-response-gm-asker.json",
+
+  "type": "COMMUNICATION_RESPONSE",
+  "senderId": "GAME_MASTER",
+  "recipientId": "asker",
+  "payload": {
+    "senderPlayerId": "asked",
+    "accepted": true,
+    "board": [
+      {
+        "distanceToPiece": 5,
+        "hasCompletedGoal": false,
+        "piece": {
+          "isSham": true,
+          "wasTested": true
+        },
+        "playerId": null,
+        "timestamp": 1515941794
+      },
+      {
+        "distanceToPiece": 4,
+        "hasCompletedGoal": false,
+        "piece": null,
+        "playerId": "someuuid",
+        "timestamp": 1515941821
+      }
+    ]
+  }
+}

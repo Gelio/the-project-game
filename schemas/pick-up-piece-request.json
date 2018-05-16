@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://the-project-game.net/schema/pick-up-piece-request.json",
+  "type": "object",
+  "title": "PickUpPieceRequest",
+  "description": "Message sent by Player who wants to pick up the piece he is standing on",
+  "properties": {
+    "type": {
+      "const": "PICK_UP_PIECE_REQUEST"
+    },
+    "senderId": {
+      "$ref": "common/entity-ids.json#/definitions/playerId"
+    }
+  },
+  "required": ["type", "senderId"]
+}

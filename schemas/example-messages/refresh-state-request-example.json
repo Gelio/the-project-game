@@ -1,0 +1,6 @@
+{
+  "$schema": "../refresh-state-request.json",
+
+  "type": "REFRESH_STATE_REQUEST",
+  "senderId": "579ba3c2-eb0f-47ba-9f85-680b81447e18"
+}

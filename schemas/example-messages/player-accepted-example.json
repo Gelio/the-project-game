@@ -1,0 +1,7 @@
+{
+  "$schema": "../player-accepted.json",
+
+  "type": "PLAYER_ACCEPTED",
+  "senderId": "GAME_MASTER",
+  "recipientId": "579ba3c2-eb0f-47ba-9f85-680b81447e18"
+}

@@ -25,7 +25,8 @@
     "destroy": 2000,
     "test": 3000,
     "communicationRequest": 5000,
-    "communicationAccept": 5000
+    "communicationAccept": 5000,
+    "place": 1000
   },
   "timeout": 10000,
   "registrationTriesLimit": 5,

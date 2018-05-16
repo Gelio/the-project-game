@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://the-project-game.net/schema/unregister-game-request.json",
+
+  "type": "object",
+  "title": "UnregisterGameRequest",
+
+  "properties": {
+    "type": {
+      "const": "UNREGISTER_GAME_REQUEST"
+    },
+    "senderId": {
+      "$ref": "common/entity-ids.json#/definitions/gameMasterId"
+    },
+    "recipientId": {
+      "$ref": "common/entity-ids.json#/definitions/communicationServerId"
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "gameName": {
+          "type": "string"
+        }
+      },
+      "required": ["gameName"]
+    }
+  },
+
+  "required": ["type", "senderId", "recipientId", "payload"]
+}

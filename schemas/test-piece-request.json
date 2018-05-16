@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://the-project-game.net/schema/test-piece-request.json",
+  "type": "object",
+  "title": "TestPieceRequest",
+  "description": "Message sent by Player who wants to test the currently held piece",
+  "properties": {
+    "type": {
+      "const": "TEST_PIECE_REQUEST"
+    },
+    "senderId": {
+      "$ref": "common/entity-ids.json#/definitions/playerId"
+    }
+  },
+  "required": ["type", "senderId"]
+}

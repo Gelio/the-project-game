@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://the-project-game.net/schema/discovery-response.json",
+
+  "type": "object",
+  "title": "DiscoveryResponse",
+
+  "properties": {
+    "type": {
+      "const": "DISCOVERY_RESPONSE"
+    },
+    "senderId": {
+      "$ref": "common/entity-ids.json#/definitions/gameMasterId"
+    },
+    "recipientId": {
+      "$ref": "common/entity-ids.json#/definitions/playerId"
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "timestamp": {
+          "$ref": "common/common-defs.json#/definitions/nonNegativeNumber"
+        },
+        "tiles": {
+          "$ref": "#/definitions/tiles"
+        }
+      },
+
+      "required": ["tiles", "timestamp"]
+    }
+  },
+
+  "definitions": {
+    "tiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "$ref": "common/common-defs.json#/definitions/nonNegativeInteger"
+          },
+          "y": {
+            "$ref": "common/common-defs.json#/definitions/nonNegativeInteger"
+          },
+          "playerId": {
+            "oneOf": [
+              { "type": "null" },
+              { "$ref": "common/entity-ids.json#/definitions/playerId" }
+            ]
+          },
+          "piece": {
+            "type": "boolean"
+          },
+          "distanceToClosestPiece": {
+            "type": "number",
+            "minimum": -1
+          }
+        },
+
+        "required": ["x", "y", "playerId", "piece", "distanceToClosestPiece"]
+      },
+      "minItems": 4,
+      "maxItems": 9,
+      "uniqueItems": true
+    }
+  },
+
+  "required": ["type", "senderId", "recipientId", "payload"]
+}

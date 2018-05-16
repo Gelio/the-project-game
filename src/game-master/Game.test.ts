@@ -424,7 +424,9 @@ describe('[GM] Game', () => {
       const message: RegisterGameRequest = {
         type: 'REGISTER_GAME_REQUEST',
         senderId: GAME_MASTER_ID,
-        payload: gameDefinition
+        payload: {
+          game: gameDefinition
+        }
       };
 
       const responseMessage: RegisterGameResponse = {
