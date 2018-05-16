@@ -28,7 +28,7 @@ import { Game } from './Game';
 import { GameState } from './GameState';
 import { mapOptionsToGameDefinition } from './mapOptionsToGameDefinition';
 
-import { UIController } from './ui/UIController';
+import { UIController } from './ui/IUIController';
 
 export interface GameMasterOptions {
   serverHostname: string;

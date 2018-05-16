@@ -27,7 +27,7 @@ import { Scoreboard } from './models/Scoreboard';
 import { GameState } from './GameState';
 import { ProcessMessageResult } from './ProcessMessageResult';
 
-import { UIController } from './ui/UIController';
+import { UIController } from './ui/IUIController';
 
 import { PlayerMessageHandler } from './game-logic/PlayerMessageHandler';
 
