@@ -114,13 +114,9 @@ namespace Player.Tests.PieceTests
                 Id = _assignedPlayerId,
                 X = assignedX,
                 Y = assignedY,
-                Game = _game
+                Game = _game,
+                Board = new Board(_game.BoardSize)
             };
-
-            for (int i = 0; i < _game.BoardSize.X * (_game.BoardSize.GoalArea * 2 + _game.BoardSize.TaskArea); i++)
-            {
-                player.Board.Add(new Tile());
-            }
             player.HeldPiece = new Piece();
 
 

@@ -129,20 +129,19 @@ namespace Player.Tests
                 Id = assignedPlayerId,
                 X = assignedX,
                 Y = assignedY,
-                Game = _game
+                Game = _game,
+                Board = new Board(_game.BoardSize)
             };
-            for (int i = 0; i < _game.BoardSize.X * (_game.BoardSize.GoalArea * 2 + _game.BoardSize.TaskArea); i++)
-                player.Board.Add(new Tile());
-            player.Board[indexBeforeMove].PlayerId = assignedPlayerId;
+            player.Board.At(indexBeforeMove).PlayerId = assignedPlayerId;
 
 
             var result = player.Move(direction);
 
             Assert.That(result, Is.True);
-            Assert.That(player.Board[indexBeforeMove].PlayerId, Is.Null);
-            Assert.That(player.Board[indexAfterMove].PlayerId, Is.EqualTo(assignedPlayerId));
-            Assert.That(player.Board[indexAfterMove].DistanceToClosestPiece, Is.EqualTo(msg2.Payload.DistanceToPiece));
-            Assert.That(player.Board[indexAfterMove].Timestamp, Is.EqualTo(msg2.Payload.TimeStamp));
+            Assert.That(player.Board.At(indexBeforeMove).PlayerId, Is.Null);
+            Assert.That(player.Board.At(indexAfterMove).PlayerId, Is.EqualTo(assignedPlayerId));
+            Assert.That(player.Board.At(indexAfterMove).DistanceToClosestPiece, Is.EqualTo(msg2.Payload.DistanceToPiece));
+            Assert.That(player.Board.At(indexAfterMove).Timestamp, Is.EqualTo(msg2.Payload.TimeStamp));
             Assert.That(player.X, Is.EqualTo(newX));
             Assert.That(player.Y, Is.EqualTo(newY));
         }
