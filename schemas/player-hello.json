@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://the-project-game.net/schema/player-hello.json",
+
+  "type": "object",
+  "title": "PlayerHello",
+  "description": "Initial message from Player sent when connecting to GM",
+
+  "properties": {
+    "type": {
+      "const": "PLAYER_HELLO"
+    },
+    "senderId": {
+      "$ref": "common/entity-ids.json#/definitions/playerId"
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "game": {
+          "title": "The name of the chosen game",
+          "type": "string"
+        },
+        "teamId": {
+          "enum": [1, 2]
+        },
+        "isLeader": {
+          "type": "boolean"
+        }
+      },
+      "required": ["game", "teamId", "isLeader"]
+    }
+  },
+  "required": ["type", "senderId", "payload"]
+}

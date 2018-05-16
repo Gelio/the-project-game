@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://the-project-game.net/schema/player-accepted.json",
+
+  "type": "object",
+  "title": "PlayerAccepted",
+  "description": "Sent when player was successfully connected to game",
+
+  "properties": {
+    "type": {
+      "const": "PLAYER_ACCEPTED"
+    },
+    "senderId": {
+      "$ref": "common/entity-ids.json#/definitions/gameMasterId"
+    },
+    "recipientId": {
+      "$ref": "common/entity-ids.json#/definitions/playerId"
+    }
+  },
+  "required": ["type", "senderId", "recipientId"]
+}

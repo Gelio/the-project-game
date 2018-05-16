@@ -1,0 +1,11 @@
+{
+  "$schema": "../player-hello.json",
+
+  "type": "PLAYER_HELLO",
+  "senderId": "579ba3c2-eb0f-47ba-9f85-680b81447e18",
+  "payload": {
+    "game": "Default",
+    "teamId": 1,
+    "isLeader": true
+  }
+}

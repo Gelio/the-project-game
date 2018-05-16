@@ -1,0 +1,10 @@
+{
+  "$schema": "../player-rejected.json",
+
+  "type": "PLAYER_REJECTED",
+  "senderId": "GAME_MASTER",
+  "recipientId": "579ba3c2-eb0f-47ba-9f85-680b81447e18",
+  "payload": {
+    "reason": "Team is full"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://the-project-game.net/schema/action-valid.json",
+
+  "type": "object",
+  "title": "ActionValid",
+  "description": "Sent from GM to Player when requested action is valid",
+
+  "properties": {
+    "type": {
+      "const": "ACTION_VALID"
+    },
+    "senderId": {
+      "$ref": "common/entity-ids.json#/definitions/gameMasterId"
+    },
+    "recipientId": {
+      "$ref": "common/entity-ids.json#/definitions/playerId"
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "delay": {
+          "$ref": "common/common-defs.json#/definitions/nonNegativeInteger"
+        }
+      },
+      "required": ["delay"]
+    }
+  },
+  "required": ["type", "senderId", "recipientId", "payload"]
+}

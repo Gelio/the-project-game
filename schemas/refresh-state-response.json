@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://the-project-game.net/schema/refresh-state-response.json",
+
+  "type": "object",
+  "title": "RefreshStateResponse",
+
+  "definitions": {
+    "playerPosition": {
+      "type": "object",
+      "properties": {
+        "playerId": {
+          "$ref": "common/entity-ids.json#/definitions/playerId"
+        },
+        "x": {
+          "$ref": "common/common-defs.json#/definitions/nonNegativeInteger"
+        },
+        "y": {
+          "$ref": "common/common-defs.json#/definitions/nonNegativeInteger"
+        }
+      },
+      "required": ["playerId", "x", "y"]
+    }
+  },
+
+  "properties": {
+    "type": {
+      "const": "REFRESH_STATE_RESPONSE"
+    },
+    "senderId": {
+      "$ref": "common/entity-ids.json#/definitions/gameMasterId"
+    },
+    "recipientId": {
+      "$ref": "common/entity-ids.json#/definitions/playerId"
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "timestamp": {
+          "$ref": "common/common-defs.json#/definitions/nonNegativeInteger"
+        },
+        "currentPositionDistanceToClosestPiece": {
+          "type": "integer",
+          "minimum": -1
+        },
+        "playerPositions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/playerPosition"
+          }
+        },
+        "team1Score": {
+          "$ref": "common/common-defs.json#/definitions/nonNegativeInteger"
+        },
+        "team2Score": {
+          "$ref": "common/common-defs.json#/definitions/nonNegativeInteger"
+        }
+      },
+      "required": [
+        "timestamp",
+        "currentPositionDistanceToClosestPiece",
+        "playerPositions",
+        "team1Score",
+        "team2Score"
+      ]
+    }
+  },
+  "required": ["type", "senderId", "recipientId", "payload"]
+}
