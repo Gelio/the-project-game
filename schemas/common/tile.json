@@ -20,7 +20,7 @@
       "oneOf": [{ "type": "null" }, { "$ref": "common/entity-ids.json#/definitions/playerId" }]
     },
     "timestamp": {
-      "type": "integer"
+      "$ref": "common/common-defs.json#/definitions/nonNegativeNumber"
     }
   },
   "required": ["distanceToPiece", "piece", "playerId", "timestamp"]
