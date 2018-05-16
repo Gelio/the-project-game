@@ -3,7 +3,7 @@
   "$id": "http://the-project-game.net/schema/common/team-sizes.json",
   "type": "object",
 
-  "title": "Team sizes",
+  "title": "TeamSizes",
 
   "properties": {
     "1": {

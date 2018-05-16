@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://the-project-game.net/schema/common/tile.json",
+
+  "type": "object",
+  "title": "Tile",
+
+  "properties": {
+    "distanceToPiece": {
+      "type": "integer",
+      "minimum": -1
+    },
+    "hasCompletedGoal": {
+      "type": "boolean"
+    },
+    "piece": {
+      "oneOf": [{ "type": "null" }, { "$ref": "common/piece.json#" }]
+    },
+    "playerId": {
+      "oneOf": [{ "type": "null" }, { "$ref": "common/entity-ids.json#/definitions/playerId" }]
+    },
+    "timestamp": {
+      "$ref": "common/common-defs.json#/definitions/nonNegativeNumber"
+    }
+  },
+  "required": ["distanceToPiece", "piece", "playerId", "timestamp"]
+}

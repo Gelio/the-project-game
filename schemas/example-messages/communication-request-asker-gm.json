@@ -1,0 +1,9 @@
+{
+  "$schema": "../communication-request-asker-gm.json",
+
+  "type": "COMMUNICATION_REQUEST",
+  "senderId": "asker",
+  "payload": {
+    "targetPlayerId": "asked"
+  }
+}

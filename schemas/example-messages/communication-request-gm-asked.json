@@ -1,0 +1,10 @@
+{
+  "$schema": "../communication-request-gm-asked.json",
+
+  "type": "COMMUNICATION_REQUEST",
+  "senderId": "GAME_MASTER",
+  "recipientId": "asked",
+  "payload": {
+    "senderPlayerId": "asker"
+  }
+}

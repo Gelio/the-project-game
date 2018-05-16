@@ -3,7 +3,7 @@
   "$id": "http://the-project-game.net/schema/common/game-definition.json",
 
   "type": "object",
-  "title": "Game definition",
+  "title": "GameDefinition",
 
   "properties": {
     "name": {

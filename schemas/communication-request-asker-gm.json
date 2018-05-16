@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://the-project-game.net/schema/communication-request-asker-gm.json",
+
+  "type": "object",
+  "title": "CommunicationRequestAskerGm",
+  "description": "Communication request from asker to Game Master",
+
+  "properties": {
+    "type": {
+      "const": "COMMUNICATION_REQUEST"
+    },
+    "senderId": {
+      "$ref": "common/entity-ids.json#/definitions/playerId"
+    },
+    "payload": {
+      "type": "object",
+      "properties": {
+        "targetPlayerId": {
+          "$ref": "common/entity-ids.json#/definitions/playerId"
+        }
+      },
+      "required": ["targetPlayerId"]
+    }
+  },
+  "required": ["type", "senderId", "payload"]
+}

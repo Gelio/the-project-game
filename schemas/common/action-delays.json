@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema",
   "$id": "http://the-project-game.net/schema/common/action-delays.json",
 
-  "title": "Action delays",
+  "title": "ActionDelays",
 
   "type": "object",
   "properties": {
