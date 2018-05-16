@@ -116,28 +116,25 @@ namespace Player.Tests
                 Id = _assignedPlayerId,
                 X = assignedX,
                 Y = assignedY,
-                Game = _game
+                Game = _game,
+                Board = new Board(_game.BoardSize)
             };
-            for (int i = 0; i < _game.BoardSize.X * (_game.BoardSize.GoalArea * 2 + _game.BoardSize.TaskArea); i++)
-            {
-                player.Board.Add(new Tile());
-            }
 
             var result = player.Discover();
 
             Assert.That(result, Is.True);
             foreach (var t in tiles)
             {
-                Assert.That(player.Board[t.X + _game.BoardSize.X * t.Y].DistanceToClosestPiece, Is.EqualTo(t.DistanceToClosestPiece));
-                Assert.That(player.Board[t.X + _game.BoardSize.X * t.Y].Timestamp, Is.EqualTo(msg.Payload.Timestamp));
+                Assert.That(player.Board.At(t.X, t.Y).DistanceToClosestPiece, Is.EqualTo(t.DistanceToClosestPiece));
+                Assert.That(player.Board.At(t.X, t.Y).Timestamp, Is.EqualTo(msg.Payload.Timestamp));
                 if (t.Piece)
                 {
-                    Assert.That(player.Board[t.X + _game.BoardSize.X * t.Y], Is.Not.Null);
-                    Assert.That(player.Board[t.X + _game.BoardSize.X * t.Y].Piece.WasTested, Is.False);
+                    Assert.That(player.Board.At(t.X, t.Y), Is.Not.Null);
+                    Assert.That(player.Board.At(t.X, t.Y).Piece.WasTested, Is.False);
                 }
                 else
                 {
-                    Assert.That(player.Board[t.X + _game.BoardSize.X * t.Y].Piece, Is.Null);
+                    Assert.That(player.Board.At(t.X, t.Y).Piece, Is.Null);
                 }
             }
         }
@@ -173,12 +170,9 @@ namespace Player.Tests
             var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
             {
                 Id = _assignedPlayerId,
-                Game = _game
+                Game = _game,
+                Board = new Board(_game.BoardSize)
             };
-            for (int i = 0; i < _game.BoardSize.X * (_game.BoardSize.GoalArea * 2 + _game.BoardSize.TaskArea); i++)
-            {
-                player.Board.Add(new Tile());
-            }
 
 
             Assert.Throws<WrongPayloadException>(() => player.Discover());
