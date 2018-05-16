@@ -378,7 +378,6 @@ describe('[GM] Game', () => {
     anotherPlayer.isLeader = true;
     anotherPlayer.isBusy = false;
     anotherPlayer.isConnected = true;
-
     game.addPlayer(anotherPlayer);
 
     expect(game.playersContainer.getPlayerById(player.playerId)).toBe(player);
@@ -400,22 +399,12 @@ describe('[GM] Game', () => {
   });
 
   describe('handlePlayerDisconnected', () => {
-    it('should remove the player when the game has not started', () => {
+    it('should remove the player', () => {
       const message = getPlayerDisconnectedMessage(player);
 
       game.handlePlayerDisconnectedMessage(message);
 
       expect(game.playersContainer.getPlayerById(player.playerId)).toBeUndefined();
-    });
-
-    it('should mark the player as disconnected', () => {
-      game.start();
-
-      const message = getPlayerDisconnectedMessage(player);
-
-      game.handlePlayerDisconnectedMessage(message);
-
-      expect(player.isConnected).toBe(false);
     });
   });
 
