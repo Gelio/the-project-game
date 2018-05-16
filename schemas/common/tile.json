@@ -14,13 +14,13 @@
       "type": "boolean"
     },
     "piece": {
-      "oneOf": [{ "type": "null" }, { "$ref": "common/piece.json#" }]
+      "oneOf": [{ "type": "null" }, { "$ref": "piece.json#" }]
     },
     "playerId": {
-      "oneOf": [{ "type": "null" }, { "$ref": "common/entity-ids.json#/definitions/playerId" }]
+      "oneOf": [{ "type": "null" }, { "$ref": "entity-ids.json#/definitions/playerId" }]
     },
     "timestamp": {
-      "$ref": "common/common-defs.json#/definitions/nonNegativeNumber"
+      "$ref": "common-defs.json#/definitions/nonNegativeNumber"
     }
   },
   "required": ["distanceToPiece", "piece", "playerId", "timestamp"]
