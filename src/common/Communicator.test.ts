@@ -1,7 +1,10 @@
 import * as Stream from 'stream';
 
 import { Message } from '../interfaces/Message';
+
 import { Communicator } from './Communicator';
+import { createDelay } from './createDelay';
+
 import { LoggerFactory } from './logging/LoggerFactory';
 
 class MockSocket {
@@ -280,7 +283,7 @@ describe('Communicator', () => {
     });
 
     describe('message event', () => {
-      it('should be emitted when message is received', () => {
+      it('should be emitted when message is received', async () => {
         const message = createTestMessage();
 
         const communicator = createCommunicator(socket);
@@ -292,10 +295,12 @@ describe('Communicator', () => {
 
         writeMessageToStream(socket, message);
 
+        await createDelay(50);
+
         expect.assertions(1);
       });
 
-      it('should be emitted when multiple messages arrived in a single TCP packet', () => {
+      it('should be emitted when multiple messages arrived in a single TCP packet', async () => {
         const message = createTestMessage();
         const serializedMessage = serializeMessage(message);
         const repeatedMessages = Buffer.alloc(serializedMessage.length * 2);
@@ -309,6 +314,8 @@ describe('Communicator', () => {
         communicator.on('message', handler);
 
         socket.write(repeatedMessages);
+
+        await createDelay(50);
 
         expect(handler).toHaveBeenCalledTimes(2);
         expect(handler).toHaveBeenCalledWith(message);
