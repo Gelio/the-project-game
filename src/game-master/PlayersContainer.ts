@@ -23,8 +23,8 @@ export class PlayersContainer {
     return this.players.filter(player => player.teamId === teamId);
   }
 
-  public getConnectedPlayers() {
-    return this.players.filter(player => player.isConnected);
+  public getPlayers() {
+    return this.players;
   }
 
   public getPlayerById(playerId: string) {

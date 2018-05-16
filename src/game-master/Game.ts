@@ -259,22 +259,7 @@ export class Game {
     const teamPlayers = this.playersContainer.getPlayersFromTeam(message.payload.teamId);
 
     if (this.state === GameState.InProgress) {
-      /**
-       * NOTE: possibly when game is in progress no player should be able to join
-       * See https://trello.com/c/62WrxI35
-       */
-
-      const disconnectedPlayer = teamPlayers.find(
-        player => !player.isConnected && player.isLeader === message.payload.isLeader
-      );
-
-      if (!disconnectedPlayer) {
-        throw new Error('Game already started and no more slots free');
-      }
-
-      disconnectedPlayer.isConnected = true;
-
-      return;
+      throw new Error('Game already started');
     }
 
     if (teamPlayers.length >= this.definition.teamSizes[message.payload.teamId]) {
@@ -299,14 +284,13 @@ export class Game {
     newPlayer.teamId = message.payload.teamId;
     newPlayer.isLeader = message.payload.isLeader;
     newPlayer.isBusy = false;
-    newPlayer.isConnected = true;
 
     this.addPlayer(newPlayer);
   }
 
   private sendGameStartedMessageToPlayers() {
     const gameStartedMessagePayload = getGameStartedMessagePayload(this.playersContainer);
-    this.playersContainer.getConnectedPlayers().forEach(player => {
+    this.playersContainer.getPlayers().forEach(player => {
       const message: GameStartedMessage = {
         senderId: GAME_MASTER_ID,
         recipientId: player.playerId,
@@ -324,7 +308,7 @@ export class Game {
       team2Score: this.scoreboard.team2Score
     };
 
-    this.playersContainer.getConnectedPlayers().forEach(player => {
+    this.playersContainer.getPlayers().forEach(player => {
       const gameFinishedMessage: GameFinishedMessage = {
         type: 'GAME_FINISHED',
         senderId: GAME_MASTER_ID,

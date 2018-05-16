@@ -99,48 +99,31 @@ describe('[GM] PlayersContainer', () => {
     });
   });
 
-  describe('getConnectedPlayers', () => {
+  describe('getPlayers', () => {
     it('should work when there are no players', () => {
       const container = new PlayersContainer();
 
-      expect(container.getConnectedPlayers()).toHaveLength(0);
+      expect(container.getPlayers()).toHaveLength(0);
     });
 
-    it('should return connected players', () => {
+    it('should return players', () => {
       const container = new PlayersContainer();
 
       const players = [
-        createPlayerMock({ isConnected: true }),
-        createPlayerMock({ isConnected: true }),
-        createPlayerMock({ isConnected: true }),
-        createPlayerMock({ isConnected: true }),
-        createPlayerMock({ isConnected: true }),
-        createPlayerMock({ isConnected: false })
+        createPlayerMock({ playerId: '1' }),
+        createPlayerMock({ playerId: '2' }),
+        createPlayerMock({ playerId: '3' }),
+        createPlayerMock({ playerId: '4' }),
+        createPlayerMock({ playerId: '5' })
       ];
 
       players.forEach(player => container.addPlayer(player));
 
-      const result = container.getConnectedPlayers();
+      const result = container.getPlayers();
       expect(result).toHaveLength(5);
-      expect(result).toContain(players[0]);
-      expect(result).toContain(players[4]);
-    });
-
-    it('should return an empty array when there are no connected players', () => {
-      const container = new PlayersContainer();
-
-      const players = [
-        createPlayerMock({ isConnected: false }),
-        createPlayerMock({ isConnected: false }),
-        createPlayerMock({ isConnected: false }),
-        createPlayerMock({ isConnected: false }),
-        createPlayerMock({ isConnected: false })
-      ];
-
-      players.forEach(player => container.addPlayer(player));
-
-      const result = container.getConnectedPlayers();
-      expect(result).toHaveLength(0);
+      players.forEach(player => {
+        expect(result).toContain(player);
+      });
     });
   });
 
