@@ -1,3 +1,5 @@
+import * as ajv from 'ajv';
+
 import { getMessageValidator } from './common/getMessageValidator';
 import { LoggerFactory } from './common/logging/LoggerFactory';
 
@@ -13,7 +15,15 @@ const config = require('./communication-server.config.json');
   const loggerFactory = new LoggerFactory();
   const consoleLogger = loggerFactory.createConsoleLogger();
 
-  const messageValidator = await getMessageValidator();
+  let messageValidator: ajv.ValidateFunction;
+  try {
+    messageValidator = await getMessageValidator();
+  } catch (error) {
+    consoleLogger.error('Schema compilation failed');
+    consoleLogger.error(JSON.stringify(error));
+
+    return;
+  }
 
   const communicationServer = new CommunicationServer(
     {
