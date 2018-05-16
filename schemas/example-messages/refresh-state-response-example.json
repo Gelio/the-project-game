@@ -1,0 +1,23 @@
+{
+  "type": "REFRESH_STATE_RESPONSE",
+  "senderId": "GAME_MASTER",
+  "recipientId": "579ba3c2-eb0f-47ba-9f85-680b81447e18",
+  "payload": {
+    "timestamp": 1515941821,
+    "currentPositionDistanceToClosestPiece": 4,
+    "playerPositions": [
+      {
+        "playerId": "4882732a-bb59-45cb-9dcb-a80be6cd371f",
+        "x": 5,
+        "y": 2
+      },
+      {
+        "playerId": "c6fe1177-b2b3-4909-95b4-aad7962aaada",
+        "x": 4,
+        "y": 10
+      }
+    ],
+    "team1Score": 5,
+    "team2Score": 0
+  }
+}
