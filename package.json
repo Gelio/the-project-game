@@ -6,7 +6,6 @@
     "ajv": "^6.5.0",
     "argparse": "^1.0.10",
     "blessed": "^0.1.81",
-    "csv-writer": "^1.0.0",
     "glob": "^7.1.2",
     "network-byte-order": "^0.2.0",
     "winston": "^3.0.0-rc1"
