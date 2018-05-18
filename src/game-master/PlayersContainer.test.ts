@@ -99,34 +99,6 @@ describe('[GM] PlayersContainer', () => {
     });
   });
 
-  describe('getPlayers', () => {
-    it('should work when there are no players', () => {
-      const container = new PlayersContainer();
-
-      expect(container.getPlayers()).toHaveLength(0);
-    });
-
-    it('should return players', () => {
-      const container = new PlayersContainer();
-
-      const players = [
-        createPlayerMock({ playerId: '1' }),
-        createPlayerMock({ playerId: '2' }),
-        createPlayerMock({ playerId: '3' }),
-        createPlayerMock({ playerId: '4' }),
-        createPlayerMock({ playerId: '5' })
-      ];
-
-      players.forEach(player => container.addPlayer(player));
-
-      const result = container.getPlayers();
-      expect(result).toHaveLength(5);
-      players.forEach(player => {
-        expect(result).toContain(player);
-      });
-    });
-  });
-
   describe('getPlayerById', () => {
     it('should return undefined when there are no players', () => {
       const container = new PlayersContainer();

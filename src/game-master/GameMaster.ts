@@ -189,8 +189,8 @@ export class GameMaster implements Service {
     this.logger.info(`Player ${message.payload.playerId} disconnected`);
     this.game.handlePlayerDisconnectedMessage(message);
 
-    const connectedPlayers = this.game.playersContainer.getPlayers();
-    if (connectedPlayers.length === 0) {
+    const players = this.game.playersContainer.players;
+    if (players.length === 0) {
       this.logger.info('All players disconnected');
 
       if (this.game.state === GameState.InProgress) {

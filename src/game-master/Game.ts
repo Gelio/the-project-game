@@ -290,7 +290,7 @@ export class Game {
 
   private sendGameStartedMessageToPlayers() {
     const gameStartedMessagePayload = getGameStartedMessagePayload(this.playersContainer);
-    this.playersContainer.getPlayers().forEach(player => {
+    this.playersContainer.players.forEach(player => {
       const message: GameStartedMessage = {
         senderId: GAME_MASTER_ID,
         recipientId: player.playerId,
@@ -308,7 +308,7 @@ export class Game {
       team2Score: this.scoreboard.team2Score
     };
 
-    this.playersContainer.getPlayers().forEach(player => {
+    this.playersContainer.players.forEach(player => {
       const gameFinishedMessage: GameFinishedMessage = {
         type: 'GAME_FINISHED',
         senderId: GAME_MASTER_ID,
