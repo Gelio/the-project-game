@@ -399,7 +399,17 @@ describe('[GM] Game', () => {
   });
 
   describe('handlePlayerDisconnected', () => {
-    it('should remove the player', () => {
+    it('should remove the player when the game has not started', () => {
+      const message = getPlayerDisconnectedMessage(player);
+
+      game.handlePlayerDisconnectedMessage(message);
+
+      expect(game.playersContainer.getPlayerById(player.playerId)).toBeUndefined();
+    });
+
+    it('should remove the player when the game has started', () => {
+      game.start();
+
       const message = getPlayerDisconnectedMessage(player);
 
       game.handlePlayerDisconnectedMessage(message);
