@@ -194,14 +194,17 @@ export class GameMaster implements Service {
           reason: error.message
         }
       };
-
-      this.writeCsvLog(
-        message.type,
-        message.senderId,
-        message.payload.teamId,
-        message.payload.isLeader,
-        false
-      );
+      try {
+        this.writeCsvLog(
+          message.type,
+          message.senderId,
+          message.payload.teamId,
+          message.payload.isLeader,
+          false
+        );
+      } catch (error) {
+        this.logger.error(`Could not write csv log. error:${error.message}`);
+      }
 
       return this.communicator.sendMessage(playerRejectedMessage);
     }
