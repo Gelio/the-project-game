@@ -7,10 +7,10 @@ export enum role {
 
 export interface GameLog {
   type: string;
-  senderId: EntityId;
-  teamId: number;
   timestamp: number;
+  playerId: EntityId;
+  teamId: number;
   round: number;
   role: role;
-  valid: validity;
+  valid: number;
 }

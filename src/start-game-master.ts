@@ -1,6 +1,7 @@
 import { ArgumentParser } from 'argparse';
 import * as blessed from 'blessed';
 
+import { CsvWriterFactory } from './common/logging/CsvWriterFactory';
 import { LoggerFactory } from './common/logging/LoggerFactory';
 
 import { createBlessedScreen } from './createBlessedScreen';
@@ -60,6 +61,8 @@ function parseGMArguments(): GMArguments {
     uiController = new UIController(screen, blessed.box, loggerFactory);
   }
 
-  const gameMaster = new GameMaster(config, uiController);
+  const csvWriterFactory = new CsvWriterFactory();
+
+  const gameMaster = new GameMaster(config, uiController, csvWriterFactory);
   gameMaster.init();
 })();

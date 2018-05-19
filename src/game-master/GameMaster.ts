@@ -4,8 +4,10 @@ import { LoggerInstance } from 'winston';
 import { bindObjectMethods } from '../common/bindObjectMethods';
 import { Communicator } from '../common/Communicator';
 import { createDelay } from '../common/createDelay';
-import { CsvWriter } from '../common/CsvWriter';
 import { GAME_MASTER_ID } from '../common/EntityIds';
+import { CsvWriter } from '../common/logging/CsvWriter';
+import { CsvWriterFactory } from '../common/logging/CsvWriterFactory';
+import { UITransport } from '../common/logging/UITransport';
 
 import { ActionDelays } from '../interfaces/ActionDelays';
 import { BoardSize } from '../interfaces/BoardSize';
@@ -67,9 +69,10 @@ export class GameMaster implements Service {
     PLAYER_DISCONNECTED: this.handlePlayerDisconnectedMessage
   };
 
-  constructor(options: GameMasterOptions, uiController: UIController) {
+  constructor(options: GameMasterOptions, uiController: UIController, csvWriter: CsvWriter) {
     this.options = options;
     this.uiController = uiController;
+    this.csvWriter = csvWriter;
 
     bindObjectMethods(this.messageHandlers, this);
     this.destroy = this.destroy.bind(this);
@@ -101,7 +104,11 @@ export class GameMaster implements Service {
 
     this.gameDefinition = mapOptionsToGameDefinition(this.options);
 
-    this.csvWriter = new CsvWriter(this.gameDefinition.name);
+    try {
+      this.csvWriter = this.csvWriterFactory.createCsvWriter(this.gameDefinition.name);
+    } catch (error) {
+      this.logger.error(`Failed to initialize csvWriter, error: ${error.message}`);
+    }
 
     this.createNewGame();
   }
@@ -326,20 +333,24 @@ export class GameMaster implements Service {
 
   private writeCsvLog(
     type: string,
-    senderId: string,
+    playerId: string,
     teamId: number,
     isLeader: boolean,
     valid: boolean
   ) {
     const message: GameLog = {
       type,
-      senderId,
-      valid: valid ? 1 : 0,
-      role: isLeader ? role.Leader : role.Member,
-      round: this.currentRound,
+      timestamp: Date.now(),
+      playerId: playerId,
       teamId: teamId,
-      timestamp: Date.now()
+      round: this.currentRound,
+      role: isLeader ? role.Leader : role.Member,
+      valid: valid ? 1 : 0
     };
-    this.csvWriter.logMessage(message);
+    try {
+      this.csvWriter.logMessage(message);
+    } catch (error) {
+      this.logger.error(`Failed to write log, error: ${error.message}`);
+    }
   }
 }

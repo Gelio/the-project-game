@@ -108,6 +108,7 @@ describe('[GM] Game', () => {
   let player: Player;
   let otherPlayer: Player;
   let updateUIFn: Function;
+  let writeCsvLog: Function;
 
   beforeEach(() => {
     periodicPieceGenerator = <any>createMockPeriodicPieceGenerator();
@@ -118,6 +119,7 @@ describe('[GM] Game', () => {
     loggerInstance = loggerFactory.createEmptyLogger();
 
     updateUIFn = jest.fn();
+    writeCsvLog = jest.fn();
 
     game = new Game(
       gameDefinition,
@@ -126,7 +128,8 @@ describe('[GM] Game', () => {
       communicator,
       () => periodicPieceGenerator,
       jest.fn(),
-      updateUIFn
+      updateUIFn,
+      writeCsvLog
     );
 
     player = new Player();
@@ -173,6 +176,18 @@ describe('[GM] Game', () => {
       };
 
       expect(sendIngameMessageSpy).toHaveBeenCalledWith(actionInvalidMessage);
+    });
+
+    it('should write save log about message', () => {
+      const message: DiscoveryRequest = {
+        senderId: player.playerId,
+        type: 'DISCOVERY_REQUEST',
+        payload: undefined
+      };
+
+      game.handleMessage(message);
+
+      expect(writeCsvLog).toBeCalled();
     });
 
     it('should reject message with unknown type', () => {
