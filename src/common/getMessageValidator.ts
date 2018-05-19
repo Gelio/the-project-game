@@ -39,5 +39,10 @@ function globPromise(pattern: string): Promise<string[]> {
 async function readGlobbedJSONFiles(pattern: string): Promise<object[]> {
   // Oh Haskell monad syntax, where are you (╯°□°）╯︵ ┻━┻
   // globPromise pattern >>= fmap readJSONFile
-  return globPromise(pattern).then(files => Promise.all(files.map(readJSONFile)));
+
+  return globPromise(pattern).then(files =>
+    // NOTE: `undefined` has to be used when calling `readJSONFile` in order for dependency
+    // injection to work
+    Promise.all(files.map(filePath => readJSONFile(filePath, undefined)))
+  );
 }
