@@ -52,6 +52,7 @@ export class Game {
   private readonly communicator: Communicator;
   private readonly uiController: UIController;
   private readonly updateUI: Function;
+  private readonly writeCsvLog: Function;
   private _state = GameState.Registered;
 
   public get state() {
@@ -65,7 +66,8 @@ export class Game {
     communicator: Communicator,
     periodicPieceGeneratorFactory: PeriodicPieceGeneratorFactory,
     onPointsLimitReached: Function,
-    updateUI: Function
+    updateUI: Function,
+    writeCsvLog: Function
   ) {
     this.definition = gameDefinition;
     this.board = new Board(this.definition.boardSize, this.definition.goalLimit);
@@ -75,6 +77,7 @@ export class Game {
     this.playersContainer = new PlayersContainer();
     this.communicator = communicator;
     this.updateUI = updateUI;
+    this.writeCsvLog = writeCsvLog;
     this.periodicPieceGenerator = periodicPieceGeneratorFactory(this.board);
 
     this.playerMessageHandler = new PlayerMessageHandler(
@@ -111,6 +114,8 @@ export class Game {
   }
 
   public async handleMessage(message: Message<any>) {
+    const messageSender = <Player>this.playersContainer.getPlayerById(message.senderId);
+
     const result = this.processPlayerMessage(message);
     if (!result.valid) {
       const actionInvalidMessage: ActionInvalidMessage = {
@@ -121,6 +126,14 @@ export class Game {
           reason: result.reason
         }
       };
+
+      this.writeCsvLog(
+        message.type,
+        message.senderId,
+        messageSender.teamId,
+        messageSender.isLeader,
+        false
+      );
 
       return this.sendIngameMessage(actionInvalidMessage);
     }
@@ -133,6 +146,14 @@ export class Game {
         delay: result.delay
       }
     };
+
+    this.writeCsvLog(
+      message.type,
+      message.senderId,
+      messageSender.teamId,
+      messageSender.isLeader,
+      true
+    );
 
     this.updateUI();
     this.sendIngameMessage(actionValidMessage);

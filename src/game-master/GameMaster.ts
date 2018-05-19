@@ -4,11 +4,13 @@ import { LoggerInstance } from 'winston';
 import { bindObjectMethods } from '../common/bindObjectMethods';
 import { Communicator } from '../common/Communicator';
 import { createDelay } from '../common/createDelay';
+import { CsvWriter } from '../common/CsvWriter';
 import { GAME_MASTER_ID } from '../common/EntityIds';
 
 import { ActionDelays } from '../interfaces/ActionDelays';
 import { BoardSize } from '../interfaces/BoardSize';
-import { TeamSizes } from '../interfaces/GameDefinition';
+import { GameDefinition, TeamSizes } from '../interfaces/GameDefinition';
+import { GameLog, role } from '../interfaces/GameLog';
 import { Message } from '../interfaces/Message';
 import { Service } from '../interfaces/Service';
 
@@ -51,9 +53,11 @@ export class GameMaster implements Service {
   private readonly options: GameMasterOptions;
   private communicator: Communicator;
   private game: Game;
+  private gameDefinition: GameDefinition;
 
   private readonly uiController: UIController;
   private logger: LoggerInstance;
+  private csvWriter: CsvWriter;
 
   private failedRegistrations = 0;
   private currentRound = 0;
@@ -94,6 +98,10 @@ export class GameMaster implements Service {
     this.communicator.bindListeners();
 
     this.communicator.once('close', this.handleServerDisconnection.bind(this));
+
+    this.gameDefinition = mapOptionsToGameDefinition(this.options);
+
+    this.csvWriter = new CsvWriter(this.gameDefinition.name);
 
     this.createNewGame();
   }
@@ -158,6 +166,14 @@ export class GameMaster implements Service {
       if (this.game.state === GameState.Registered) {
         this.tryStartGame();
       }
+
+      this.writeCsvLog(
+        message.type,
+        message.senderId,
+        message.payload.teamId,
+        message.payload.isLeader,
+        true
+      );
     } catch (e) {
       const error: Error = e;
 
@@ -171,6 +187,14 @@ export class GameMaster implements Service {
           reason: error.message
         }
       };
+
+      this.writeCsvLog(
+        message.type,
+        message.senderId,
+        message.payload.teamId,
+        message.payload.isLeader,
+        false
+      );
 
       return this.communicator.sendMessage(playerRejectedMessage);
     }
@@ -215,16 +239,15 @@ export class GameMaster implements Service {
       shamChance: this.options.shamChance
     };
 
-    const gameDefinition = mapOptionsToGameDefinition(this.options);
-
     this.game = new Game(
-      gameDefinition,
+      this.gameDefinition,
       this.logger,
       this.uiController,
       this.communicator,
       createPeriodicPieceGenerator(periodicPieceGeneratorOptions, this.logger),
       this.onPointsLimitReached.bind(this),
-      this.updateUI.bind(this)
+      this.updateUI.bind(this),
+      this.writeCsvLog.bind(this)
     );
     this.currentRound++;
     this.updateUI();
@@ -299,5 +322,24 @@ export class GameMaster implements Service {
       this.game.scoreboard,
       this.game.playersContainer
     );
+  }
+
+  private writeCsvLog(
+    type: string,
+    senderId: string,
+    teamId: number,
+    isLeader: boolean,
+    valid: boolean
+  ) {
+    const message: GameLog = {
+      type,
+      senderId,
+      valid: valid ? 1 : 0,
+      role: isLeader ? role.Leader : role.Member,
+      round: this.currentRound,
+      teamId: teamId,
+      timestamp: Date.now()
+    };
+    this.csvWriter.logMessage(message);
   }
 }
