@@ -134,7 +134,6 @@ describe('[GM] Game', () => {
     player.teamId = 1;
     player.isLeader = true;
     player.isBusy = false;
-    player.isConnected = true;
     game.addPlayer(player);
 
     otherPlayer = new Player();
@@ -142,7 +141,6 @@ describe('[GM] Game', () => {
     otherPlayer.teamId = 2;
     otherPlayer.isLeader = true;
     otherPlayer.isBusy = false;
-    otherPlayer.isConnected = true;
     game.addPlayer(otherPlayer);
   });
 
@@ -377,7 +375,6 @@ describe('[GM] Game', () => {
     anotherPlayer.teamId = 2;
     anotherPlayer.isLeader = true;
     anotherPlayer.isBusy = false;
-    anotherPlayer.isConnected = true;
     game.addPlayer(anotherPlayer);
 
     expect(game.playersContainer.getPlayerById(player.playerId)).toBe(player);

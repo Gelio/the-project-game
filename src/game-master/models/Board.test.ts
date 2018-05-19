@@ -135,7 +135,7 @@ describe('[GM] Board', () => {
 
     beforeEach(() => {
       player = new Player();
-      player.isBusy = player.isConnected = player.isLeader = true;
+      player.isBusy = player.isLeader = true;
       player.teamId = 1;
       player.playerId = 'player1';
     });
