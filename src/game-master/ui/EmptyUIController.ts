@@ -32,7 +32,6 @@ export class EmptyUIController implements Service, IUIController {
   }
 
   public createLogger() {
-    // TODO: add tests
     return this.loggerFactory.createConsoleLogger();
   }
 }

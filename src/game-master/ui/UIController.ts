@@ -140,7 +140,6 @@ export class UIController implements Service, IUIController {
   }
 
   public createLogger() {
-    // TODO: add tests
     const uiTransport = new UITransport(this.log);
 
     return this.loggerFactory.createLogger([uiTransport]);

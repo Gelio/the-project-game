@@ -113,6 +113,32 @@ describe('[GM] UIController', () => {
     });
   });
 
+  describe('createLogger', () => {
+    it('should create a logger', () => {
+      const logger = uiController.createLogger();
+
+      expect(logger).toBeDefined();
+    });
+
+    describe('after init', () => {
+      beforeEach(() => {
+        uiController.init();
+      });
+
+      it('should create a logger that pushes and scrolls in the logs box', () => {
+        const logsBox = findBox('Logs');
+
+        const logger = uiController.createLogger();
+
+        logger.error('test');
+
+        const pushLineArgument: string = (<jest.Mock>logsBox.pushLine).mock.calls[0][0];
+        expect(pushLineArgument.includes('test')).toBe(true);
+        expect(logsBox.setScrollPerc).toHaveBeenCalledWith(100);
+      });
+    });
+  });
+
   describe('updateBoard', () => {
     let board: Board;
 
