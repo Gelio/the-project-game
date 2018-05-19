@@ -121,7 +121,6 @@ function handlePlaceDownOnTeamAreaTile(
   };
 }
 
-// TODO: test if `onPointsLimitReached` is called
 export function handlePlaceDownPieceRequest(
   dependencies: MessageHandlerDependencies,
   sender: Player,

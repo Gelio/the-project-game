@@ -37,6 +37,7 @@ describe('[GM] handlePlaceDownPiece', () => {
   let piece: Piece;
   let scoreboard: Scoreboard;
   let logger: LoggerInstance;
+  let onPointsLimitReached: jest.Mock;
 
   beforeEach(() => {
     board = new Board(
@@ -69,6 +70,8 @@ describe('[GM] handlePlaceDownPiece', () => {
 
     scoreboard = new Scoreboard(5);
 
+    onPointsLimitReached = jest.fn();
+
     logger = loggerFactory.createEmptyLogger();
     jest.useFakeTimers();
   });
@@ -86,7 +89,7 @@ describe('[GM] handlePlaceDownPiece', () => {
         logger,
         scoreboard,
         sendMessage: jest.fn(),
-        onPointsLimitReached: jest.fn()
+        onPointsLimitReached
       },
       player,
       <any>{}
@@ -305,7 +308,15 @@ describe('[GM] handlePlaceDownPiece', () => {
           expect(scoreboard.team2Score).toBe(1);
         });
 
-        // TODO: add a test for a win condition
+        it('should detect a winning condition', () => {
+          player.teamId = 1;
+          scoreboard.team1Score = scoreboard.scoreLimit - 1;
+
+          executeHandler();
+
+          expect(onPointsLimitReached).toHaveBeenCalled();
+          expect(onPointsLimitReached).toHaveBeenCalledTimes(1);
+        });
       });
 
       describe('and tile does have a completed goal', () => {
