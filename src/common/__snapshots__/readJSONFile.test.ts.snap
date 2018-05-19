@@ -1,0 +1,5 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`readJSONFile should reject with an error when parsing the file fails 1`] = `[SyntaxError: Unexpected token o in JSON at position 1]`;
+
+exports[`readJSONFile should reject with an error when reading the file fails 1`] = `[Error: test]`;
