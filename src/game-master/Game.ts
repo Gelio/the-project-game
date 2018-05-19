@@ -127,13 +127,17 @@ export class Game {
         }
       };
 
-      this.writeCsvLog(
-        message.type,
-        message.senderId,
-        messageSender.teamId,
-        messageSender.isLeader,
-        false
-      );
+      if (messageSender) {
+        this.writeCsvLog(
+          message.type,
+          message.senderId,
+          messageSender.teamId,
+          messageSender.isLeader,
+          false
+        );
+      } else {
+        this.logger.warn('Could not write csv log, invalid senderId');
+      }
 
       return this.sendIngameMessage(actionInvalidMessage);
     }
