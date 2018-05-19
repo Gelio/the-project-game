@@ -89,8 +89,6 @@ describe('[CS] Player', () => {
     expect(logger.warn).toHaveBeenCalled();
   });
 
-  // TODO: add tests for message validation
-
   describe('destroy', () => {
     it('should unregister the player from MessageRouter', () => {
       jest.spyOn(messageRouter, 'unregisterPlayerCommunicator');
