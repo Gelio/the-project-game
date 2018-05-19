@@ -11,9 +11,11 @@ import { Scoreboard } from '../models/Scoreboard';
 
 import { BoardFormatter } from './BoardFormatter';
 
+import { UIController as IUIController } from './IUIController';
+
 export type BoxFactoryFn = (options: blessed.Widgets.BoxOptions) => blessed.Widgets.BoxElement;
 
-export class UIController implements Service {
+export class UIController implements Service, IUIController {
   private readonly screen: blessed.Widgets.Screen;
   private readonly boardFormatter: BoardFormatter;
   private readonly boxFactoryFn: BoxFactoryFn;
