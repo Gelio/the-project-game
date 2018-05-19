@@ -2,6 +2,7 @@ import * as blessed from 'blessed';
 
 import { UIController } from './UIController';
 
+import { LoggerFactory } from '../../common/logging/LoggerFactory';
 import { Point } from '../../common/Point';
 
 import { GameMasterOptions } from '../GameMaster';
@@ -15,6 +16,7 @@ import { Scoreboard } from '../models/Scoreboard';
 describe('[GM] UIController', () => {
   let boxes: blessed.Widgets.BoxElement[];
   let screen: blessed.Widgets.Screen;
+  let loggerFactory: LoggerFactory;
   let uiController: UIController;
 
   function createMockScreen(): blessed.Widgets.Screen {
@@ -43,7 +45,10 @@ describe('[GM] UIController', () => {
   beforeEach(() => {
     boxes = [];
     screen = createMockScreen();
-    uiController = new UIController(screen, createMockBox);
+
+    loggerFactory = new LoggerFactory();
+
+    uiController = new UIController(screen, createMockBox, loggerFactory);
   });
 
   describe('init', () => {
@@ -105,23 +110,6 @@ describe('[GM] UIController', () => {
       uiController.render();
 
       expect(screen.render).toHaveBeenCalled();
-    });
-  });
-
-  describe('log', () => {
-    beforeEach(() => {
-      uiController.init();
-    });
-
-    it('should push and scroll in the logs box', () => {
-      const logsBox = findBox('Logs');
-      spyOn(logsBox, 'pushLine');
-      spyOn(logsBox, 'setScrollPerc');
-
-      uiController.log('test');
-
-      expect(logsBox.pushLine).toHaveBeenCalledWith('test');
-      expect(logsBox.setScrollPerc).toHaveBeenCalledWith(100);
     });
   });
 

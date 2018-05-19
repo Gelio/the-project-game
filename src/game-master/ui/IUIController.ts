@@ -1,3 +1,5 @@
+import { LoggerInstance } from 'winston';
+
 import { Board } from '../models/Board';
 import { Scoreboard } from '../models/Scoreboard';
 
@@ -6,10 +8,13 @@ import { PlayersContainer } from '../PlayersContainer';
 
 export interface UIController {
   init(): void;
+
   destroy(): void;
+
   render(): void;
-  log(lines: string | string[]): void;
+
   updateBoard(board: Board): void;
+
   updateGameInfo(
     currentRound: number,
     gameMasterOptions: GameMasterOptions,
@@ -17,4 +22,6 @@ export interface UIController {
     scoreboard: Scoreboard,
     playersContainer: PlayersContainer
   ): void;
+
+  createLogger(): LoggerInstance;
 }

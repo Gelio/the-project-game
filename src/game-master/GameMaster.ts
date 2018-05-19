@@ -5,8 +5,6 @@ import { bindObjectMethods } from '../common/bindObjectMethods';
 import { Communicator } from '../common/Communicator';
 import { createDelay } from '../common/createDelay';
 import { GAME_MASTER_ID } from '../common/EntityIds';
-import { LoggerFactory } from '../common/logging/LoggerFactory';
-import { UITransport } from '../common/logging/UITransport';
 
 import { ActionDelays } from '../interfaces/ActionDelays';
 import { BoardSize } from '../interfaces/BoardSize';
@@ -55,7 +53,6 @@ export class GameMaster implements Service {
   private game: Game;
 
   private readonly uiController: UIController;
-  private readonly loggerFactory: LoggerFactory;
   private logger: LoggerInstance;
 
   private failedRegistrations = 0;
@@ -66,14 +63,9 @@ export class GameMaster implements Service {
     PLAYER_DISCONNECTED: this.handlePlayerDisconnectedMessage
   };
 
-  constructor(
-    options: GameMasterOptions,
-    uiController: UIController,
-    loggerFactory: LoggerFactory
-  ) {
+  constructor(options: GameMasterOptions, uiController: UIController) {
     this.options = options;
     this.uiController = uiController;
-    this.loggerFactory = loggerFactory;
 
     bindObjectMethods(this.messageHandlers, this);
     this.destroy = this.destroy.bind(this);
@@ -128,8 +120,7 @@ export class GameMaster implements Service {
       throw new Error('Cannot create logger without UI controller');
     }
 
-    const uiTransport = new UITransport(this.uiController.log.bind(this.uiController));
-    this.logger = this.loggerFactory.createLogger([uiTransport]);
+    this.logger = this.uiController.createLogger();
     registerUncaughtExceptionHandler(this.logger);
     this.logger.info('Logger initialized');
   }
