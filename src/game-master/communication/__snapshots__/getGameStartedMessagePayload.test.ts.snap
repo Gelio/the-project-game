@@ -1,0 +1,24 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`getGameStartedMessagePayload should generate a message matching snapshot 1`] = `
+Object {
+  "teamInfo": Object {
+    "1": Object {
+      "leaderId": "p1",
+      "players": Array [
+        "p1",
+      ],
+    },
+    "2": Object {
+      "leaderId": "p2",
+      "players": Array [
+        "p2",
+      ],
+    },
+  },
+}
+`;
+
+exports[`getGameStartedMessagePayload should should throw an error when there is no leader from team 1 1`] = `"Game cannot start without both leaders"`;
+
+exports[`getGameStartedMessagePayload should should throw an error when there is no leader from team 2 1`] = `"Game cannot start without both leaders"`;

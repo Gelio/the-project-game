@@ -33,12 +33,12 @@ import { PlayerMessageHandler } from './game-logic/PlayerMessageHandler';
 
 import { Communicator } from '../common/Communicator';
 import { COMMUNICATION_SERVER_ID, GAME_MASTER_ID } from '../common/EntityIds';
-import { getGameStartedMessagePayload } from '../common/getGameStartedMessagePayload';
 
 import { PeriodicPieceGeneratorFactory } from './board-generation/createPeriodicPieceGenerator';
 import { PeriodicPieceGenerator } from './board-generation/PeriodicPieceGenerator';
 
 import { CommunicationRequestsStore } from './communication/CommunicationRequestsStore';
+import { getGameStartedMessagePayload } from './communication/getGameStartedMessagePayload';
 
 export class Game {
   public board: Board;
