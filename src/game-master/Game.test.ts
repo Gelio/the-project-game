@@ -178,7 +178,7 @@ describe('[GM] Game', () => {
       expect(sendIngameMessageSpy).toHaveBeenCalledWith(actionInvalidMessage);
     });
 
-    it('should write save log about message', () => {
+    it('should save csv log', () => {
       const message: DiscoveryRequest = {
         senderId: player.playerId,
         type: 'DISCOVERY_REQUEST',
