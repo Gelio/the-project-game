@@ -27,7 +27,6 @@ function getSurroundingTiles(playerPosition: Point, board: Board): TileInfo[] {
         y: y,
         playerId: tile.player ? tile.player.playerId : null,
         piece: !!tile.piece,
-        // FIXME: do not provide distance on TeamAreaTiles
         distanceToClosestPiece: board.getDistanceToClosestPiece(new Point(tile.x, tile.y))
       });
     }
