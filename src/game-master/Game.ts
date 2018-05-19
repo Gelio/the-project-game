@@ -180,23 +180,14 @@ export class Game {
   }
 
   public handlePlayerDisconnectedMessage(message: PlayerDisconnectedMessage) {
-    // NOTE: it is possible that the player should be removed from the board
     const disconnectedPlayer = this.playersContainer.getPlayerById(message.payload.playerId);
-
-    if (this.state === GameState.Registered) {
-      if (disconnectedPlayer) {
-        this.removePlayer(disconnectedPlayer);
-        this.uiController.updateBoard(this.board);
-      }
-
-      return;
-    }
 
     if (!disconnectedPlayer) {
       return;
     }
 
-    disconnectedPlayer.isConnected = false;
+    this.removePlayer(disconnectedPlayer);
+    this.uiController.updateBoard(this.board);
   }
 
   public removePlayer(disconnectedPlayer: Player) {
