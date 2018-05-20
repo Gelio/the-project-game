@@ -1,8 +1,9 @@
 import * as ajv from 'ajv';
 import { ArgumentParser } from 'argparse';
 
-import { getMessageValidator } from './common/getMessageValidator';
 import { LoggerFactory } from './common/logging/LoggerFactory';
+import { getMessageValidator } from './common/validation/getMessageValidator';
+import { validateJSON } from './common/validation/validateJSON';
 
 import { CommunicationServer } from './communication-server/CommunicationServer';
 import { MessageRouter } from './communication-server/MessageRouter';
@@ -12,8 +13,10 @@ import { CSArguments } from './interfaces/arguments/CSArguments';
 import { addSharedArguments } from './arguments/addSharedArguments';
 import { getLogLevel } from './arguments/getLogLevel';
 
-// tslint:disable-next-line:no-require-imports no-var-requires
+// tslint:disable no-require-imports no-var-requires
 const config = require('./communication-server.config.json');
+const csConfigSchema = require('../schemas/configs/communication-server-config.json');
+// tslint:enable no-require-imports no-var-requires
 
 function parseCSArguments(): CSArguments {
   const parser = new ArgumentParser({
@@ -34,6 +37,15 @@ function parseCSArguments(): CSArguments {
   loggerFactory.logLevel = getLogLevel(parsedArguments);
 
   const consoleLogger = loggerFactory.createConsoleLogger();
+
+  try {
+    await validateJSON(csConfigSchema, config);
+  } catch (error) {
+    consoleLogger.error('Communication Server config is invalid');
+    consoleLogger.error(JSON.stringify(error, null, 2));
+
+    return;
+  }
 
   let messageValidator: ajv.ValidateFunction;
   try {
