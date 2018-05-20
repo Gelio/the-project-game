@@ -32,13 +32,13 @@
       "type": "object",
       "properties": {
         "x": {
-          "$ref": "common/common-defs.json#/definitions/positiveInteger"
+          "$ref": "../common/common-defs.json#/definitions/positiveInteger"
         },
         "taskArea": {
-          "$ref": "common/common-defs.json#/definitions/positiveInteger"
+          "$ref": "../common/common-defs.json#/definitions/positiveInteger"
         },
         "goalArea": {
-          "$ref": "common/common-defs.json#/definitions/positiveInteger"
+          "$ref": "../common/common-defs.json#/definitions/positiveInteger"
         }
       },
       "required": ["x", "taskArea", "goalArea"]
