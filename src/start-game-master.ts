@@ -14,8 +14,9 @@ import { GMArguments } from './interfaces/arguments/GMArguments';
 
 import { addSharedArguments } from './arguments/addSharedArguments';
 import { getLogLevel } from './arguments/getLogLevel';
+import { validateGameMasterConfig } from './game-master/validation/validateGameMasterConfig';
 
-// tslint:disable-next-line:no-require-imports no-var-requires
+// tslint:disable-next-line no-require-imports no-var-requires
 const config = require('./game-master.config.json');
 
 function parseGMArguments(): GMArguments {
@@ -30,18 +31,35 @@ function parseGMArguments(): GMArguments {
   return parser.parseArgs();
 }
 
-const parsedArguments = parseGMArguments();
+(async () => {
+  const parsedArguments = parseGMArguments();
 
-const loggerFactory = new LoggerFactory();
-loggerFactory.logLevel = getLogLevel(parsedArguments);
+  const loggerFactory = new LoggerFactory();
+  loggerFactory.logLevel = getLogLevel(parsedArguments);
 
-let uiController: IUIController;
-if (parsedArguments.no_ui) {
-  uiController = new EmptyUIController(loggerFactory);
-} else {
-  const screen = createBlessedScreen();
-  uiController = new UIController(screen, blessed.box, loggerFactory);
-}
+  try {
+    await validateGameMasterConfig(config);
+  } catch (error) {
+    const logger = loggerFactory.createConsoleLogger();
 
-const gameMaster = new GameMaster(config, uiController);
-gameMaster.init();
+    logger.error('Game Master configuration error');
+    if (error instanceof Error) {
+      logger.error(error.message);
+    } else {
+      logger.error(JSON.stringify(error, null, 2));
+    }
+
+    return;
+  }
+
+  let uiController: IUIController;
+  if (parsedArguments.no_ui) {
+    uiController = new EmptyUIController(loggerFactory);
+  } else {
+    const screen = createBlessedScreen();
+    uiController = new UIController(screen, blessed.box, loggerFactory);
+  }
+
+  const gameMaster = new GameMaster(config, uiController);
+  gameMaster.init();
+})();
