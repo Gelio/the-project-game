@@ -1,7 +1,6 @@
 import { ArgumentParser } from 'argparse';
 import * as blessed from 'blessed';
 
-import { CsvWriterFactory } from './common/logging/CsvWriterFactory';
 import { LoggerFactory } from './common/logging/LoggerFactory';
 
 import { createBlessedScreen } from './createBlessedScreen';
@@ -15,7 +14,11 @@ import { GMArguments } from './interfaces/arguments/GMArguments';
 
 import { addSharedArguments } from './arguments/addSharedArguments';
 import { getLogLevel } from './arguments/getLogLevel';
+<<<<<<< HEAD
 import { validateGameMasterConfig } from './game-master/validation/validateGameMasterConfig';
+=======
+import { CsvWriter } from './common/logging/CsvWriter';
+>>>>>>> [GM] remove CsvLogFactory
 
 // tslint:disable-next-line no-require-imports no-var-requires
 const config = require('./game-master.config.json');
@@ -53,6 +56,7 @@ function parseGMArguments(): GMArguments {
     return;
   }
 
+<<<<<<< HEAD
   let uiController: IUIController;
   if (parsedArguments.no_ui) {
     uiController = new EmptyUIController(loggerFactory);
@@ -61,8 +65,16 @@ function parseGMArguments(): GMArguments {
     uiController = new UIController(screen, blessed.box, loggerFactory);
   }
 
-  const csvWriterFactory = new CsvWriterFactory();
+  const csvWriter = new CsvWriter(config.gameName);
 
-  const gameMaster = new GameMaster(config, uiController, csvWriterFactory);
+  const gameMaster = new GameMaster(config, uiController, csvWriter);
   gameMaster.init();
 })();
+=======
+let csvWriter;
+
+csvWriter = new CsvWriter(config.gameName);
+
+const gameMaster = new GameMaster(config, uiController, csvWriter);
+gameMaster.init();
+>>>>>>> [GM] remove CsvLogFactory
