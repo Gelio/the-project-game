@@ -42,7 +42,11 @@ function parseCSArguments(): CSArguments {
     await validateJSON(csConfigSchema, config);
   } catch (error) {
     consoleLogger.error('Communication Server config is invalid');
-    consoleLogger.error(JSON.stringify(error, null, 2));
+    if (error instanceof Error) {
+      consoleLogger.error(error.message);
+    } else {
+      consoleLogger.error(JSON.stringify(error, null, 2));
+    }
 
     return;
   }
