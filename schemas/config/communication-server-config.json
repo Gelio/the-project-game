@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://the-project-game.net/schema/communication-server-config.json",
+
+  "type": "object",
+  "title": "CommunicationServerConfig",
+
+  "properties": {
+    "hostname": {
+      "type": "string",
+      "pattern": "^([0-9]{1,3}.){3}[0-9]{1,3}$"
+    },
+    "port": {
+      "type": "string",
+      "pattern": "^[0-9]{4}$"
+    }
+  },
+  "required": ["hostname", "port"]
+}
