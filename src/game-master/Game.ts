@@ -32,7 +32,7 @@ import { UIController } from './ui/IUIController';
 import { PlayerMessageHandler } from './game-logic/PlayerMessageHandler';
 
 import { Communicator } from '../common/Communicator';
-import { COMMUNICATION_SERVER_ID, GAME_MASTER_ID } from '../common/EntityIds';
+import { COMMUNICATION_SERVER_ID, GAME_MASTER_ID, PlayerId } from '../common/EntityIds';
 
 import { PeriodicPieceGeneratorFactory } from './board-generation/createPeriodicPieceGenerator';
 import { PeriodicPieceGenerator } from './board-generation/PeriodicPieceGenerator';
@@ -52,7 +52,7 @@ export class Game {
   private readonly communicator: Communicator;
   private readonly uiController: UIController;
   private readonly updateUI: Function;
-  private readonly writeCsvLog: Function;
+  private readonly writeCsvLog: (message: Message<any>, playerId: PlayerId, valid: boolean) => any;
   private _state = GameState.Registered;
 
   public get state() {
@@ -67,7 +67,7 @@ export class Game {
     periodicPieceGeneratorFactory: PeriodicPieceGeneratorFactory,
     onPointsLimitReached: Function,
     updateUI: Function,
-    writeCsvLog: Function
+    writeCsvLog: (message: Message<any>, playerId: PlayerId, valid: boolean) => any
   ) {
     this.definition = gameDefinition;
     this.board = new Board(this.definition.boardSize, this.definition.goalLimit);
