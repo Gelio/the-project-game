@@ -1,0 +1,101 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://the-project-game.net/schema/game-master-config.json",
+
+  "type": "object",
+  "title": "GameMasterConfig",
+
+  "properties": {
+    "serverHostname": {
+      "type": "string",
+      "pattern": "^localhost|([0-9]{1,3}.){3}[0-9]{1,3}$"
+    },
+    "serverPort": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65535
+    },
+    "gameName": {
+      "type": "string"
+    },
+    "gameDescription": {
+      "type": "string"
+    },
+    "gamesLimit": {
+      "$ref": "common/common-defs.json#/definitions/positiveInteger"
+    },
+    "teamSizes": {
+      "type": "object",
+      "properties": {
+        "1": {
+          "$ref": "common/common-defs.json#/definitions/positiveInteger"
+        },
+        "2": {
+          "$ref": "common/common-defs.json#/definitions/positiveInteger"
+        }
+      },
+      "required": ["1", "2"]
+    },
+    "pointsLimit": {
+      "$ref": "common/common-defs.json#/definitions/positiveInteger"
+    },
+    "boardSize": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "$ref": "common/common-defs.json#/definitions/positiveInteger"
+        },
+        "taskArea": {
+          "$ref": "common/common-defs.json#/definitions/positiveInteger"
+        },
+        "goalArea": {
+          "$ref": "common/common-defs.json#/definitions/positiveInteger"
+        }
+      },
+      "required": ["x", "taskArea", "goalArea"]
+    },
+    "shamChance": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "generatePiecesInterval": {
+      "$ref": "common/common-defs.json#/definitions/positiveInteger"
+    },
+    "piecesLimit": {
+      "$ref": "common/common-defs.json#/definitions/positiveInteger"
+    },
+    "resultFileName": {
+      "type": "string"
+    },
+    "actionDelays": {
+      "$ref": "common/action-delays.json#"
+    },
+    "timeout": {
+      "$ref": "common/common-defs.json#/definitions/positiveInteger"
+    },
+    "registrationTriesLimit": {
+      "$ref": "common/common-defs.json#/definitions/positiveInteger"
+    },
+    "registerGameInterval": {
+      "$ref": "common/common-defs.json#/definitions/positiveInteger"
+    }
+  },
+  "required": [
+    "serverHostname",
+    "serverPort",
+    "gameName",
+    "gamesLimit",
+    "teamSizes",
+    "pointsLimit",
+    "boardSize",
+    "shamChance",
+    "generatePiecesInterval",
+    "piecesLimit",
+    "resultFileName",
+    "actionDelays",
+    "timeout",
+    "registrationTriesLimit",
+    "registerGameInterval"
+  ]
+}

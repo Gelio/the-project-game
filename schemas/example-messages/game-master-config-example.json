@@ -1,0 +1,36 @@
+{
+  "$schema": "../game-master-config.json",
+
+  "serverHostname": "localhost",
+  "serverPort": 4200,
+  "gameName": "the project game",
+  "gameDescription": "High sham chance, many pieces",
+  "gamesLimit": 2,
+  "teamSizes": {
+    "1": 1,
+    "2": 1
+  },
+  "pointsLimit": 1,
+  "boardSize": {
+    "x": 4,
+    "taskArea": 3,
+    "goalArea": 2
+  },
+  "shamChance": 0.8,
+  "generatePiecesInterval": 3000,
+  "piecesLimit": 5,
+  "resultFileName": "result.json",
+  "actionDelays": {
+    "move": 350,
+    "pick": 1000,
+    "discover": 500,
+    "destroy": 2000,
+    "test": 3000,
+    "communicationRequest": 5000,
+    "communicationAccept": 5000,
+    "place": 1000
+  },
+  "timeout": 10000,
+  "registrationTriesLimit": 5,
+  "registerGameInterval": 10000
+}
