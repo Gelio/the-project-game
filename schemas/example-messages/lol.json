@@ -1,0 +1,207 @@
+{
+  "$schema": "../positive-communication-response-asked-gm.json",
+  "type": "COMMUNICATION_RESPONSE",
+  "senderId": "6597541f-eb04-4841-b488-812dfa0b13da",
+  "payload": {
+    "targetPlayerId": "3803ce34-e1ae-4336-9270-15f753a9c8a0",
+    "accepted": true,
+    "board": [
+      {
+        "piece": null,
+        "distanceToPiece": 0,
+        "hasCompletedGoal": false,
+        "playerId": null,
+        "timeStamp": 1526902654993
+      },
+      {
+        "piece": null,
+        "distanceToPiece": 0,
+        "hasCompletedGoal": false,
+        "playerId": null,
+        "timeStamp": 1526902654993
+      },
+      {
+        "piece": null,
+        "distanceToPiece": 0,
+        "hasCompletedGoal": false,
+        "playerId": null,
+        "timeStamp": 0
+      },
+      {
+        "piece": null,
+        "distanceToPiece": 0,
+        "hasCompletedGoal": false,
+        "playerId": "3803ce34-e1ae-4336-9270-15f753a9c8a0",
+        "timeStamp": 1526902656430
+      },
+      {
+        "piece": null,
+        "distanceToPiece": 0,
+        "hasCompletedGoal": false,
+        "playerId": "6597541f-eb04-4841-b488-812dfa0b13da",
+        "timeStamp": 1526902661838
+      },
+      {
+        "piece": null,
+        "distanceToPiece": 0,
+        "hasCompletedGoal": false,
+        "playerId": null,
+        "timeStamp": 1526902654993
+      },
+      {
+        "piece": null,
+        "distanceToPiece": 0,
+        "hasCompletedGoal": false,
+        "playerId": null,
+        "timeStamp": 0
+      },
+      {
+        "piece": null,
+        "distanceToPiece": 0,
+        "hasCompletedGoal": false,
+        "playerId": null,
+        "timeStamp": 0
+      },
+      {
+        "piece": null,
+        "distanceToPiece": 0,
+        "hasCompletedGoal": false,
+        "playerId": null,
+        "timeStamp": 1526902656430
+      },
+      {
+        "piece": null,
+        "distanceToPiece": 0,
+        "hasCompletedGoal": false,
+        "playerId": null,
+        "timeStamp": 1526902654993
+      },
+      {
+        "piece": null,
+        "distanceToPiece": 0,
+        "hasCompletedGoal": false,
+        "playerId": "3803ce34-e1ae-4336-9270-15f753a9c8a0",
+        "timeStamp": 1526902661838
+      },
+      {
+        "piece": null,
+        "distanceToPiece": 0,
+        "hasCompletedGoal": false,
+        "playerId": null,
+        "timeStamp": 0
+      },
+      {
+        "piece": null,
+        "distanceToPiece": 0,
+        "hasCompletedGoal": false,
+        "playerId": null,
+        "timeStamp": 0
+      },
+      {
+        "piece": null,
+        "distanceToPiece": 0,
+        "hasCompletedGoal": false,
+        "playerId": null,
+        "timeStamp": 0
+      },
+      {
+        "piece": null,
+        "distanceToPiece": 0,
+        "hasCompletedGoal": false,
+        "playerId": null,
+        "timeStamp": 0
+      },
+      {
+        "piece": null,
+        "distanceToPiece": 0,
+        "hasCompletedGoal": false,
+        "playerId": "cc5bc3d1-8da9-4647-ba80-765c28da8827",
+        "timeStamp": 1526902661838
+      },
+      {
+        "piece": null,
+        "distanceToPiece": 0,
+        "hasCompletedGoal": false,
+        "playerId": null,
+        "timeStamp": 0
+      },
+      {
+        "piece": null,
+        "distanceToPiece": 0,
+        "hasCompletedGoal": false,
+        "playerId": "d433c821-f523-4cf2-9b20-8d74bda396f1",
+        "timeStamp": 1526902661838
+      },
+      {
+        "piece": null,
+        "distanceToPiece": 0,
+        "hasCompletedGoal": false,
+        "playerId": null,
+        "timeStamp": 0
+      },
+      {
+        "piece": null,
+        "distanceToPiece": 0,
+        "hasCompletedGoal": false,
+        "playerId": "cc5bc3d1-8da9-4647-ba80-765c28da8827",
+        "timeStamp": 1526902656430
+      },
+      {
+        "piece": null,
+        "distanceToPiece": 0,
+        "hasCompletedGoal": false,
+        "playerId": null,
+        "timeStamp": 0
+      },
+      {
+        "piece": null,
+        "distanceToPiece": 0,
+        "hasCompletedGoal": false,
+        "playerId": "d433c821-f523-4cf2-9b20-8d74bda396f1",
+        "timeStamp": 1526902656430
+      },
+      {
+        "piece": null,
+        "distanceToPiece": 0,
+        "hasCompletedGoal": false,
+        "playerId": null,
+        "timeStamp": 0
+      },
+      {
+        "piece": null,
+        "distanceToPiece": 0,
+        "hasCompletedGoal": false,
+        "playerId": "cc5bc3d1-8da9-4647-ba80-765c28da8827",
+        "timeStamp": 1526902655397
+      },
+      {
+        "piece": null,
+        "distanceToPiece": 0,
+        "hasCompletedGoal": false,
+        "playerId": null,
+        "timeStamp": 0
+      },
+      {
+        "piece": null,
+        "distanceToPiece": 0,
+        "hasCompletedGoal": false,
+        "playerId": null,
+        "timeStamp": 0
+      },
+      {
+        "piece": null,
+        "distanceToPiece": 0,
+        "hasCompletedGoal": false,
+        "playerId": null,
+        "timeStamp": 0
+      },
+      {
+        "piece": null,
+        "distanceToPiece": 0,
+        "hasCompletedGoal": false,
+        "playerId": "cc5bc3d1-8da9-4647-ba80-765c28da8827",
+        "timeStamp": 1526902654471
+      }
+    ]
+  }
+}
