@@ -15,11 +15,13 @@ export class GameLogsCsvWriter implements Service {
   private readonly fileName: string;
   private readonly fileNameWithExtension: string;
   private fileDescriptor: number = -1;
+  private readonly logsDirectory: string;
 
   constructor(gameName: string) {
     try {
       const safeGameName = sanitize(gameName);
-      this.fileName = `${config.logsDirectory}/${safeGameName}`;
+      this.logsDirectory = sanitize(config.logsDirectory);
+      this.fileName = `${this.logsDirectory}/${safeGameName}`;
       this.fileNameWithExtension = `${this.fileName}.${config.logsExtension}`;
     } catch {
       this.fileName = 'Invalid config';
@@ -74,12 +76,12 @@ export class GameLogsCsvWriter implements Service {
 
   private createLogsDirectory() {
     try {
-      if (!existsSync(config.logsDirectory)) {
-        mkdirSync(config.logsDirectory);
+      if (!existsSync(this.logsDirectory)) {
+        mkdirSync(this.logsDirectory);
       }
     } catch (error) {
       throw new Error(
-        `Failed to create logs directory ${config.logsDirectory}. Error code: ${error.code}`
+        `Failed to create logs directory ${this.logsDirectory}. Error code: ${error.code}`
       );
     }
   }
@@ -91,7 +93,7 @@ export class GameLogsCsvWriter implements Service {
         const currentDate = new Date();
         newFileName = `${
           this.fileName
-        }-${currentDate.toLocaleDateString()}-${currentDate.toLocaleTimeString()}${
+        }-${currentDate.toLocaleDateString()}-${currentDate.toLocaleTimeString()}.${
           config.logsExtension
         }`;
         newFileName = newFileName.split(':').join('-');
