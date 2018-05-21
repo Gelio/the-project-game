@@ -114,8 +114,6 @@ export class Game {
   }
 
   public async handleMessage(message: Message<any>) {
-    const messageSender = <Player>this.playersContainer.getPlayerById(message.senderId);
-
     const result = this.processPlayerMessage(message);
     if (!result.valid) {
       const actionInvalidMessage: ActionInvalidMessage = {
@@ -127,17 +125,7 @@ export class Game {
         }
       };
 
-      if (messageSender) {
-        this.writeCsvLog(
-          message.type,
-          message.senderId,
-          messageSender.teamId,
-          messageSender.isLeader,
-          false
-        );
-      } else {
-        this.logger.warn('Could not write csv log, invalid senderId');
-      }
+      this.writeCsvLog(message, message.senderId, false);
 
       return this.sendIngameMessage(actionInvalidMessage);
     }
@@ -151,13 +139,7 @@ export class Game {
       }
     };
 
-    this.writeCsvLog(
-      message.type,
-      message.senderId,
-      messageSender.teamId,
-      messageSender.isLeader,
-      true
-    );
+    this.writeCsvLog(message, message.senderId, true);
 
     this.updateUI();
     this.sendIngameMessage(actionValidMessage);

@@ -10,6 +10,7 @@ import { BoardSize } from '../interfaces/BoardSize';
 import { Direction } from '../interfaces/Direction';
 import { GameDefinition } from '../interfaces/GameDefinition';
 
+import { Message } from '../interfaces/Message';
 import { ActionInvalidMessage } from '../interfaces/messages/ActionInvalidMessage';
 import { ActionValidMessage } from '../interfaces/messages/ActionValidMessage';
 import { GameFinishedMessage } from '../interfaces/messages/GameFinishedMessage';
@@ -108,7 +109,7 @@ describe('[GM] Game', () => {
   let player: Player;
   let otherPlayer: Player;
   let updateUIFn: Function;
-  let writeCsvLog: Function;
+  let writeCsvLog: (message: Message<any>, playerId: PlayerId, valid: boolean) => any;
 
   beforeEach(() => {
     periodicPieceGenerator = <any>createMockPeriodicPieceGenerator();
