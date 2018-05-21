@@ -16,8 +16,13 @@ export class GameLogsCsvWriter implements Service {
   private fileDescriptor: number = -1;
 
   constructor(gameName: string) {
-    this.fileName = `${config.logsDirectory}/${gameName}`;
-    this.fileNameWithExtension = `${this.fileName}.${config.logsExtension}`;
+    try {
+      this.fileName = `${config.logsDirectory}/${gameName}`;
+      this.fileNameWithExtension = `${this.fileName}.${config.logsExtension}`;
+    } catch {
+      this.fileName = 'Invalid config';
+      this.fileNameWithExtension = 'csv';
+    }
   }
 
   public async init(): Promise<any> {

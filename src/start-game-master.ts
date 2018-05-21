@@ -1,6 +1,7 @@
 import { ArgumentParser } from 'argparse';
 import * as blessed from 'blessed';
 
+import { GameLogsCsvWriter } from './common/logging/GameLogsCsvWriter';
 import { LoggerFactory } from './common/logging/LoggerFactory';
 
 import { createBlessedScreen } from './createBlessedScreen';
@@ -15,10 +16,13 @@ import { GMArguments } from './interfaces/arguments/GMArguments';
 import { addSharedArguments } from './arguments/addSharedArguments';
 import { getLogLevel } from './arguments/getLogLevel';
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { validateGameMasterConfig } from './game-master/validation/validateGameMasterConfig';
 =======
 import { CsvWriter } from './common/logging/CsvWriter';
 >>>>>>> [GM] remove CsvLogFactory
+=======
+>>>>>>> [GM] check if config exists
 
 // tslint:disable-next-line no-require-imports no-var-requires
 const config = require('./game-master.config.json');
@@ -67,14 +71,26 @@ function parseGMArguments(): GMArguments {
 
   const csvWriter = new CsvWriter(config.gameName);
 
+<<<<<<< HEAD
   const gameMaster = new GameMaster(config, uiController, csvWriter);
   gameMaster.init();
 })();
 =======
 let csvWriter;
+=======
+let gameLogsCsvWriter;
+>>>>>>> [GM] check if config exists
 
-csvWriter = new CsvWriter(config.gameName);
+let gameName;
 
-const gameMaster = new GameMaster(config, uiController, csvWriter);
+if (config) {
+  gameName = config.gameName;
+} else {
+  gameName = 'Invalid GM config';
+}
+
+gameLogsCsvWriter = new GameLogsCsvWriter(gameName);
+
+const gameMaster = new GameMaster(config, uiController, gameLogsCsvWriter);
 gameMaster.init();
 >>>>>>> [GM] remove CsvLogFactory
