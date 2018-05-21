@@ -31,6 +31,7 @@ import { mapOptionsToGameDefinition } from './mapOptionsToGameDefinition';
 import { Player } from './Player';
 
 import { UIController } from './ui/IUIController';
+import { METHODS } from 'http';
 
 export interface GameMasterOptions {
   serverHostname: string;
@@ -105,7 +106,9 @@ export class GameMaster implements Service {
 
     this.communicator.once('close', this.handleServerDisconnection.bind(this));
 
-    this.gameLogsCsvWriter.init();
+    this.gameLogsCsvWriter.init().catch(error => {
+      this.logger.error(error.message);
+    });
 
     this.createNewGame();
   }
@@ -122,7 +125,11 @@ export class GameMaster implements Service {
     this.communicator.destroy();
     this.uiController.destroy();
 
-    this.gameLogsCsvWriter.destroy();
+    try {
+      this.gameLogsCsvWriter.destroy();
+    } catch (error) {
+      this.logger.error(error.message);
+    }
   }
 
   private initUI() {

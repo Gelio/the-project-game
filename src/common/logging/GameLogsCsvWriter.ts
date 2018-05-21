@@ -1,4 +1,5 @@
 import { close, existsSync, mkdirSync, open, renameSync, write } from 'fs';
+import * as sanitize from 'sanitize-filename';
 import { promisify } from 'util';
 
 import { GameLog } from '../../interfaces/GameLog';
@@ -17,7 +18,8 @@ export class GameLogsCsvWriter implements Service {
 
   constructor(gameName: string) {
     try {
-      this.fileName = `${config.logsDirectory}/${gameName}`;
+      const safeGameName = sanitize(gameName);
+      this.fileName = `${config.logsDirectory}/${safeGameName}`;
       this.fileNameWithExtension = `${this.fileName}.${config.logsExtension}`;
     } catch {
       this.fileName = 'Invalid config';
