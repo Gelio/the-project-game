@@ -57,12 +57,8 @@ export class GameMaster implements Service {
   private game: Game;
 
   private readonly uiController: UIController;
-<<<<<<< HEAD
-=======
-  private readonly loggerFactory: LoggerFactory;
->>>>>>> [GM] remove CsvLogFactory
   private logger: LoggerInstance;
-  private csvWriter: CsvWriter;
+  private gameLogsCsvWriter: GameLogsCsvWriter;
 
   private failedRegistrations = 0;
   private currentRound = 0;
@@ -72,22 +68,14 @@ export class GameMaster implements Service {
     PLAYER_DISCONNECTED: this.handlePlayerDisconnectedMessage
   };
 
-<<<<<<< HEAD
-  constructor(options: GameMasterOptions, uiController: UIController, csvWriter: CsvWriter) {
-    this.options = options;
-    this.uiController = uiController;
-=======
   constructor(
     options: GameMasterOptions,
     uiController: UIController,
-    loggerFactory: LoggerFactory,
-    csvWriter: CsvWriter
+    gameLogsCsvWriter: GameLogsCsvWriter
   ) {
     this.options = options;
     this.uiController = uiController;
-    this.loggerFactory = loggerFactory;
->>>>>>> [GM] remove CsvLogFactory
-    this.csvWriter = csvWriter;
+    this.gameLogsCsvWriter = gameLogsCsvWriter;
 
     bindObjectMethods(this.messageHandlers, this);
     this.destroy = this.destroy.bind(this);
@@ -117,6 +105,8 @@ export class GameMaster implements Service {
 
     this.communicator.once('close', this.handleServerDisconnection.bind(this));
 
+    this.gameLogsCsvWriter.init();
+
     this.createNewGame();
   }
 
@@ -131,6 +121,8 @@ export class GameMaster implements Service {
 
     this.communicator.destroy();
     this.uiController.destroy();
+
+    this.gameLogsCsvWriter.destroy();
   }
 
   private initUI() {
@@ -280,6 +272,7 @@ export class GameMaster implements Service {
 
       this.communicator.on('message', this.handleMessage);
     } catch (error) {
+      console.log(error);
       this.failedRegistrations++;
 
       if (this.options.registrationTriesLimit === this.failedRegistrations) {
@@ -345,7 +338,7 @@ export class GameMaster implements Service {
       valid
     };
     try {
-      this.csvWriter.logMessage(log);
+      this.gameLogsCsvWriter.writeLog(log);
     } catch (error) {
       this.logger.error(`Failed to write log, error: ${error.message}`);
     }
