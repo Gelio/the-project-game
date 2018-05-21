@@ -6,6 +6,7 @@ import { GameLog } from '../../interfaces/GameLog';
 import { Service } from '../../interfaces/Service';
 
 import { config } from '../../config';
+import { getFormattedDate } from '../formatting/getFormattedDate';
 
 const promisifiedOpen = promisify(open);
 const promisifiedClose = promisify(close);
@@ -14,58 +15,53 @@ const promisifiedWrite = promisify(write);
 export class GameLogsCsvWriter implements Service {
   private readonly fileName: string;
   private readonly fileNameWithExtension: string;
-  private fileDescriptor: number = -1;
+  private fileDescriptor: number | null = null;
   private readonly logsDirectory: string;
+  private readonly logsExtension = 'csv';
 
   constructor(gameName: string) {
     try {
-      const safeGameName = sanitize(gameName);
+      const sanitizedGameName = sanitize(gameName);
       this.logsDirectory = sanitize(config.logsDirectory);
-      this.fileName = `${this.logsDirectory}/${safeGameName}`;
-      this.fileNameWithExtension = `${this.fileName}.${config.logsExtension}`;
+      this.fileName = `${this.logsDirectory}/${sanitizedGameName}-${getFormattedDate(new Date())}`;
+      this.fileNameWithExtension = `${this.fileName}.${this.logsExtension}`;
     } catch {
-      this.fileName = 'Invalid config';
-      this.fileNameWithExtension = 'csv';
+      this.fileName = `Invalid config.${this.logsExtension}`;
     }
   }
 
   public async init(): Promise<any> {
-    if (this.fileDescriptor > 0) {
+    if (this.fileDescriptor) {
       throw new Error('File descriptor already opened');
     }
 
-    this.createLogsDirectory();
+    this.createLogsDirectoryIfNotExists();
 
-    this.renameOldLogs();
+    try {
+      this.fileDescriptor = await promisifiedOpen(this.fileNameWithExtension, 'wx');
+    } catch (error) {
+      throw new Error(
+        `Could not open the file ${this.fileNameWithExtension}. Error code: ${error.code}`
+      );
+    }
 
-    await promisifiedOpen(this.fileNameWithExtension, 'wx')
-      .then(fileDescriptor => {
-        this.fileDescriptor = fileDescriptor;
-      })
-      .catch(error => {
-        throw new Error(
-          `Could not open the file ${this.fileNameWithExtension}. Error code: ${error.code}`
-        );
-      });
-
-    this.writeHeaders();
+    return this.writeHeaders();
   }
 
-  public destroy(): void {
-    if (this.fileDescriptor < 0) {
+  public async destroy() {
+    if (!this.fileDescriptor) {
       throw new Error('File descriptor already closed');
     }
-    promisifiedClose(this.fileDescriptor)
-      .then(() => {
-        this.fileDescriptor = 0;
-      })
-      .catch(error => {
-        throw new Error(
-          `Could not close the file ${this.fileNameWithExtension}, fd: ${
-            this.fileDescriptor
-          }, error code: ${error.code}`
-        );
-      });
+    try {
+      await promisifiedClose(<number>this.fileDescriptor);
+      this.fileDescriptor = null;
+    } catch (error) {
+      throw new Error(
+        `Could not close the file ${this.fileNameWithExtension}, fd: ${
+          this.fileDescriptor
+        }, error code: ${error.code}`
+      );
+    }
   }
 
   public writeLog(message: GameLog) {
@@ -74,7 +70,7 @@ export class GameLogsCsvWriter implements Service {
     return this.writeLine(line);
   }
 
-  private createLogsDirectory() {
+  private createLogsDirectoryIfNotExists() {
     try {
       if (!existsSync(this.logsDirectory)) {
         mkdirSync(this.logsDirectory);
@@ -82,27 +78,6 @@ export class GameLogsCsvWriter implements Service {
     } catch (error) {
       throw new Error(
         `Failed to create logs directory ${this.logsDirectory}. Error code: ${error.code}`
-      );
-    }
-  }
-
-  private renameOldLogs() {
-    let newFileName;
-    try {
-      if (existsSync(this.fileNameWithExtension)) {
-        const currentDate = new Date();
-        newFileName = `${
-          this.fileName
-        }-${currentDate.toLocaleDateString()}-${currentDate.toLocaleTimeString()}.${
-          config.logsExtension
-        }`;
-        newFileName = newFileName.split(':').join('-');
-        renameSync(this.fileNameWithExtension, newFileName);
-      }
-    } catch (error) {
-      throw new Error(
-        `Failed to rename ${this.fileNameWithExtension} to
-          ${newFileName}`
       );
     }
   }
@@ -134,6 +109,6 @@ export class GameLogsCsvWriter implements Service {
       throw new Error('File is not opened');
     }
 
-    promisifiedWrite(this.fileDescriptor, line);
+    return promisifiedWrite(this.fileDescriptor, line);
   }
 }
