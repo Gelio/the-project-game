@@ -17,7 +17,7 @@ namespace Player.Messages.DTO
         [JsonProperty("playerId")]
         public string PlayerId;
 
-        [JsonProperty("timeStamp")]
+        [JsonProperty("timestamp")]
         public long TimeStamp;
     }
 
