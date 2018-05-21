@@ -90,10 +90,10 @@ namespace Player
         }
         static void StartGame(Arguments args)
         {
-            PlayerConfig configObject;
+            PlayerConfig playerConfig;
             try
             {
-                configObject = new ConfigFileReader().ReadConfigFile(args.ConfigPath);
+                playerConfig = new ConfigFileReader().ReadConfigFile(args.ConfigPath);
             }
             catch (FileNotFoundException)
             {
@@ -110,12 +110,12 @@ namespace Player
                 logger.Fatal(e.Message);
                 return;
             }
-            configObject.GameName = args.GameName;
+            playerConfig.GameName = args.GameName;
 
             var communicator = new Communicator(args.CommunicationServerAddress, args.CommunicationServerPort);
             var gameService = new GameService(communicator);
-            var playerState = new PlayerState();
-            var player = new Player(communicator, configObject, gameService, new MessageProvider(playerState, communicator), playerState);
+            var playerState = new PlayerState(playerConfig);
+            var player = new Player(communicator, playerConfig, gameService, new MessageProvider(playerState, communicator), playerState);
 
             try
             {

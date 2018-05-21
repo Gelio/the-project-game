@@ -44,12 +44,13 @@ namespace Player
             _communicationResponses.Clear();
         }
 
-        public PlayerState()
+        public PlayerState(PlayerConfig playerConfig)
         {
             Id = Guid.NewGuid().ToString();
             _communicationRequests = new Queue<Message<CommunicationPayload>>();
             _communicationResponses = new Queue<Message<CommunicationResponsePayload>>();
             WaitingForResponse = new Dictionary<string, bool>();
+            PlayerConfig = playerConfig;
         }
 
         public void InitBoard()
