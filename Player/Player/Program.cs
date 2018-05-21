@@ -22,6 +22,12 @@ namespace Player
     {
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
+        static void PrintUsageWithMessage(string message)
+        {
+            Console.WriteLine(message);
+            Console.WriteLine("usage:\n\tdotnet run comm_server_addr comm_serv_port -l\n\tdotnet run comm_server_addr comm_serv_port game_name [config_file_path]");
+            return;
+        }
         static Arguments ParseArguments(string[] args)
         {
             var address = args[0];
@@ -32,7 +38,6 @@ namespace Player
 
             return new Arguments { CommunicationServerAddress = address, CommunicationServerPort = port, ListGames = flag, GameName = gameName, ConfigPath = configPath };
         }
-
         static void ListGames(Arguments args)
         {
             IList<GameInfo> gamesList;
@@ -83,7 +88,6 @@ namespace Player
             communicator.Disconnect();
             return;
         }
-
         static void StartGame(Arguments args)
         {
             PlayerConfig configObject;
@@ -153,6 +157,7 @@ namespace Player
                 return;
             }
         }
+
         static void Main(string[] args)
         {
             MapperInitializer.InitializeMapper();
@@ -160,17 +165,25 @@ namespace Player
 
             if (args.Length < 3)
             {
-                Console.WriteLine("usage:\ndotnet run comm_server_addr comm_serv_port -l\ndotnet run comm_server_addr comm_serv_port game_name [config_file_path]");
+                PrintUsageWithMessage("Not enough arguments!");
                 return;
             }
-            var arguments = ParseArguments(args);
+
+            Arguments arguments;
+            try
+            {
+                arguments = ParseArguments(args);
+            }
+            catch (FormatException)
+            {
+                PrintUsageWithMessage("Server port has to be a number!");
+                return;
+            }
 
             if (arguments.ListGames)
-            {
                 ListGames(arguments);
-                return;
-            }
-            StartGame(arguments);
+            else
+                StartGame(arguments);
         }
     }
 }
