@@ -1,36 +1,42 @@
-import { close, existsSync, open, renameSync, write } from 'fs';
+import { close, existsSync, mkdirSync, open, renameSync, write } from 'fs';
 import { promisify } from 'util';
 
 import { GameLog } from '../../interfaces/GameLog';
 import { Service } from '../../interfaces/Service';
 
+import { config } from '../../config';
+
 const promisifiedOpen = promisify(open);
 const promisifiedClose = promisify(close);
 const promisifiedWrite = promisify(write);
 
-export class CsvWriter implements Service {
+export class GameLogsCsvWriter implements Service {
   private readonly fileName: string;
+  private readonly fileNameWithExtension: string;
   private fileDescriptor: number = -1;
 
   constructor(gameName: string) {
-    this.fileName = `${gameName}.csv`;
+    this.fileName = `${config.logsDirectory}/${gameName}`;
+    this.fileNameWithExtension = `${this.fileName}.${config.logsExtension}`;
   }
 
-  public init(): void {
-    if (existsSync(this.fileName)) {
-      renameSync(this.fileName, `${this.fileName}.${Date.now()}`);
-    }
-
+  public async init(): Promise<any> {
     if (this.fileDescriptor > 0) {
       throw new Error('File descriptor already opened');
     }
 
-    promisifiedOpen(this.fileName, 'wx')
+    this.createLogsDirectory();
+
+    this.renameOldLogs();
+
+    await promisifiedOpen(this.fileNameWithExtension, 'wx')
       .then(fileDescriptor => {
         this.fileDescriptor = fileDescriptor;
       })
       .catch(error => {
-        throw new Error(`Could not open the file ${this.fileName}. Error code: ${error.code}`);
+        throw new Error(
+          `Could not open the file ${this.fileNameWithExtension}. Error code: ${error.code}`
+        );
       });
 
     this.writeHeaders();
@@ -46,9 +52,9 @@ export class CsvWriter implements Service {
       })
       .catch(error => {
         throw new Error(
-          `Could not close the file ${this.fileName}, fd: ${this.fileDescriptor}, error code: ${
-            error.code
-          }`
+          `Could not close the file ${this.fileNameWithExtension}, fd: ${
+            this.fileDescriptor
+          }, error code: ${error.code}`
         );
       });
   }
@@ -59,14 +65,37 @@ export class CsvWriter implements Service {
     return this.writeLine(line);
   }
 
-  private convertToCsvFormat(message: GameLog): string {
-    let converted = `${(<any>Object)
-      .values(message)
-      .map((property: any) => `"${property}"`)
-      .join(',')}`;
-    converted += '\r\n';
+  private createLogsDirectory() {
+    try {
+      if (!existsSync(config.logsDirectory)) {
+        mkdirSync(config.logsDirectory);
+      }
+    } catch (error) {
+      throw new Error(
+        `Failed to create logs directory ${config.logsDirectory}. Error code: ${error.code}`
+      );
+    }
+  }
 
-    return converted;
+  private renameOldLogs() {
+    let newFileName;
+    try {
+      if (existsSync(this.fileNameWithExtension)) {
+        const currentDate = new Date();
+        newFileName = `${
+          this.fileName
+        }-${currentDate.toLocaleDateString()}-${currentDate.toLocaleTimeString()}${
+          config.logsExtension
+        }`;
+        newFileName = newFileName.split(':').join('-');
+        renameSync(this.fileNameWithExtension, newFileName);
+      }
+    } catch (error) {
+      throw new Error(
+        `Failed to rename ${this.fileNameWithExtension} to
+          ${newFileName}`
+      );
+    }
   }
 
   private writeHeaders() {
