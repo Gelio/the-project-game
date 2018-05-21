@@ -105,9 +105,11 @@ export class GameMaster implements Service {
 
     this.communicator.once('close', this.handleServerDisconnection.bind(this));
 
-    await this.gameLogsCsvWriter.init().catch(error => {
+    try {
+      await this.gameLogsCsvWriter.init();
+    } catch (error) {
       this.logger.error(error.message);
-    });
+    }
 
     this.createNewGame();
   }
@@ -125,7 +127,7 @@ export class GameMaster implements Service {
     this.uiController.destroy();
 
     try {
-      this.gameLogsCsvWriter.destroy();
+      await this.gameLogsCsvWriter.destroy();
     } catch (error) {
       this.logger.error(error.message);
     }
@@ -322,28 +324,10 @@ export class GameMaster implements Service {
     );
   }
 
-  private writeCsvLog(message: Message<any>, playerId: PlayerId, valid: boolean) {
-    let player = this.game.playersContainer.getPlayerById(playerId);
-
-    if (!player) {
-      this.logger.warn(`Player ${playerId} not found. Could not save csv log`);
-
-      return;
-    }
-
-    player = <Player>player;
-
-    const log: GameLog = {
-      type: message.type,
-      timestamp: new Date().toString(),
-      playerId: playerId,
-      teamId: player.teamId,
-      round: this.currentRound,
-      role: player.isLeader ? PlayerRole.Leader : PlayerRole.Member,
-      valid
-    };
+  private async writeCsvLog(message: Message<any>, player: Player, valid: boolean): Promise<void> {
+    const log = new GameLog(message, player, this.currentRound, valid);
     try {
-      this.gameLogsCsvWriter.writeLog(log);
+      await this.gameLogsCsvWriter.writeLog(log);
     } catch (error) {
       this.logger.error(`Failed to write log, error: ${error.message}`);
     }
