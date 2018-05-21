@@ -1,5 +1,7 @@
 import { EntityId } from '../common/EntityIds';
 import { TeamId } from '../common/TeamId';
+import { Message } from './Message';
+import { Player } from '../game-master/Player';
 
 export enum PlayerRole {
   Member = 'member',
@@ -16,20 +18,18 @@ export class GameLog {
   public readonly valid: boolean;
 
   constructor(
-    type: string,
-    timestamp: string,
-    playerId: EntityId,
-    teamId: TeamId,
+    message: Message<any>,
+    player: Player,
     round: number,
-    role: PlayerRole,
-    valid: boolean
+    isValid: boolean,
+    timestamp?: string
   ) {
-    this.teamId = teamId;
-    this.type = type;
-    this.valid = valid;
-    this.timestamp = timestamp;
-    this.playerId = playerId;
+    this.type = message.type;
+    this.playerId = player.playerId;
+    this.teamId = player.teamId;
+    this.role = player.isLeader ? PlayerRole.Leader : PlayerRole.Member;
+    this.valid = isValid;
+    this.timestamp = timestamp || new Date().toString();
     this.round = round;
-    this.role = role;
   }
 }
