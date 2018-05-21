@@ -278,7 +278,6 @@ export class GameMaster implements Service {
 
       this.communicator.on('message', this.handleMessage);
     } catch (error) {
-      console.log(error);
       this.failedRegistrations++;
 
       if (this.options.registrationTriesLimit === this.failedRegistrations) {
