@@ -105,7 +105,7 @@ export class GameMaster implements Service {
 
     this.communicator.once('close', this.handleServerDisconnection.bind(this));
 
-    this.gameLogsCsvWriter.init().catch(error => {
+    await this.gameLogsCsvWriter.init().catch(error => {
       this.logger.error(error.message);
     });
 
