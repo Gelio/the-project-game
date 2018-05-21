@@ -11,10 +11,10 @@ namespace Player.Strategy
     public abstract class AbstractStrategy
     {
         protected PlayerState _playerState;
-        protected IActionExecuter _actionExecuter;
+        protected IActionExecutor _actionExecuter;
         protected static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        public AbstractStrategy(PlayerState playerState, IActionExecuter actionExecuter)
+        public AbstractStrategy(PlayerState playerState, IActionExecutor actionExecuter)
         {
             _playerState = playerState;
             _actionExecuter = actionExecuter;
@@ -56,15 +56,6 @@ namespace Player.Strategy
                 }
                 Console.WriteLine();
             }
-        }
-
-        protected void RoundFinished(string receivedMessageSerialized)
-        {
-            var received = JsonConvert.DeserializeObject<Message<GameFinishedPayload>>(receivedMessageSerialized);
-            var winnerTeam = (received.Payload.Team1Score > received.Payload.Team2Score) ? "Team 1" : "Team 2";
-            string message = $"Scores:\n\tTeam 1: {received.Payload.Team1Score}\n\tTeam 2: {received.Payload.Team2Score}\n" +
-                $"Congratulations {winnerTeam}! WOOP WOOP!\n";
-            logger.Info(message);
         }
 
         protected string PickRandomMovementDirection()

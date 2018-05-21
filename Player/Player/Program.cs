@@ -114,7 +114,8 @@ namespace Player
 
             var communicator = new Communicator(args.CommunicationServerAddress, args.CommunicationServerPort);
             var gameService = new GameService(communicator);
-            var player = new Player(communicator, configObject, gameService, new MessageProvider(communicator));
+            var playerState = new PlayerState();
+            var player = new Player(communicator, configObject, gameService, new MessageProvider(playerState, communicator), playerState);
 
             try
             {

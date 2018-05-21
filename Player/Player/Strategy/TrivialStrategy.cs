@@ -6,7 +6,7 @@ namespace Player.Strategy
 {
     public class TrivialStrategy : AbstractStrategy
     {
-        public TrivialStrategy(PlayerState playerState, IActionExecuter actionExecuter) : base(playerState, actionExecuter) { }
+        public TrivialStrategy(PlayerState playerState, IActionExecutor actionExecuter) : base(playerState, actionExecuter) { }
 
         public override void Play()
         {

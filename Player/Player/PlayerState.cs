@@ -25,8 +25,8 @@ namespace Player
 
         public Dictionary<string, bool> WaitingForResponse;
 
-        private Queue<Message<CommunicationPayload>> _communicationRequests = new Queue<Message<CommunicationPayload>>();
-        private Queue<Message<CommunicationResponsePayload>> _communicationResponses = new Queue<Message<CommunicationResponsePayload>>();
+        private Queue<Message<CommunicationPayload>> _communicationRequests;
+        private Queue<Message<CommunicationResponsePayload>> _communicationResponses;
 
         public bool HasPendingRequests => _communicationRequests.Count > 0;
         public bool HasPendingResponses => _communicationResponses.Count > 0;
@@ -34,5 +34,28 @@ namespace Player
         public Message<CommunicationResponsePayload> GetPendingResponse() => _communicationResponses.Dequeue();
         public void PutRequest(Message<CommunicationPayload> request) => _communicationRequests.Enqueue(request);
         public void PutResponse(Message<CommunicationResponsePayload> response) => _communicationResponses.Enqueue(response);
+
+        public void ResetState()
+        {
+            Board.Reset();
+            HeldPiece = null;
+            WaitingForResponse.Clear();
+            _communicationRequests.Clear();
+            _communicationResponses.Clear();
+        }
+
+        public PlayerState()
+        {
+            Id = Guid.NewGuid().ToString();
+            _communicationRequests = new Queue<Message<CommunicationPayload>>();
+            _communicationResponses = new Queue<Message<CommunicationResponsePayload>>();
+            WaitingForResponse = new Dictionary<string, bool>();
+        }
+
+        public void InitBoard()
+        {
+            Board = new Board(Game.BoardSize);
+        }
+
     }
 }

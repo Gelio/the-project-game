@@ -5,7 +5,7 @@ using static Player.Player;
 
 namespace Player.Interfaces
 {
-    public interface IActionExecuter
+    public interface IActionExecutor
     {
         bool Discover();
         bool RefreshBoardState();
