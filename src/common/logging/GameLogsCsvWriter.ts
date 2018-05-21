@@ -1,4 +1,4 @@
-import { close, existsSync, mkdirSync, open, renameSync, write } from 'fs';
+import { close, existsSync, mkdirSync, open, write } from 'fs';
 import * as sanitize from 'sanitize-filename';
 import { promisify } from 'util';
 

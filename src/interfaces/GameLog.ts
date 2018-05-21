@@ -1,6 +1,8 @@
 import { EntityId } from '../common/EntityIds';
 import { TeamId } from '../common/TeamId';
+
 import { Message } from './Message';
+
 import { Player } from '../game-master/Player';
 
 export enum PlayerRole {

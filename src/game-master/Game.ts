@@ -32,7 +32,7 @@ import { UIController } from './ui/IUIController';
 import { PlayerMessageHandler } from './game-logic/PlayerMessageHandler';
 
 import { Communicator } from '../common/Communicator';
-import { COMMUNICATION_SERVER_ID, GAME_MASTER_ID, PlayerId } from '../common/EntityIds';
+import { COMMUNICATION_SERVER_ID, GAME_MASTER_ID } from '../common/EntityIds';
 
 import { PeriodicPieceGeneratorFactory } from './board-generation/createPeriodicPieceGenerator';
 import { PeriodicPieceGenerator } from './board-generation/PeriodicPieceGenerator';

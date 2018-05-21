@@ -109,7 +109,7 @@ describe('[GM] Game', () => {
   let player: Player;
   let otherPlayer: Player;
   let updateUIFn: Function;
-  let writeCsvLog: (message: Message<any>, playerId: PlayerId, valid: boolean) => any;
+  let writeCsvLog: (message: Message<any>, player: Player, valid: boolean) => any;
 
   beforeEach(() => {
     periodicPieceGenerator = <any>createMockPeriodicPieceGenerator();

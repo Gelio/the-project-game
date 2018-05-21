@@ -4,14 +4,13 @@ import { LoggerInstance } from 'winston';
 import { bindObjectMethods } from '../common/bindObjectMethods';
 import { Communicator } from '../common/Communicator';
 import { createDelay } from '../common/createDelay';
-import { GAME_MASTER_ID, PlayerId } from '../common/EntityIds';
-import { CsvWriter } from '../common/logging/CsvWriter';
-import { UITransport } from '../common/logging/UITransport';
+import { GAME_MASTER_ID } from '../common/EntityIds';
+import { GameLogsCsvWriter } from '../common/logging/GameLogsCsvWriter';
 
 import { ActionDelays } from '../interfaces/ActionDelays';
 import { BoardSize } from '../interfaces/BoardSize';
 import { TeamSizes } from '../interfaces/GameDefinition';
-import { GameLog, PlayerRole } from '../interfaces/GameLog';
+import { GameLog } from '../interfaces/GameLog';
 import { Message } from '../interfaces/Message';
 import { Service } from '../interfaces/Service';
 
