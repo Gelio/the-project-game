@@ -50,6 +50,12 @@ export interface GameMasterOptions {
   registerGameInterval: number;
 }
 
+export type WriteCsvLogFn = (
+  message: Message<any>,
+  player: Player,
+  valid: boolean
+) => Promise<void>;
+
 export class GameMaster implements Service {
   private readonly options: GameMasterOptions;
   private communicator: Communicator;
@@ -323,8 +329,12 @@ export class GameMaster implements Service {
     );
   }
 
-  private async writeCsvLog(message: Message<any>, player: Player, valid: boolean): Promise<void> {
-    const log = new GameLog(message, player, this.currentRound, valid);
+  private async writeCsvLog(
+    message: Message<any>,
+    player: Player,
+    isValid: boolean
+  ): Promise<void> {
+    const log = new GameLog(message, player, this.currentRound, isValid);
     try {
       await this.gameLogsCsvWriter.writeLog(log);
     } catch (error) {

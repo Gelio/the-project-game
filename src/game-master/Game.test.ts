@@ -10,7 +10,6 @@ import { BoardSize } from '../interfaces/BoardSize';
 import { Direction } from '../interfaces/Direction';
 import { GameDefinition } from '../interfaces/GameDefinition';
 
-import { Message } from '../interfaces/Message';
 import { ActionInvalidMessage } from '../interfaces/messages/ActionInvalidMessage';
 import { ActionValidMessage } from '../interfaces/messages/ActionValidMessage';
 import { GameFinishedMessage } from '../interfaces/messages/GameFinishedMessage';
@@ -27,6 +26,7 @@ import { TestPieceResponse } from '../interfaces/responses/TestPieceResponse';
 import { UnregisterGameResponse } from '../interfaces/responses/UnregisterGameResponse';
 
 import { Game } from './Game';
+import { WriteCsvLogFn } from './GameMaster';
 import { GameState } from './GameState';
 import { Player } from './Player';
 import { InvalidMessageResult } from './ProcessMessageResult';
@@ -109,7 +109,7 @@ describe('[GM] Game', () => {
   let player: Player;
   let otherPlayer: Player;
   let updateUIFn: Function;
-  let writeCsvLog: (message: Message<any>, player: Player, valid: boolean) => any;
+  let writeCsvLog: WriteCsvLogFn;
 
   beforeEach(() => {
     periodicPieceGenerator = <any>createMockPeriodicPieceGenerator();

@@ -24,6 +24,7 @@ import { UnregisterGameResponse } from '../interfaces/responses/UnregisterGameRe
 import { Board } from './models/Board';
 import { Scoreboard } from './models/Scoreboard';
 
+import { WriteCsvLogFn } from './GameMaster';
 import { GameState } from './GameState';
 import { ProcessMessageResult } from './ProcessMessageResult';
 
@@ -52,11 +53,7 @@ export class Game {
   private readonly communicator: Communicator;
   private readonly uiController: UIController;
   private readonly updateUI: Function;
-  private readonly writeCsvLog: (
-    message: Message<any>,
-    player: Player,
-    valid: boolean
-  ) => Promise<void>;
+  private readonly writeCsvLog: WriteCsvLogFn;
   private _state = GameState.Registered;
 
   public get state() {
