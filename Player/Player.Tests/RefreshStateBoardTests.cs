@@ -20,6 +20,7 @@ namespace Player.Tests
         PlayerConfig _playerConfig;
         Mock<IGameService> _gameService;
         Mock<IMessageProvider> _messageProvider;
+        PlayerState _playerState;
 
         [SetUp]
         public void Setup()
@@ -35,6 +36,7 @@ namespace Player.Tests
             };
             _gameService = new Mock<IGameService>();
             _messageProvider = new Mock<IMessageProvider>();
+            _playerState = new PlayerState(_playerConfig);
         }
 
 
@@ -43,7 +45,7 @@ namespace Player.Tests
         {
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Throws(new ActionInvalidException());
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object);
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object, _playerState);
 
             var result = player.RefreshBoardState();
 
@@ -65,10 +67,8 @@ namespace Player.Tests
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Returns(new Message<ActionValidPayload>());
             _messageProvider.Setup(x => x.Receive<RefreshStateResponsePayload>()).Returns(msg2);
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
-            {
-                Id = assignedPlayerId,
-            };
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object, _playerState);
+            player.PlayerState.Id = assignedPlayerId;
 
             Assert.Throws<NoPayloadException>(() => player.RefreshBoardState());
         }
@@ -117,12 +117,11 @@ namespace Player.Tests
                     X = 20
                 }
             };
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
-            {
-                Id = assignedPlayerId,
-                Game = game,
-                Board = new Board(game.BoardSize)
-            };
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object, _playerState);
+            player.PlayerState.Game = game;
+            player.PlayerState.Board = new Board(game.BoardSize);
+            player.PlayerState.Id = assignedPlayerId;
+
 
             Assert.Throws<InvalidOperationException>(() => player.RefreshBoardState());
         }
@@ -178,12 +177,10 @@ namespace Player.Tests
                     X = 20
                 }
             };
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
-            {
-                Id = assignedPlayerId,
-                Game = game,
-                Board = new Board(game.BoardSize)
-            };
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object, _playerState);
+            player.PlayerState.Game = game;
+            player.PlayerState.Board = new Board(game.BoardSize);
+            player.PlayerState.Id = assignedPlayerId;
             var result = player.RefreshBoardState();
 
             Assert.That(result, Is.True);
@@ -196,8 +193,8 @@ namespace Player.Tests
 
             foreach (var p in playerPositions)
             {
-                Assert.That(player.Board.At(p.X, p.Y).PlayerId, Is.EqualTo(p.PlayerId));
-                Assert.That(player.Board.At(p.X, p.Y).Timestamp, Is.EqualTo(msg2.Payload.Timestamp));
+                Assert.That(player.PlayerState.Board.At(p.X, p.Y).PlayerId, Is.EqualTo(p.PlayerId));
+                Assert.That(player.PlayerState.Board.At(p.X, p.Y).Timestamp, Is.EqualTo(msg2.Payload.Timestamp));
             }
         }
     }

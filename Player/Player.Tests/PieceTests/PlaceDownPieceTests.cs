@@ -22,6 +22,7 @@ namespace Player.Tests.PieceTests
         Mock<ICommunicator> _communicator;
         Mock<IGameService> _gameService;
         Mock<IMessageProvider> _messageProvider;
+        PlayerState _playerState;
 
         static Message<PlaceDownPieceResponsePayload> _scoreMsg = new Message<PlaceDownPieceResponsePayload>()
         {
@@ -78,6 +79,7 @@ namespace Player.Tests.PieceTests
             };
             _gameService = new Mock<IGameService>();
             _messageProvider = new Mock<IMessageProvider>();
+            _playerState = new PlayerState(_playerConfig);
             _game = new GameInfo()
             {
                 BoardSize = new BoardSize
@@ -87,6 +89,9 @@ namespace Player.Tests.PieceTests
                     X = 20
                 }
             };
+            _playerState.Game = _game;
+            _playerState.Id = _assignedPlayerId;
+            _playerState.Board = new Board(_game.BoardSize);
         }
 
         public static IEnumerable<TestCaseData> PlaceDownPieceSuccessTestCases
@@ -109,15 +114,14 @@ namespace Player.Tests.PieceTests
 
             // ------------------------
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object);
             {
-                Id = _assignedPlayerId,
                 X = assignedX,
                 Y = assignedY,
-                Game = _game,
-                Board = new Board(_game.BoardSize)
             };
-            player.HeldPiece = new Piece();
+            player.PlayerState.X = assignedX;
+            player.PlayerState.Y = assignedY;
+            player.PlayerState.HeldPiece = new Piece();
 
 
             (var boolResult, var enumResult) = player.PlaceDownPiece();
@@ -132,7 +136,7 @@ namespace Player.Tests.PieceTests
         {
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Throws(new ActionInvalidException());
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object);
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object, _playerState);
 
             (var boolResult, var enumResult) = player.PlaceDownPiece();
 
@@ -154,11 +158,7 @@ namespace Player.Tests.PieceTests
             _messageProvider.Setup(x => x.Receive<PlaceDownPieceResponsePayload>()).Returns(msg2);
 
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
-            {
-                Id = _assignedPlayerId,
-                Game = _game
-            };
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object, _playerState);
 
             Assert.Throws<NoPayloadException>(() => player.PlaceDownPiece());
         }

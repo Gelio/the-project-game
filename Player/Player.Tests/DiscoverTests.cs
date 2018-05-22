@@ -21,6 +21,7 @@ namespace Player.Tests
         Mock<ICommunicator> _communicator;
         Mock<IGameService> _gameService;
         Mock<IMessageProvider> _messageProvider;
+        PlayerState _playerState;
 
         [SetUp]
         public void Setup()
@@ -36,7 +37,7 @@ namespace Player.Tests
                 TeamNumber = 1
             };
             _gameService = new Mock<IGameService>();
-
+            _playerState = new PlayerState(_playerConfig);
             _game = new GameInfo()
             {
                 BoardSize = new BoardSize
@@ -46,15 +47,17 @@ namespace Player.Tests
                     X = 20
                 }
             };
-
             _assignedPlayerId = Guid.NewGuid().ToString();
+            _playerState.Game = _game;
+            _playerState.Id = _assignedPlayerId;
+            _playerState.Board = new Board(_game.BoardSize);
         }
 
         [Test]
         public void DiscoverActionInvalid()
         {
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Throws(new ActionInvalidException());
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object);
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object, _playerState);
 
             var result = player.Discover();
 
@@ -111,30 +114,25 @@ namespace Player.Tests
             _messageProvider.Setup(x => x.Receive<DiscoveryResponsePayload>()).Returns(msg);
 
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
-            {
-                Id = _assignedPlayerId,
-                X = assignedX,
-                Y = assignedY,
-                Game = _game,
-                Board = new Board(_game.BoardSize)
-            };
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object, _playerState);
+            player.PlayerState.X = assignedX;
+            player.PlayerState.Y = assignedY;
 
             var result = player.Discover();
 
             Assert.That(result, Is.True);
             foreach (var t in tiles)
             {
-                Assert.That(player.Board.At(t.X, t.Y).DistanceToClosestPiece, Is.EqualTo(t.DistanceToClosestPiece));
-                Assert.That(player.Board.At(t.X, t.Y).Timestamp, Is.EqualTo(msg.Payload.Timestamp));
+                Assert.That(player.PlayerState.Board.At(t.X, t.Y).DistanceToClosestPiece, Is.EqualTo(t.DistanceToClosestPiece));
+                Assert.That(player.PlayerState.Board.At(t.X, t.Y).Timestamp, Is.EqualTo(msg.Payload.Timestamp));
                 if (t.Piece)
                 {
-                    Assert.That(player.Board.At(t.X, t.Y), Is.Not.Null);
-                    Assert.That(player.Board.At(t.X, t.Y).Piece.WasTested, Is.False);
+                    Assert.That(player.PlayerState.Board.At(t.X, t.Y), Is.Not.Null);
+                    Assert.That(player.PlayerState.Board.At(t.X, t.Y).Piece.WasTested, Is.False);
                 }
                 else
                 {
-                    Assert.That(player.Board.At(t.X, t.Y).Piece, Is.Null);
+                    Assert.That(player.PlayerState.Board.At(t.X, t.Y).Piece, Is.Null);
                 }
             }
         }
@@ -153,10 +151,7 @@ namespace Player.Tests
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Returns(new Message<ActionValidPayload>());
             _messageProvider.Setup(x => x.Receive<DiscoveryResponsePayload>()).Returns(msg);
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
-            {
-                Id = _assignedPlayerId,
-            };
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object, _playerState);
 
             Assert.Throws<NoPayloadException>(() => player.Discover());
         }
@@ -167,13 +162,7 @@ namespace Player.Tests
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Returns(new Message<ActionValidPayload>());
             _messageProvider.Setup(x => x.Receive<DiscoveryResponsePayload>()).Throws(new WrongPayloadException());
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
-            {
-                Id = _assignedPlayerId,
-                Game = _game,
-                Board = new Board(_game.BoardSize)
-            };
-
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object, _playerState);
 
             Assert.Throws<WrongPayloadException>(() => player.Discover());
         }
@@ -183,10 +172,7 @@ namespace Player.Tests
         {
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Throws(new GameAlreadyFinishedException());
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
-            {
-                Game = _game
-            };
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object, _playerState);
 
             Assert.Throws<GameAlreadyFinishedException>(() => player.Discover());
         }
@@ -197,9 +183,7 @@ namespace Player.Tests
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Returns(new Message<ActionValidPayload>());
             _messageProvider.Setup(x => x.Receive<DiscoveryResponsePayload>()).Throws(new GameAlreadyFinishedException());
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
-            {
-            };
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object, _playerState);
 
             Assert.Throws<GameAlreadyFinishedException>(() => player.Discover());
         }

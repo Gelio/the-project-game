@@ -22,6 +22,7 @@ namespace Player.Tests.PieceTests
         Mock<ICommunicator> _communicator;
         Mock<IGameService> _gameService;
         Mock<IMessageProvider> _messageProvider;
+        PlayerState _playerState;
 
         [SetUp]
         public void Setup()
@@ -37,6 +38,7 @@ namespace Player.Tests.PieceTests
             };
             _gameService = new Mock<IGameService>();
             _messageProvider = new Mock<IMessageProvider>();
+            _playerState = new PlayerState(_playerConfig);
             _game = new GameInfo()
             {
                 BoardSize = new BoardSize
@@ -46,6 +48,9 @@ namespace Player.Tests.PieceTests
                     X = 20
                 }
             };
+            _playerState.Game = _game;
+            _playerState.Id = _assignedPlayerId;
+            _playerState.Board = new Board(_game.BoardSize);
         }
 
         [TestCase(true)]
@@ -71,27 +76,23 @@ namespace Player.Tests.PieceTests
 
             // ------------------------
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
-            {
-                Id = _assignedPlayerId,
-                X = assignedX,
-                Y = assignedY,
-                Game = _game
-            };
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object, _playerState);
+            player.PlayerState.X = assignedX;
+            player.PlayerState.Y = assignedY;
 
             var piece = new Piece()
             {
                 IsSham = !isSham
             };
 
-            player.HeldPiece = piece;
+            player.PlayerState.HeldPiece = piece;
 
             var result = player.TestPiece();
 
             // ------------------------
 
             Assert.That(result, Is.True);
-            Assert.That(player.HeldPiece.IsSham.Equals(isSham));
+            Assert.That(player.PlayerState.HeldPiece.IsSham.Equals(isSham));
         }
 
         [Test]
@@ -99,7 +100,7 @@ namespace Player.Tests.PieceTests
         {
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Throws(new ActionInvalidException());
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object);
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object, _playerState);
             var result = player.TestPiece();
 
             Assert.That(result, Is.False);
@@ -118,12 +119,7 @@ namespace Player.Tests.PieceTests
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Returns(new Message<ActionValidPayload>());
             _messageProvider.Setup(x => x.Receive<TestPieceResponsePayload>()).Returns(msg2);
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
-            {
-                Id = _assignedPlayerId,
-                Game = _game
-            };
-
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object, _playerState);
             Assert.Throws<NoPayloadException>(() => player.TestPiece());
         }
     }
