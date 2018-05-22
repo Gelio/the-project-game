@@ -26,7 +26,7 @@ namespace Player
         {
             List<TileCommunicationDTO> boardToSend = new List<TileCommunicationDTO>();
 
-            for (int i = 0; i < _playerState.Game.BoardSize.X * (_playerState.Game.BoardSize.GoalArea * 2 + _playerState.Game.BoardSize.TaskArea); i++)
+            for (int i = 0; i < _playerState.Game.BoardSize.Area; i++)
             {
                 boardToSend.Add(AutoMapper.Mapper.Map<Tile, TileCommunicationDTO>(_playerState.Board.At(i)));
             }

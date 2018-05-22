@@ -13,19 +13,19 @@ namespace Player.Strategy
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
         protected PlayerState _playerState;
-        protected IActionExecutor _actionExecuter;
+        protected IActionExecutor _actionExecutor;
 
-        public AbstractStrategy(PlayerState playerState, IActionExecutor actionExecuter)
+        public AbstractStrategy(PlayerState playerState, IActionExecutor actionExecutor)
         {
             _playerState = playerState;
-            _actionExecuter = actionExecuter;
+            _actionExecutor = actionExecutor;
         }
 
         public abstract void Play();
 
         protected void InitGoalAreaDirection()
         {
-            _actionExecuter.RefreshBoardState();
+            _actionExecutor.RefreshBoardState();
             _playerState.GoalAreaDirection = _playerState.Y < _playerState.Game.BoardSize.GoalArea ? Consts.Up : Consts.Down;
             logger.Debug($"Player's init position: {_playerState.X} {_playerState.Y}");
         }
@@ -55,7 +55,7 @@ namespace Player.Strategy
         protected void PrintBoard()
         {
             int i = 0;
-            for (int y = 0; y < 2 * _playerState.Game.BoardSize.GoalArea + _playerState.Game.BoardSize.TaskArea; y++)
+            for (int y = 0; y < _playerState.Game.BoardSize.Y; y++)
             {
                 for (int x = 0; x < _playerState.Game.BoardSize.X; x++, i++)
                 {
@@ -92,7 +92,7 @@ namespace Player.Strategy
             else
             {
                 startY = _playerState.Game.BoardSize.GoalArea + _playerState.Game.BoardSize.TaskArea;
-                endY = (_playerState.Game.BoardSize.GoalArea * 2) + _playerState.Game.BoardSize.TaskArea;
+                endY = _playerState.Game.BoardSize.Y;
                 dy = 1;
             }
 
@@ -118,12 +118,14 @@ namespace Player.Strategy
         {
             int bestDistance = int.MaxValue;
             int bestDx = 0, bestDy = 0;
+            int x = _playerState.X;
+            int y = _playerState.Y;
             for (int dy = -1; dy <= 1; dy++)
                 for (int dx = -1; dx <= 1; dx++)
                 {
-                    if (_playerState.X + dx < 0 || _playerState.X + dx >= _playerState.Game.BoardSize.X || _playerState.Y + dy < 0 || _playerState.Y + dy >= (_playerState.Game.BoardSize.TaskArea + _playerState.Game.BoardSize.GoalArea * 2))
+                    if (x + dx < 0 || x + dx >= _playerState.Game.BoardSize.X || y + dy < 0 || y + dy >= _playerState.Game.BoardSize.Y)
                         continue;
-                    int index = _playerState.X + dx + _playerState.Game.BoardSize.X * (_playerState.Y + dy);
+                    int index = x + dx + _playerState.Game.BoardSize.X * (y + dy);
                     logger.Debug("dx: {}, dy: {}, index: {}", dx, dy, index);
                     if (_playerState.Board.At(index).DistanceToClosestPiece != -1 && _playerState.Board.At(index).DistanceToClosestPiece < bestDistance)
                     {
