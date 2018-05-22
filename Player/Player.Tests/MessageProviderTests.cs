@@ -29,6 +29,13 @@ namespace Player.Tests
     {
         Mock<ICommunicator> _communicator = new Mock<ICommunicator>();
         string _id = System.Guid.NewGuid().ToString();
+        PlayerState _playerState;
+
+        [SetUp]
+        public void SetUp()
+        {
+            _playerState = new PlayerState(null);
+        }
 
         [Test]
         public void SuccessfullyFinishedAction()
@@ -52,7 +59,7 @@ namespace Player.Tests
             _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
 
 
-            var system = new MessageProvider(_communicator.Object);
+            var system = new MessageProvider(_playerState, _communicator.Object);
             var result1 = system.Receive<ActionValidPayload>();
             var result2 = system.Receive<MoveResponsePayload>();
 
@@ -80,7 +87,7 @@ namespace Player.Tests
             _communicator.Setup(x => x.Receive()).Returns(serializedMsg);
 
 
-            var system = new MessageProvider(_communicator.Object);
+            var system = new MessageProvider(_playerState, _communicator.Object);
 
 
             Assert.Throws<ActionInvalidException>(() => system.Receive<ActionValidPayload>());
@@ -102,7 +109,7 @@ namespace Player.Tests
             });
             _communicator.Setup(x => x.Receive()).Returns(msg);
 
-            var system = new MessageProvider(_communicator.Object);
+            var system = new MessageProvider(_playerState, _communicator.Object);
 
             Assert.Throws<WrongPayloadException>(() => system.Receive<ActionValidPayload>());
             Assert.Throws<WrongPayloadException>(() => system.Receive<ActionInvalidPayload>());
@@ -141,9 +148,9 @@ namespace Player.Tests
             _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
 
 
-            var system = new MessageProvider(_communicator.Object);
+            var system = new MessageProvider(_playerState, _communicator.Object);
 
-            Assert.That(system.HasPendingRequests, Is.EqualTo(false));
+            Assert.That(system.PlayerState.HasPendingRequests, Is.EqualTo(false));
 
             var result1 = system.Receive<ActionValidPayload>();
             var result2 = system.Receive<MoveResponsePayload>();
@@ -152,7 +159,7 @@ namespace Player.Tests
             Assert.That(result2, Is.Not.Null);
             Assert.That(result1.Type, Is.EqualTo(Common.Consts.ActionValid));
             Assert.That(result2.Type, Is.EqualTo(Common.Consts.MoveResponse));
-            Assert.That(system.HasPendingRequests, Is.EqualTo(true));
+            Assert.That(system.PlayerState.HasPendingRequests, Is.EqualTo(true));
         }
 
         [Test]
@@ -187,9 +194,9 @@ namespace Player.Tests
             _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
 
 
-            var system = new MessageProvider(_communicator.Object);
+            var system = new MessageProvider(_playerState, _communicator.Object);
 
-            Assert.That(system.HasPendingRequests, Is.EqualTo(false));
+            Assert.That(system.PlayerState.HasPendingRequests, Is.EqualTo(false));
 
             var result1 = system.Receive<ActionValidPayload>();
             var result2 = system.Receive<MoveResponsePayload>();
@@ -198,7 +205,7 @@ namespace Player.Tests
             Assert.That(result2, Is.Not.Null);
             Assert.That(result1.Type, Is.EqualTo(Common.Consts.ActionValid));
             Assert.That(result2.Type, Is.EqualTo(Common.Consts.MoveResponse));
-            Assert.That(system.HasPendingRequests, Is.EqualTo(true));
+            Assert.That(system.PlayerState.HasPendingRequests, Is.EqualTo(true));
         }
 
         [Test]
@@ -241,9 +248,9 @@ namespace Player.Tests
             _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
 
 
-            var system = new MessageProvider(_communicator.Object);
+            var system = new MessageProvider(_playerState, _communicator.Object);
 
-            Assert.That(system.HasPendingResponses, Is.EqualTo(false));
+            Assert.That(system.PlayerState.HasPendingResponses, Is.EqualTo(false));
 
             var result1 = system.Receive<ActionValidPayload>();
             var result2 = system.Receive<DiscoveryResponsePayload>();
@@ -252,7 +259,7 @@ namespace Player.Tests
             Assert.That(result2, Is.Not.Null);
             Assert.That(result1.Type, Is.EqualTo(Common.Consts.ActionValid));
             Assert.That(result2.Type, Is.EqualTo(Common.Consts.DiscoveryResponse));
-            Assert.That(system.HasPendingResponses, Is.EqualTo(true));
+            Assert.That(system.PlayerState.HasPendingResponses, Is.EqualTo(true));
         }
 
         [Test]
@@ -291,9 +298,9 @@ namespace Player.Tests
             _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
 
 
-            var system = new MessageProvider(_communicator.Object);
+            var system = new MessageProvider(_playerState, _communicator.Object);
 
-            Assert.That(system.HasPendingResponses, Is.EqualTo(false));
+            Assert.That(system.PlayerState.HasPendingResponses, Is.EqualTo(false));
 
             var result1 = system.Receive<ActionValidPayload>();
             var result2 = system.Receive<DiscoveryResponsePayload>();
@@ -302,7 +309,7 @@ namespace Player.Tests
             Assert.That(result2, Is.Not.Null);
             Assert.That(result1.Type, Is.EqualTo(Common.Consts.ActionValid));
             Assert.That(result2.Type, Is.EqualTo(Common.Consts.DiscoveryResponse));
-            Assert.That(system.HasPendingResponses, Is.EqualTo(false));
+            Assert.That(system.PlayerState.HasPendingResponses, Is.EqualTo(false));
         }
 
         [Test]
@@ -321,7 +328,7 @@ namespace Player.Tests
             });
             _communicator.Setup(x => x.Receive()).Returns(msg);
 
-            var system = new MessageProvider(_communicator.Object);
+            var system = new MessageProvider(_playerState, _communicator.Object);
             Assert.Throws<GameAlreadyFinishedException>(() => system.Receive<ActionValidPayload>());
         }
 
@@ -348,7 +355,7 @@ namespace Player.Tests
             _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
 
 
-            var system = new MessageProvider(_communicator.Object);
+            var system = new MessageProvider(_playerState, _communicator.Object);
             var result1 = system.Receive<ActionValidPayload>();
 
             Assert.That(result1.Type, Is.EqualTo(Common.Consts.ActionValid));
@@ -389,17 +396,17 @@ namespace Player.Tests
             _communicator.Setup(x => x.Receive()).Returns(queue.Dequeue);
 
 
-            var system = new MessageProvider(_communicator.Object);
-            Assert.That(system.HasPendingRequests, Is.EqualTo(false));
+            var system = new MessageProvider(_playerState, _communicator.Object);
+            Assert.That(system.PlayerState.HasPendingRequests, Is.EqualTo(false));
 
             var result1 = system.Receive<ActionValidPayload>();
 
             Assert.That(result1, Is.Not.Null);
             Assert.That(result1.Type, Is.EqualTo(Common.Consts.ActionValid));
-            Assert.That(system.HasPendingRequests, Is.EqualTo(false));
+            Assert.That(system.PlayerState.HasPendingRequests, Is.EqualTo(false));
 
             Assert.Throws<WrongPayloadException>(() => system.Receive<DiscoveryPayload>());
-            Assert.That(system.HasPendingRequests, Is.EqualTo(true));
+            Assert.That(system.PlayerState.HasPendingRequests, Is.EqualTo(true));
         }
     }
 }

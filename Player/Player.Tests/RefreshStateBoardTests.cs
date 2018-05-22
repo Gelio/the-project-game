@@ -184,12 +184,12 @@ namespace Player.Tests
             var result = player.RefreshBoardState();
 
             Assert.That(result, Is.True);
-            (int foundX, int foundY) = player.Board.FindPlayerPosition(assignedPlayerId);
+            (int foundX, int foundY) = player.PlayerState.Board.FindPlayerPosition(assignedPlayerId);
             Assert.That(foundX, Is.Not.Negative);
             Assert.That(foundY, Is.Not.Negative);
-            Assert.That(player.Board.At(foundX, foundY).DistanceToClosestPiece, Is.EqualTo(msg2.Payload.CurrentPositionDistanceToClosestPiece));
-            Assert.That(player.X, Is.EqualTo(playerPos1.X));
-            Assert.That(player.Y, Is.EqualTo(playerPos1.Y));
+            Assert.That(player.PlayerState.Board.At(foundX, foundY).DistanceToClosestPiece, Is.EqualTo(msg2.Payload.CurrentPositionDistanceToClosestPiece));
+            Assert.That(player.PlayerState.X, Is.EqualTo(playerPos1.X));
+            Assert.That(player.PlayerState.Y, Is.EqualTo(playerPos1.Y));
 
             foreach (var p in playerPositions)
             {

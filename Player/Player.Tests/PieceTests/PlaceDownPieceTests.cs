@@ -114,11 +114,8 @@ namespace Player.Tests.PieceTests
 
             // ------------------------
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object);
-            {
-                X = assignedX,
-                Y = assignedY,
-            };
+            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object, _playerState);
+
             player.PlayerState.X = assignedX;
             player.PlayerState.Y = assignedY;
             player.PlayerState.HeldPiece = new Piece();
