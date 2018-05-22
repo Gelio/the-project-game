@@ -31,7 +31,9 @@ namespace Player
         static Arguments ParseArguments(string[] args)
         {
             var address = args[0];
-            var port = Int32.Parse(args[1]);
+            var parseResult = Int32.TryParse(args[1], out int port);
+            if (!parseResult)
+                throw new ArgumentException();
             var flag = args[2] == "-l";
             var gameName = flag ? "" : args[2];
             var configPath = args.Length < 4 ? "" : args[3];
@@ -174,9 +176,9 @@ namespace Player
             {
                 arguments = ParseArguments(args);
             }
-            catch (FormatException)
+            catch (ArgumentException)
             {
-                PrintUsageWithMessage("Server port has to be a number!");
+                PrintUsageWithMessage("Second argument has to be a port number!");
                 return;
             }
 
