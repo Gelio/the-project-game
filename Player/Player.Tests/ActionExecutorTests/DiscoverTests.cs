@@ -18,7 +18,6 @@ namespace Player.Tests
         string _assignedPlayerId;
         PlayerConfig _playerConfig;
         GameInfo _game;
-        Mock<ICommunicator> _communicator;
         Mock<IGameService> _gameService;
         Mock<IMessageProvider> _messageProvider;
         PlayerState _playerState;
@@ -26,7 +25,6 @@ namespace Player.Tests
         [SetUp]
         public void Setup()
         {
-            _communicator = new Mock<ICommunicator>();
             _messageProvider = new Mock<IMessageProvider>();
             _playerConfig = new PlayerConfig
             {
@@ -57,9 +55,9 @@ namespace Player.Tests
         public void DiscoverActionInvalid()
         {
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Throws(new ActionInvalidException());
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object, _playerState);
 
-            var result = player.Discover();
+            var actionExecutor = new ActionExecutor(_messageProvider.Object, _playerState);
+            var result = actionExecutor.Discover();
 
             Assert.That(result, Is.False);
         }
@@ -112,27 +110,25 @@ namespace Player.Tests
 
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Returns(new Message<ActionValidPayload>());
             _messageProvider.Setup(x => x.Receive<DiscoveryResponsePayload>()).Returns(msg);
+            _playerState.X = assignedX;
+            _playerState.Y = assignedY;
 
-
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object, _playerState);
-            player.PlayerState.X = assignedX;
-            player.PlayerState.Y = assignedY;
-
-            var result = player.Discover();
+            var actionExecutor = new ActionExecutor(_messageProvider.Object, _playerState);
+            var result = actionExecutor.Discover();
 
             Assert.That(result, Is.True);
             foreach (var t in tiles)
             {
-                Assert.That(player.PlayerState.Board.At(t.X, t.Y).DistanceToClosestPiece, Is.EqualTo(t.DistanceToClosestPiece));
-                Assert.That(player.PlayerState.Board.At(t.X, t.Y).Timestamp, Is.EqualTo(msg.Payload.Timestamp));
+                Assert.That(_playerState.Board.At(t.X, t.Y).DistanceToClosestPiece, Is.EqualTo(t.DistanceToClosestPiece));
+                Assert.That(_playerState.Board.At(t.X, t.Y).Timestamp, Is.EqualTo(msg.Payload.Timestamp));
                 if (t.Piece)
                 {
-                    Assert.That(player.PlayerState.Board.At(t.X, t.Y), Is.Not.Null);
-                    Assert.That(player.PlayerState.Board.At(t.X, t.Y).Piece.WasTested, Is.False);
+                    Assert.That(_playerState.Board.At(t.X, t.Y), Is.Not.Null);
+                    Assert.That(_playerState.Board.At(t.X, t.Y).Piece.WasTested, Is.False);
                 }
                 else
                 {
-                    Assert.That(player.PlayerState.Board.At(t.X, t.Y).Piece, Is.Null);
+                    Assert.That(_playerState.Board.At(t.X, t.Y).Piece, Is.Null);
                 }
             }
         }
@@ -151,9 +147,9 @@ namespace Player.Tests
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Returns(new Message<ActionValidPayload>());
             _messageProvider.Setup(x => x.Receive<DiscoveryResponsePayload>()).Returns(msg);
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object, _playerState);
+            var actionExecutor = new ActionExecutor(_messageProvider.Object, _playerState);
 
-            Assert.Throws<NoPayloadException>(() => player.Discover());
+            Assert.Throws<NoPayloadException>(() => actionExecutor.Discover());
         }
 
         [Test]
@@ -162,9 +158,9 @@ namespace Player.Tests
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Returns(new Message<ActionValidPayload>());
             _messageProvider.Setup(x => x.Receive<DiscoveryResponsePayload>()).Throws(new WrongPayloadException());
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object, _playerState);
+            var actionExecutor = new ActionExecutor(_messageProvider.Object, _playerState);
 
-            Assert.Throws<WrongPayloadException>(() => player.Discover());
+            Assert.Throws<WrongPayloadException>(() => actionExecutor.Discover());
         }
 
         [Test]
@@ -172,9 +168,9 @@ namespace Player.Tests
         {
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Throws(new GameAlreadyFinishedException());
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object, _playerState);
+            var actionExecutor = new ActionExecutor(_messageProvider.Object, _playerState);
 
-            Assert.Throws<GameAlreadyFinishedException>(() => player.Discover());
+            Assert.Throws<GameAlreadyFinishedException>(() => actionExecutor.Discover());
         }
 
         [Test]
@@ -183,9 +179,9 @@ namespace Player.Tests
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Returns(new Message<ActionValidPayload>());
             _messageProvider.Setup(x => x.Receive<DiscoveryResponsePayload>()).Throws(new GameAlreadyFinishedException());
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object, _playerState);
+            var actionExecutor = new ActionExecutor(_messageProvider.Object, _playerState);
 
-            Assert.Throws<GameAlreadyFinishedException>(() => player.Discover());
+            Assert.Throws<GameAlreadyFinishedException>(() => actionExecutor.Discover());
         }
     }
 }

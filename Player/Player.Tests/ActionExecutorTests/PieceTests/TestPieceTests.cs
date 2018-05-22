@@ -19,7 +19,6 @@ namespace Player.Tests.PieceTests
         static string _assignedPlayerId = Guid.NewGuid().ToString();
         PlayerConfig _playerConfig;
         GameInfo _game;
-        Mock<ICommunicator> _communicator;
         Mock<IGameService> _gameService;
         Mock<IMessageProvider> _messageProvider;
         PlayerState _playerState;
@@ -27,7 +26,6 @@ namespace Player.Tests.PieceTests
         [SetUp]
         public void Setup()
         {
-            _communicator = new Mock<ICommunicator>();
             _playerConfig = new PlayerConfig
             {
                 AskLevel = 10,
@@ -59,7 +57,6 @@ namespace Player.Tests.PieceTests
         {
             var assignedX = 12;
             var assignedY = 3;
-
             var msg2 = new Message<TestPieceResponsePayload>()
             {
                 Type = Common.Consts.TestPieceResponse,
@@ -70,29 +67,21 @@ namespace Player.Tests.PieceTests
                     IsSham = isSham
                 }
             };
-
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Returns(new Message<ActionValidPayload>());
             _messageProvider.Setup(x => x.Receive<TestPieceResponsePayload>()).Returns(msg2);
-
-            // ------------------------
-
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object, _playerState);
-            player.PlayerState.X = assignedX;
-            player.PlayerState.Y = assignedY;
-
-            var piece = new Piece()
+            _playerState.X = assignedX;
+            _playerState.Y = assignedY;
+            _playerState.HeldPiece = new Piece()
             {
                 IsSham = !isSham
             };
 
-            player.PlayerState.HeldPiece = piece;
+            var actionExecutor = new ActionExecutor(_messageProvider.Object, _playerState);
+            var result = actionExecutor.TestPiece();
 
-            var result = player.TestPiece();
-
-            // ------------------------
 
             Assert.That(result, Is.True);
-            Assert.That(player.PlayerState.HeldPiece.IsSham.Equals(isSham));
+            Assert.That(_playerState.HeldPiece.IsSham.Equals(isSham));
         }
 
         [Test]
@@ -100,8 +89,8 @@ namespace Player.Tests.PieceTests
         {
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Throws(new ActionInvalidException());
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object, _playerState);
-            var result = player.TestPiece();
+            var actionExecutor = new ActionExecutor(_messageProvider.Object, _playerState);
+            var result = actionExecutor.TestPiece();
 
             Assert.That(result, Is.False);
         }
@@ -119,8 +108,8 @@ namespace Player.Tests.PieceTests
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Returns(new Message<ActionValidPayload>());
             _messageProvider.Setup(x => x.Receive<TestPieceResponsePayload>()).Returns(msg2);
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object, _playerState);
-            Assert.Throws<NoPayloadException>(() => player.TestPiece());
+            var actionExecutor = new ActionExecutor(_messageProvider.Object, _playerState);
+            Assert.Throws<NoPayloadException>(() => actionExecutor.TestPiece());
         }
     }
 }

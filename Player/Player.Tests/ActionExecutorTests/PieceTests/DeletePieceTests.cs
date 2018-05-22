@@ -15,7 +15,6 @@ namespace Player.Tests.PieceTests
         static string _assignedPlayerId = Guid.NewGuid().ToString();
         PlayerConfig _playerConfig;
         GameInfo _game;
-        Mock<ICommunicator> _communicator;
         Mock<IGameService> _gameService;
         Mock<IMessageProvider> _messageProvider;
         PlayerState _playerState;
@@ -23,7 +22,6 @@ namespace Player.Tests.PieceTests
         [SetUp]
         public void Setup()
         {
-            _communicator = new Mock<ICommunicator>();
             _playerConfig = new PlayerConfig
             {
                 AskLevel = 10,
@@ -55,29 +53,25 @@ namespace Player.Tests.PieceTests
             {
                 Type = Common.Consts.DeletePieceResponse,
                 SenderId = Common.Consts.GameMasterId,
-                RecipientId = _assignedPlayerId               
+                RecipientId = _assignedPlayerId
             };
+            _playerState.HeldPiece = new Piece()
+            {
+                IsSham = false
+            }; ;
 
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Returns(new Message<ActionValidPayload>());
             _messageProvider.Setup(x => x.Receive<DeletePieceResponsePayload>()).Returns(msg2);
 
             // ------------------------
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object, _playerState){};
-
-            var piece = new Piece()
-            {
-                IsSham = false
-            };
-
-            player.PlayerState.HeldPiece = piece;
-
-            var result = player.DeletePiece();
+            var actionExecutor = new ActionExecutor(_messageProvider.Object, _playerState);
+            var result = actionExecutor.DeletePiece();
 
             // ------------------------
 
             Assert.That(result, Is.True);
-            Assert.That(player.PlayerState.HeldPiece, Is.Null);
+            Assert.That(actionExecutor.PlayerState.HeldPiece, Is.Null);
         }
 
         [Test]
@@ -85,8 +79,8 @@ namespace Player.Tests.PieceTests
         {
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Throws(new ActionInvalidException());
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object, _playerState);
-            var result = player.DeletePiece();
+            var actionExecutor = new ActionExecutor(_messageProvider.Object, _playerState);
+            var result = actionExecutor.DeletePiece();
 
             Assert.That(result, Is.False);
         }

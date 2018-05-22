@@ -9,7 +9,7 @@ using Player.Messages.Responses;
 
 namespace Player
 {
-    class ActionExecutor : IActionExecutor
+    public class ActionExecutor : IActionExecutor
     {
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 

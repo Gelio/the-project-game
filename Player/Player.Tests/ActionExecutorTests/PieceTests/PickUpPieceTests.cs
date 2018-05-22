@@ -19,7 +19,6 @@ namespace Player.Tests.PieceTests
         static string _assignedPlayerId = Guid.NewGuid().ToString();
         PlayerConfig _playerConfig;
         GameInfo _game;
-        Mock<ICommunicator> _communicator;
         Mock<IGameService> _gameService;
         Mock<IMessageProvider> _messageProvider;
         PlayerState _playerState;
@@ -27,7 +26,6 @@ namespace Player.Tests.PieceTests
         [SetUp]
         public void Setup()
         {
-            _communicator = new Mock<ICommunicator>();
             _playerConfig = new PlayerConfig
             {
                 AskLevel = 10,
@@ -49,7 +47,7 @@ namespace Player.Tests.PieceTests
                 }
             };
             _playerState.Game = _game;
-            _playerState.Id = _assignedPlayerId;            
+            _playerState.Id = _assignedPlayerId;
         }
 
         [Test]
@@ -57,7 +55,6 @@ namespace Player.Tests.PieceTests
         {
             var assignedX = 12;
             var assignedY = 3;
-
             var msg2 = new Message<PickUpPieceResponsePayload>()
             {
                 Type = Common.Consts.PickupPieceResponse,
@@ -65,25 +62,22 @@ namespace Player.Tests.PieceTests
                 RecipientId = _assignedPlayerId,
                 Payload = new PickUpPieceResponsePayload()
             };
+            _playerState.X = assignedX;
+            _playerState.Y = assignedY;
+            _playerState.Board = new Board(_game.BoardSize);
+            _playerState.Board.At(_playerState.X, _playerState.Y).Piece = new Piece();
 
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Returns(new Message<ActionValidPayload>());
             _messageProvider.Setup(x => x.Receive<PickUpPieceResponsePayload>()).Returns(msg2);
 
-            // ------------------------
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object, _playerState);
-            player.PlayerState.X = assignedX;
-            player.PlayerState.Y = assignedY;
-            player.PlayerState.Board = new Board(_game.BoardSize);
+            var actionExecutor = new ActionExecutor(_messageProvider.Object, _playerState);
+            var result = actionExecutor.PickUpPiece();
 
-            player.PlayerState.Board.At(player.PlayerState.X, player.PlayerState.Y).Piece = new Piece();
-            var result = player.PickUpPiece();
-
-            // ------------------------
 
             Assert.That(result, Is.True);
-            Assert.That(player.PlayerState.HeldPiece, Is.Not.Null);
-            Assert.That(player.PlayerState.Board.At(player.PlayerState.X, player.PlayerState.Y).Piece, Is.Null);
+            Assert.That(_playerState.HeldPiece, Is.Not.Null);
+            Assert.That(_playerState.Board.At(_playerState.X, _playerState.Y).Piece, Is.Null);
         }
 
         [Test]
@@ -91,8 +85,8 @@ namespace Player.Tests.PieceTests
         {
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Throws(new ActionInvalidException());
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object, _playerState);
-            var result = player.PickUpPiece();
+            var actionExecutor = new ActionExecutor(_messageProvider.Object, _playerState);
+            var result = actionExecutor.PickUpPiece();
 
             Assert.That(result, Is.False);
         }
