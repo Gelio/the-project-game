@@ -11,12 +11,12 @@ export enum PlayerRole {
 }
 
 export class GameLog {
-  public readonly type: string;
+  public readonly messageType: string;
   public readonly timestamp: string;
   public readonly playerId: EntityId;
   public readonly teamId: TeamId;
   public readonly round: number;
-  public readonly role: PlayerRole;
+  public readonly playerRole: PlayerRole;
   public readonly valid: boolean;
 
   constructor(
@@ -26,10 +26,10 @@ export class GameLog {
     isValid: boolean,
     timestamp?: string
   ) {
-    this.type = message.type;
+    this.messageType = message.type;
     this.playerId = player.playerId;
     this.teamId = player.teamId;
-    this.role = player.isLeader ? PlayerRole.Leader : PlayerRole.Member;
+    this.playerRole = player.isLeader ? PlayerRole.Leader : PlayerRole.Member;
     this.valid = isValid;
     this.timestamp = timestamp || new Date().toString();
     this.round = round;
