@@ -17,12 +17,12 @@ namespace Player
     {
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private PlayerState _playerState;
+        public PlayerState PlayerState;
         private ICommunicator _communicator;
 
         public MessageProvider(PlayerState playerState, ICommunicator communicator)
         {
-            _playerState = playerState;
+            PlayerState = playerState;
             _communicator = communicator;
         }
         
@@ -57,9 +57,9 @@ namespace Player
                 if (message.Type == Consts.CommunicationRequest)
                 {
                     var request = JsonConvert.DeserializeObject<Message<CommunicationPayload>>(serializedMessage);
-                    _playerState.PutRequest(request);
+                    PlayerState.PutRequest(request);
                     logger.Info($"Received communication request from {request.Payload.SenderPlayerId}");
-                    logger.Debug($"Pending requests: {_playerState.HasPendingRequests}, Pending responses: {_playerState.HasPendingResponses}");
+                    logger.Debug($"Pending requests: {PlayerState.HasPendingRequests}, Pending responses: {PlayerState.HasPendingResponses}");
                     continue;
                 }
                 else if (message.Type == Consts.CommunicationResponse)
@@ -67,14 +67,14 @@ namespace Player
                     var response = JsonConvert.DeserializeObject<Message<CommunicationResponsePayload>>(serializedMessage);
                     if (response.Payload.Accepted)
                     {
-                        _playerState.PutResponse(response);
+                        PlayerState.PutResponse(response);
                         logger.Info($"Received accepted communication response from {response.Payload.SenderPlayerId}");
                     }
                     else
                     {
                         logger.Info($"Received rejected communication response from {response.Payload.SenderPlayerId}");
                     }
-                    logger.Debug($"Pending requests: {_playerState.HasPendingRequests}, Pending responses: {_playerState.HasPendingResponses}");
+                    logger.Debug($"Pending requests: {PlayerState.HasPendingRequests}, Pending responses: {PlayerState.HasPendingResponses}");
                     continue;
                 }
                 else

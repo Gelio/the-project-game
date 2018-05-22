@@ -23,7 +23,7 @@ namespace Player
         private IGameService _gameService;
         private IMessageProvider _messageProvider;
         private PlayerConfig _playerConfig;
-        private PlayerState _playerState;        
+        public PlayerState PlayerState;        
 
         public Player(ICommunicator communicator, PlayerConfig playerConfig, IGameService gameService, IMessageProvider messageProvider, PlayerState playerState)
         {
@@ -31,7 +31,7 @@ namespace Player
             _gameService = gameService;
             _messageProvider = messageProvider;
             _playerConfig = playerConfig;
-            _playerState = playerState;
+            PlayerState = playerState;
         }
 
 
@@ -41,7 +41,7 @@ namespace Player
 
             while (true)
             {
-                _playerState.ResetState();
+                PlayerState.ResetState();
 
                 int tries = 3;
                 while (true)
@@ -61,8 +61,8 @@ namespace Player
 
                 WaitForGameStart();
                 RefreshBoardState(); // -- gives us info about all teammates' (+ ours) initial position
-                logger.Debug($"Player's init position: {_playerState.X} {_playerState.Y}");
-                _playerState.GoalAreaDirection = _playerState.Y < _playerState.Game.BoardSize.GoalArea ? Consts.Up : Consts.Down;
+                logger.Debug($"Player's init position: {PlayerState.X} {PlayerState.Y}");
+                PlayerState.GoalAreaDirection = PlayerState.Y < PlayerState.Game.BoardSize.GoalArea ? Consts.Up : Consts.Down;
                 try
                 {
                     Play();
@@ -80,12 +80,12 @@ namespace Player
         public void GetGameInfo()
         {
             var gamesList = _gameService.GetGamesList();
-            _playerState.Game = gamesList.FirstOrDefault(x => x.Name == _playerConfig.GameName);
-            if (_playerState.Game == null)
+            PlayerState.Game = gamesList.FirstOrDefault(x => x.Name == _playerConfig.GameName);
+            if (PlayerState.Game == null)
             {
                 throw new OperationCanceledException("Game not found");
             }
-            _playerState.InitBoard();
+            PlayerState.InitBoard();
         }
 
         public void ConnectToServer()
@@ -93,7 +93,7 @@ namespace Player
             _messageProvider.SendMessageWithTimeout(new Message<IPayload>
             {
                 Type = Consts.PlayerHelloRequest,
-                SenderId = _playerState.Id,
+                SenderId = PlayerState.Id,
                 Payload = new PlayerHelloPayload
                 {
                     Game = _playerConfig.GameName,
@@ -102,7 +102,7 @@ namespace Player
                 }
             }, _playerConfig.Timeout);
             _messageProvider.AssertPlayerStatus(_playerConfig.Timeout);
-            logger.Info($"Player ({_playerState.Id}) connected to server");
+            logger.Info($"Player ({PlayerState.Id}) connected to server");
             logger.Debug($"Team no.: {_playerConfig.TeamNumber}");
             logger.Debug($"Is leader: {_playerConfig.IsLeader}");
         }
@@ -128,16 +128,16 @@ namespace Player
                 }
             }
 
-            _playerState.TeamMembersIds = message.Payload.TeamInfo[_playerConfig.TeamNumber].Players;
-            _playerState.TeamMembersIds.Remove(_playerState.Id);
-            _playerState.TeamMembersIds.ToList().ForEach(id => _playerState.WaitingForResponse.Add(id, false));
-            _playerState.LeaderId = message.Payload.TeamInfo[_playerConfig.TeamNumber].LeaderId;
+            PlayerState.TeamMembersIds = message.Payload.TeamInfo[_playerConfig.TeamNumber].Players;
+            PlayerState.TeamMembersIds.Remove(PlayerState.Id);
+            PlayerState.TeamMembersIds.ToList().ForEach(id => PlayerState.WaitingForResponse.Add(id, false));
+            PlayerState.LeaderId = message.Payload.TeamInfo[_playerConfig.TeamNumber].LeaderId;
             logger.Info("The game has started!");
         }
 
         public void Play()
         {
-            var trivialStrategy = new TrivialStrategy(_playerState, this);
+            var trivialStrategy = new TrivialStrategy(PlayerState, this);
             trivialStrategy.Play();
         }
 
@@ -148,7 +148,7 @@ namespace Player
             {
                 Type = Consts.DiscoveryRequest,
                 RecipientId = Consts.GameMasterId,
-                SenderId = _playerState.Id,
+                SenderId = PlayerState.Id,
                 Payload = new DiscoveryPayload()
             });
             if (!GetActionStatus()) { return false; }
@@ -162,11 +162,11 @@ namespace Player
 
             foreach (var tileDTO in received.Payload.Tiles)
             {
-                AutoMapper.Mapper.Map(tileDTO, _playerState.Board.At(tileDTO.X, tileDTO.Y));
-                _playerState.Board.At(tileDTO.X, tileDTO.Y).Timestamp = received.Payload.Timestamp;
+                AutoMapper.Mapper.Map(tileDTO, PlayerState.Board.At(tileDTO.X, tileDTO.Y));
+                PlayerState.Board.At(tileDTO.X, tileDTO.Y).Timestamp = received.Payload.Timestamp;
                 if (tileDTO.Piece)
                 {
-                    _playerState.Board.At(tileDTO.X, tileDTO.Y).Piece = new Piece();
+                    PlayerState.Board.At(tileDTO.X, tileDTO.Y).Piece = new Piece();
                 }
             }
             logger.Info($"Discovered {received.Payload.Tiles.Count} tiles");
@@ -196,7 +196,7 @@ namespace Player
             _messageProvider.SendMessage(new Message<IPayload>()
             {
                 Type = Consts.RefreshStateRequest,
-                SenderId = _playerState.Id,
+                SenderId = PlayerState.Id,
                 Payload = new RefreshStatePayload()
             });
             if (!GetActionStatus()) { return false; }
@@ -212,30 +212,30 @@ namespace Player
             foreach (var playerInfo in received.Payload.PlayerPositions)
             {
                 // TODO: Remove all (outdated) PlayerId attributes from board tiles
-                _playerState.Board.At(playerInfo.X, playerInfo.Y).PlayerId = playerInfo.PlayerId;
-                _playerState.Board.At(playerInfo.X, playerInfo.Y).Timestamp = received.Payload.Timestamp;
-                if (playerInfo.PlayerId == _playerState.Id)
+                PlayerState.Board.At(playerInfo.X, playerInfo.Y).PlayerId = playerInfo.PlayerId;
+                PlayerState.Board.At(playerInfo.X, playerInfo.Y).Timestamp = received.Payload.Timestamp;
+                if (playerInfo.PlayerId == PlayerState.Id)
                 {
-                    _playerState.X = playerInfo.X;
-                    _playerState.Y = playerInfo.Y;
-                    _playerState.Board.At(_playerState.X, _playerState.Y).DistanceToClosestPiece = received.Payload.CurrentPositionDistanceToClosestPiece;
+                    PlayerState.X = playerInfo.X;
+                    PlayerState.Y = playerInfo.Y;
+                    PlayerState.Board.At(PlayerState.X, PlayerState.Y).DistanceToClosestPiece = received.Payload.CurrentPositionDistanceToClosestPiece;
                     gotOwnInfo = true;
-                    if (_playerState.Board.At(_playerState.X, _playerState.Y).Piece == null && _playerState.Board.At(_playerState.X, _playerState.Y).DistanceToClosestPiece == 0)
-                        _playerState.Board.At(_playerState.X, _playerState.Y).Piece = new Piece();
+                    if (PlayerState.Board.At(PlayerState.X, PlayerState.Y).Piece == null && PlayerState.Board.At(PlayerState.X, PlayerState.Y).DistanceToClosestPiece == 0)
+                        PlayerState.Board.At(PlayerState.X, PlayerState.Y).Piece = new Piece();
                 }
             }
 
             if (!gotOwnInfo)
                 throw new InvalidOperationException("No info about player");
 
-            logger.Debug($"Player's position: ({_playerState.X}, {_playerState.Y})");
+            logger.Debug($"Player's position: ({PlayerState.X}, {PlayerState.Y})");
             return true;
         }
 
         public bool Move(string direction)
         {
-            int newX = _playerState.X;
-            int newY = _playerState.Y;
+            int newX = PlayerState.X;
+            int newY = PlayerState.Y;
             switch (direction)
             {
                 case Consts.Up:
@@ -253,11 +253,11 @@ namespace Player
                 default:
                     return false;
             }
-            int index = newX + _playerState.Game.BoardSize.X * newY;
+            int index = newX + PlayerState.Game.BoardSize.X * newY;
             _messageProvider.SendMessage(new Message<IPayload>()
             {
                 Type = Consts.MoveRequest,
-                SenderId = _playerState.Id,
+                SenderId = PlayerState.Id,
                 Payload = new MovePayload
                 {
                     Direction = direction
@@ -270,12 +270,12 @@ namespace Player
             if (received.Payload == null)
                 throw new NoPayloadException();
 
-            _playerState.Board.At(_playerState.X, _playerState.Y).PlayerId = null;
-            _playerState.Board.At(index).PlayerId = _playerState.Id;
-            _playerState.Board.At(index).DistanceToClosestPiece = received.Payload.DistanceToPiece;
-            _playerState.Board.At(index).Timestamp = received.Payload.TimeStamp;
-            _playerState.X = newX;
-            _playerState.Y = newY;
+            PlayerState.Board.At(PlayerState.X, PlayerState.Y).PlayerId = null;
+            PlayerState.Board.At(index).PlayerId = PlayerState.Id;
+            PlayerState.Board.At(index).DistanceToClosestPiece = received.Payload.DistanceToPiece;
+            PlayerState.Board.At(index).Timestamp = received.Payload.TimeStamp;
+            PlayerState.X = newX;
+            PlayerState.Y = newY;
             return true;
         }
 
@@ -284,17 +284,17 @@ namespace Player
             _messageProvider.SendMessage(new Message<IPayload>()
             {
                 Type = Consts.PickupPieceRequest,
-                SenderId = _playerState.Id,
+                SenderId = PlayerState.Id,
                 Payload = new PickUpPiecePayload()
             });
             if (!GetActionStatus()) { return false; }
             var received = _messageProvider.Receive<PickUpPieceResponsePayload>();
 
-            _playerState.HeldPiece = _playerState.Board.At(_playerState.X, _playerState.Y).Piece;
-            _playerState.Board.At(_playerState.X, _playerState.Y).Piece = null;
-            _playerState.Board.At(_playerState.X, _playerState.Y).DistanceToClosestPiece = int.MaxValue;
+            PlayerState.HeldPiece = PlayerState.Board.At(PlayerState.X, PlayerState.Y).Piece;
+            PlayerState.Board.At(PlayerState.X, PlayerState.Y).Piece = null;
+            PlayerState.Board.At(PlayerState.X, PlayerState.Y).DistanceToClosestPiece = int.MaxValue;
 
-            logger.Info("Picked up piece @ ({}, {})", _playerState.X, _playerState.Y);
+            logger.Info("Picked up piece @ ({}, {})", PlayerState.X, PlayerState.Y);
             return true;
         }
 
@@ -303,7 +303,7 @@ namespace Player
             _messageProvider.SendMessage(new Message<IPayload>()
             {
                 Type = Consts.PlaceDownPieceRequest,
-                SenderId = _playerState.Id,
+                SenderId = PlayerState.Id,
                 Payload = new PlaceDownPiecePayload()
             });
             if (!GetActionStatus()) { return (false, PlaceDownPieceResult.NoScore); }
@@ -312,13 +312,13 @@ namespace Player
             if (received.Payload == null)
                 throw new NoPayloadException();
 
-            var piece = _playerState.HeldPiece;
-            _playerState.HeldPiece = null;
-            _playerState.Board.At(_playerState.X, _playerState.Y).Piece = null;
+            var piece = PlayerState.HeldPiece;
+            PlayerState.HeldPiece = null;
+            PlayerState.Board.At(PlayerState.X, PlayerState.Y).Piece = null;
 
             if (!received.Payload.DidCompleteGoal.HasValue
-                 && (_playerState.Y < _playerState.Game.BoardSize.GoalArea
-                || _playerState.Y >= _playerState.Game.BoardSize.GoalArea + _playerState.Game.BoardSize.TaskArea))
+                 && (PlayerState.Y < PlayerState.Game.BoardSize.GoalArea
+                || PlayerState.Y >= PlayerState.Game.BoardSize.GoalArea + PlayerState.Game.BoardSize.TaskArea))
             {
                 logger.Info("The piece was a sham!");
                 return (true, PlaceDownPieceResult.Sham);
@@ -326,19 +326,19 @@ namespace Player
             else if (!received.Payload.DidCompleteGoal.HasValue)
             {
                 logger.Info("Placed a piece in Task Area");
-                _playerState.Board.At(_playerState.X, _playerState.Y).Piece = piece;
+                PlayerState.Board.At(PlayerState.X, PlayerState.Y).Piece = piece;
                 return (true, PlaceDownPieceResult.TaskArea);
             }
             else if (!received.Payload.DidCompleteGoal.Value)
             {
                 logger.Info("This tile is not a goal tile");
-                _playerState.Board.At(_playerState.X, _playerState.Y).GoalStatus = GoalStatusEnum.NoGoal;
+                PlayerState.Board.At(PlayerState.X, PlayerState.Y).GoalStatus = GoalStatusEnum.NoGoal;
                 return (true, PlaceDownPieceResult.NoScore);
             }
             else
             {
-                logger.Info($"Got 1 point for placing a piece @ {_playerState.X} {_playerState.Y}!");
-                _playerState.Board.At(_playerState.X, _playerState.Y).GoalStatus = GoalStatusEnum.CompletedGoal;
+                logger.Info($"Got 1 point for placing a piece @ {PlayerState.X} {PlayerState.Y}!");
+                PlayerState.Board.At(PlayerState.X, PlayerState.Y).GoalStatus = GoalStatusEnum.CompletedGoal;
                 return (true, PlaceDownPieceResult.Score);
             }
         }
@@ -366,14 +366,14 @@ namespace Player
             _messageProvider.SendMessage(new Message<IPayload>()
             {
                 Type = Consts.CommunicationRequest,
-                SenderId = _playerState.Id,
+                SenderId = PlayerState.Id,
                 Payload = new CommunicationPayload
                 {
                     TargetPlayerId = otherId
                 }
             });
             if (!GetActionStatus()) { return false; }
-            _playerState.WaitingForResponse[otherId] = true;
+            PlayerState.WaitingForResponse[otherId] = true;
             _messageProvider.Receive<RequestSentPayload>();
             logger.Info($"Communication request sent to {otherId}");
             return true;
@@ -385,7 +385,7 @@ namespace Player
             var r = new Random();
             int willThePoorGuyGetDataFromMe = r.Next(0, 1);
 
-            if (otherId == _playerState.LeaderId || willThePoorGuyGetDataFromMe == 1)
+            if (otherId == PlayerState.LeaderId || willThePoorGuyGetDataFromMe == 1)
             {
                 return AcceptCommunication(otherId);
             }
@@ -401,15 +401,15 @@ namespace Player
             // haven't checked how the mapping works, therefore it's written how it is now
             List<TileCommunicationDTO> boardToSend = new List<TileCommunicationDTO>();
 
-            for (int i = 0; i < _playerState.Game.BoardSize.X * (_playerState.Game.BoardSize.GoalArea * 2 + _playerState.Game.BoardSize.TaskArea); i++)
+            for (int i = 0; i < PlayerState.Game.BoardSize.X * (PlayerState.Game.BoardSize.GoalArea * 2 + PlayerState.Game.BoardSize.TaskArea); i++)
             {
-                boardToSend.Add(AutoMapper.Mapper.Map<Tile, TileCommunicationDTO>(_playerState.Board.At(i)));
+                boardToSend.Add(AutoMapper.Mapper.Map<Tile, TileCommunicationDTO>(PlayerState.Board.At(i)));
             }
 
             _messageProvider.SendMessage(new Message<IPayload>()
             {
                 Type = Consts.CommunicationResponse,
-                SenderId = _playerState.Id,
+                SenderId = PlayerState.Id,
                 Payload = new CommunicationResponsePayload
                 {
                     TargetPlayerId = otherId,
@@ -428,7 +428,7 @@ namespace Player
             _messageProvider.SendMessage(new Message<IPayload>()
             {
                 Type = Consts.CommunicationResponse,
-                SenderId = _playerState.Id,
+                SenderId = PlayerState.Id,
                 Payload = new CommunicationResponsePayload
                 {
                     TargetPlayerId = otherId,
@@ -448,7 +448,7 @@ namespace Player
             _messageProvider.SendMessage(new Message<IPayload>()
             {
                 Type = Consts.TestPieceRequest,
-                SenderId = _playerState.Id,
+                SenderId = PlayerState.Id,
                 Payload = new TestPiecePayload()
             });
             if (!GetActionStatus()) { return false; }
@@ -456,8 +456,8 @@ namespace Player
             if (received.Payload == null)
                 throw new NoPayloadException();
 
-            _playerState.HeldPiece.WasTested = true;
-            _playerState.HeldPiece.IsSham = received.Payload.IsSham;
+            PlayerState.HeldPiece.WasTested = true;
+            PlayerState.HeldPiece.IsSham = received.Payload.IsSham;
 
             string pieceResult = received.Payload.IsSham ? "a sham" : "valid";
 
@@ -471,13 +471,13 @@ namespace Player
             _messageProvider.SendMessage(new Message<IPayload>()
             {
                 Type = Consts.DeletePieceRequest,
-                SenderId = _playerState.Id,
+                SenderId = PlayerState.Id,
                 Payload = new TestPiecePayload()
             });
             if (!GetActionStatus()) { return false; }
             var received = _messageProvider.Receive<DeletePieceResponsePayload>();
 
-            _playerState.HeldPiece = null;
+            PlayerState.HeldPiece = null;
             logger.Info("Piece deleted");
 
             return true;
