@@ -25,8 +25,7 @@ import { RegisterGameResponse } from '../interfaces/responses/RegisterGameRespon
 import { TestPieceResponse } from '../interfaces/responses/TestPieceResponse';
 import { UnregisterGameResponse } from '../interfaces/responses/UnregisterGameResponse';
 
-import { Game } from './Game';
-import { WriteCsvLogFn } from './GameMaster';
+import { Game, WriteCsvLogFn } from './Game';
 import { GameState } from './GameState';
 import { Player } from './Player';
 import { InvalidMessageResult } from './ProcessMessageResult';

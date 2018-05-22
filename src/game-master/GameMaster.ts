@@ -50,12 +50,6 @@ export interface GameMasterOptions {
   registerGameInterval: number;
 }
 
-export type WriteCsvLogFn = (
-  message: Message<any>,
-  player: Player,
-  valid: boolean
-) => Promise<void>;
-
 export class GameMaster implements Service {
   private readonly options: GameMasterOptions;
   private communicator: Communicator;

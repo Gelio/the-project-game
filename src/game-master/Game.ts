@@ -24,7 +24,6 @@ import { UnregisterGameResponse } from '../interfaces/responses/UnregisterGameRe
 import { Board } from './models/Board';
 import { Scoreboard } from './models/Scoreboard';
 
-import { WriteCsvLogFn } from './GameMaster';
 import { GameState } from './GameState';
 import { ProcessMessageResult } from './ProcessMessageResult';
 
@@ -40,6 +39,12 @@ import { PeriodicPieceGenerator } from './board-generation/PeriodicPieceGenerato
 
 import { CommunicationRequestsStore } from './communication/CommunicationRequestsStore';
 import { getGameStartedMessagePayload } from './communication/getGameStartedMessagePayload';
+
+export type WriteCsvLogFn = (
+  message: Message<any>,
+  player: Player,
+  valid: boolean
+) => Promise<void>;
 
 export class Game {
   public board: Board;
@@ -68,7 +73,7 @@ export class Game {
     periodicPieceGeneratorFactory: PeriodicPieceGeneratorFactory,
     onPointsLimitReached: Function,
     updateUI: Function,
-    writeCsvLog: (message: Message<any>, player: Player, valid: boolean) => Promise<void>
+    writeCsvLog: WriteCsvLogFn
   ) {
     this.definition = gameDefinition;
     this.board = new Board(this.definition.boardSize, this.definition.goalLimit);
@@ -129,7 +134,7 @@ export class Game {
       };
 
       if (player) {
-        this.writeCsvLog(message, <Player>player, false);
+        this.writeCsvLog(message, player, false);
       } else {
         this.logger.warn(`Player ${message.senderId} not found. Could not save csv log`);
       }
