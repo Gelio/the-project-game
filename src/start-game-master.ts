@@ -15,14 +15,8 @@ import { GMArguments } from './interfaces/arguments/GMArguments';
 
 import { addSharedArguments } from './arguments/addSharedArguments';
 import { getLogLevel } from './arguments/getLogLevel';
-<<<<<<< HEAD
-<<<<<<< HEAD
+
 import { validateGameMasterConfig } from './game-master/validation/validateGameMasterConfig';
-=======
-import { CsvWriter } from './common/logging/CsvWriter';
->>>>>>> [GM] remove CsvLogFactory
-=======
->>>>>>> [GM] check if config exists
 
 // tslint:disable-next-line no-require-imports no-var-requires
 const config = require('./game-master.config.json');
@@ -60,7 +54,6 @@ function parseGMArguments(): GMArguments {
     return;
   }
 
-<<<<<<< HEAD
   let uiController: IUIController;
   if (parsedArguments.no_ui) {
     uiController = new EmptyUIController(loggerFactory);
@@ -68,29 +61,15 @@ function parseGMArguments(): GMArguments {
     const screen = createBlessedScreen();
     uiController = new UIController(screen, blessed.box, loggerFactory);
   }
+  try {
+    const gameLogsCsvWriter = new GameLogsCsvWriter(config.gameName);
+    const gameMaster = new GameMaster(config, uiController, gameLogsCsvWriter);
+    gameMaster.init();
+  } catch (error) {
+    const logger = loggerFactory.createConsoleLogger();
 
-  const csvWriter = new CsvWriter(config.gameName);
+    logger.error(error.message);
 
-<<<<<<< HEAD
-  const gameMaster = new GameMaster(config, uiController, csvWriter);
-  gameMaster.init();
+    return;
+  }
 })();
-=======
-let csvWriter;
-=======
-let gameLogsCsvWriter;
->>>>>>> [GM] check if config exists
-
-let gameName;
-
-if (config) {
-  gameName = config.gameName;
-} else {
-  gameName = 'Invalid GM config';
-}
-
-gameLogsCsvWriter = new GameLogsCsvWriter(gameName);
-
-const gameMaster = new GameMaster(config, uiController, gameLogsCsvWriter);
-gameMaster.init();
->>>>>>> [GM] remove CsvLogFactory

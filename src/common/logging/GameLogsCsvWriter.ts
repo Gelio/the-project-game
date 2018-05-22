@@ -15,7 +15,7 @@ const promisifiedWrite = promisify(write);
 export class GameLogsCsvWriter implements Service {
   private readonly fileName: string;
   private readonly fileNameWithExtension: string;
-  private fileDescriptor: number | null = null;
+  private fileDescriptor?: number;
   private readonly logsDirectory: string;
   private readonly logsExtension = 'csv';
 
@@ -25,8 +25,8 @@ export class GameLogsCsvWriter implements Service {
       this.logsDirectory = sanitize(config.logsDirectory);
       this.fileName = `${this.logsDirectory}/${sanitizedGameName}-${getFormattedDate(new Date())}`;
       this.fileNameWithExtension = `${this.fileName}.${this.logsExtension}`;
-    } catch {
-      this.fileName = `Invalid config.${this.logsExtension}`;
+    } catch (error) {
+      throw new Error(`Invalid config.ts. error: ${error.message}`);
     }
   }
 
@@ -53,8 +53,8 @@ export class GameLogsCsvWriter implements Service {
       throw new Error('File descriptor already closed');
     }
     try {
-      await promisifiedClose(<number>this.fileDescriptor);
-      this.fileDescriptor = null;
+      await promisifiedClose(this.fileDescriptor);
+      this.fileDescriptor = undefined;
     } catch (error) {
       throw new Error(
         `Could not close the file ${this.fileNameWithExtension}, fd: ${
@@ -83,17 +83,17 @@ export class GameLogsCsvWriter implements Service {
   }
 
   private writeHeaders() {
-    const gameLogHeader: { [key in keyof GameLog]: null } = {
-      type: null,
-      timestamp: null,
-      playerId: null,
-      teamId: null,
-      round: null,
-      role: null,
-      valid: null
+    const gameLogHeader: { [key in keyof GameLog]: string } = {
+      messageType: 'type',
+      timestamp: 'timestamp',
+      playerId: 'playerId',
+      teamId: 'teamId',
+      round: 'round',
+      playerRole: 'role',
+      valid: 'valid'
     };
 
-    const line = this.prepareCsvLine(Object.keys(gameLogHeader));
+    const line = this.prepareCsvLine(Object.values(gameLogHeader));
 
     return this.writeLine(line);
   }
