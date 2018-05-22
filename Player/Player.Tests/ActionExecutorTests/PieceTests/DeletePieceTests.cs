@@ -71,7 +71,7 @@ namespace Player.Tests.PieceTests
             // ------------------------
 
             Assert.That(result, Is.True);
-            Assert.That(actionExecutor.PlayerState.HeldPiece, Is.Null);
+            Assert.That(_playerState.HeldPiece, Is.Null);
         }
 
         [Test]

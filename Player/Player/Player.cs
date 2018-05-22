@@ -25,7 +25,6 @@ namespace Player
         private PlayerState _playerState;
 
 
-        public PlayerState PlayerState => _playerState;
         public Player(PlayerConfig playerConfig, IGameService gameService, IMessageProvider messageProvider, PlayerState playerState, IActionExecutor actionExecutor)
         {
             _gameService = gameService;
@@ -42,7 +41,7 @@ namespace Player
 
             while (true)
             {
-                PlayerState.ResetState();
+                _playerState.ResetState();
 
                 int tries = 3;
                 while (true)
@@ -79,12 +78,12 @@ namespace Player
         public void GetGameInfo()
         {
             var gamesList = _gameService.GetGamesList();
-            PlayerState.Game = gamesList.FirstOrDefault(x => x.Name == _playerConfig.GameName);
-            if (PlayerState.Game == null)
+            _playerState.Game = gamesList.FirstOrDefault(x => x.Name == _playerConfig.GameName);
+            if (_playerState.Game == null)
             {
                 throw new OperationCanceledException("Game not found");
             }
-            PlayerState.InitBoard();
+            _playerState.InitBoard();
         }
 
         public void ConnectToServer()
@@ -92,7 +91,7 @@ namespace Player
             _messageProvider.SendMessageWithTimeout(new Message<IPayload>
             {
                 Type = Consts.PlayerHelloRequest,
-                SenderId = PlayerState.Id,
+                SenderId = _playerState.Id,
                 Payload = new PlayerHelloPayload
                 {
                     Game = _playerConfig.GameName,
@@ -101,7 +100,7 @@ namespace Player
                 }
             }, _playerConfig.Timeout);
             _messageProvider.AssertPlayerStatus(_playerConfig.Timeout);
-            logger.Info($"Player ({PlayerState.Id}) connected to server");
+            logger.Info($"Player ({_playerState.Id}) connected to server");
             logger.Debug($"Team no.: {_playerConfig.TeamNumber}");
             logger.Debug($"Is leader: {_playerConfig.IsLeader}");
         }
@@ -122,10 +121,10 @@ namespace Player
                 }
             }
 
-            PlayerState.TeamMembersIds = message.Payload.TeamInfo[_playerConfig.TeamNumber].Players;
-            PlayerState.TeamMembersIds.Remove(PlayerState.Id);
-            PlayerState.TeamMembersIds.ToList().ForEach(id => PlayerState.WaitingForResponse.Add(id, false));
-            PlayerState.LeaderId = message.Payload.TeamInfo[_playerConfig.TeamNumber].LeaderId;
+            _playerState.TeamMembersIds = message.Payload.TeamInfo[_playerConfig.TeamNumber].Players;
+            _playerState.TeamMembersIds.Remove(_playerState.Id);
+            _playerState.TeamMembersIds.ToList().ForEach(id => _playerState.WaitingForResponse.Add(id, false));
+            _playerState.LeaderId = message.Payload.TeamInfo[_playerConfig.TeamNumber].LeaderId;
             logger.Info("The game has started!");
         }
 
@@ -134,7 +133,6 @@ namespace Player
             var trivialStrategy = new TrivialStrategy(_playerState, _actionExecutor);
             trivialStrategy.Play();
         }
-
 
         public void RoundFinished(string receivedMessageSerialized)
         {

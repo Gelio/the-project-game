@@ -91,8 +91,8 @@ namespace Player.Tests
             player.WaitForGameStart();
 
             //Then
-            Assert.That(player.PlayerState.LeaderId, Is.EqualTo(expectedLeaderId));
-            Assert.That(player.PlayerState.TeamMembersIds, Is.EquivalentTo(expectedTeamMembersIds));
+            Assert.That(_playerState.LeaderId, Is.EqualTo(expectedLeaderId));
+            Assert.That(_playerState.TeamMembersIds, Is.EquivalentTo(expectedTeamMembersIds));
         }
 
         [Test]
@@ -169,8 +169,8 @@ namespace Player.Tests
             var player = new Player(_playerConfig, _gameService.Object, _messageProvider.Object, _playerState, _actionExecutor.Object);
             player.GetGameInfo();
 
-            Assert.That(player.PlayerState.Game, Is.Not.Null);
-            Assert.That(player.PlayerState.Game.Name, Is.EqualTo(_playerConfig.GameName));
+            Assert.That(_playerState.Game, Is.Not.Null);
+            Assert.That(_playerState.Game.Name, Is.EqualTo(_playerConfig.GameName));
         }
 
         [Test]
