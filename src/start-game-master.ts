@@ -69,7 +69,5 @@ function parseGMArguments(): GMArguments {
     const logger = loggerFactory.createConsoleLogger();
 
     logger.error(error.message);
-
-    return;
   }
 })();
