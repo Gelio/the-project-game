@@ -18,16 +18,13 @@ namespace Player
     {
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        // TODO: Remove ICommunicator dependency
-        private ICommunicator _communicator;
         private IGameService _gameService;
         private IMessageProvider _messageProvider;
         private PlayerConfig _playerConfig;
-        public PlayerState PlayerState;        
+        public PlayerState PlayerState;
 
-        public Player(ICommunicator communicator, PlayerConfig playerConfig, IGameService gameService, IMessageProvider messageProvider, PlayerState playerState)
+        public Player(PlayerConfig playerConfig, IGameService gameService, IMessageProvider messageProvider, PlayerState playerState)
         {
-            _communicator = communicator;
             _gameService = gameService;
             _messageProvider = messageProvider;
             _playerConfig = playerConfig;
@@ -107,11 +104,6 @@ namespace Player
             logger.Debug($"Is leader: {_playerConfig.IsLeader}");
         }
 
-        public void Disconnect()
-        {
-            _communicator.Disconnect();
-            logger.Info("Player disconnected.");
-        }
         public void WaitForGameStart()
         {
             Message<GameStartedPayload> message;
@@ -141,7 +133,7 @@ namespace Player
             trivialStrategy.Play();
         }
 
-       
+
         public bool Discover()
         {
             _messageProvider.SendMessage(new Message<IPayload>()
@@ -395,7 +387,7 @@ namespace Player
             }
         }
 
- 
+
         public bool AcceptCommunication(string otherId)
         {
             // haven't checked how the mapping works, therefore it's written how it is now
@@ -441,7 +433,7 @@ namespace Player
             return true;
         }
 
-       
+
 
         public bool TestPiece()
         {
