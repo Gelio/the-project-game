@@ -10,9 +10,10 @@ namespace Player.Strategy
 {
     public abstract class AbstractStrategy
     {
+        private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
         protected PlayerState _playerState;
         protected IActionExecutor _actionExecuter;
-        protected static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
         public AbstractStrategy(PlayerState playerState, IActionExecutor actionExecuter)
         {
@@ -21,6 +22,13 @@ namespace Player.Strategy
         }
 
         public abstract void Play();
+
+        protected void InitGoalAreaDirection()
+        {
+            _actionExecuter.RefreshBoardState();
+            _playerState.GoalAreaDirection = _playerState.Y < _playerState.Game.BoardSize.GoalArea ? Consts.Up : Consts.Down;
+            logger.Debug($"Player's init position: {_playerState.X} {_playerState.Y}");
+        }
 
         protected void UpdateBoard()
         {

@@ -1,3 +1,4 @@
+using Player.Common;
 using Player.GameObjects;
 using Player.Interfaces;
 using System;
@@ -6,10 +7,13 @@ namespace Player.Strategy
 {
     public class TrivialStrategy : AbstractStrategy
     {
+        private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
         public TrivialStrategy(PlayerState playerState, IActionExecutor actionExecuter) : base(playerState, actionExecuter) { }
 
         public override void Play()
         {
+            InitGoalAreaDirection();
             while (true)
             {
                 _actionExecuter.RefreshBoardState();

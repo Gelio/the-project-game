@@ -112,7 +112,9 @@ namespace Player
             {
                 var gameService = new GameService(communicator);
                 var playerState = new PlayerState(playerConfig);
-                var player = new Player(playerConfig, gameService, new MessageProvider(playerState, communicator), playerState);
+                var messageProvider = new MessageProvider(playerState, communicator);
+                var actionExecutor = new ActionExecutor(messageProvider, playerState);
+                var player = new Player(playerConfig, gameService, messageProvider, playerState, actionExecutor);
 
                 try
                 {
