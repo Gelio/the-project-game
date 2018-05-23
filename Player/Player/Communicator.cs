@@ -5,7 +5,7 @@ using Player.Interfaces;
 
 namespace Player
 {
-    public class Communicator : ICommunicator
+    public class Communicator : ICommunicator, IDisposable
     {
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -91,5 +91,20 @@ namespace Player
 
             return System.Text.Encoding.UTF8.GetString(buffer);
         }
+
+        #region IDisposable Support
+        private bool _disposedValue = false; // To detect redundant calls
+
+        public void Dispose()
+        {
+            if (!_disposedValue)
+            {
+                _tcpClient.Close();
+                _tcpClient.Dispose();
+
+                _disposedValue = true;
+            }
+        }
+        #endregion
     }
 }

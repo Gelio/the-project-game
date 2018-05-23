@@ -44,58 +44,54 @@ namespace Player
         {
             IList<GameInfo> gamesList;
             GameService gameService;
-            var communicator = new Communicator(args.CommunicationServerAddress, args.CommunicationServerPort);
-            try
+            using (var communicator = new Communicator(args.CommunicationServerAddress, args.CommunicationServerPort))
             {
-                gameService = new GameService(communicator);
-                gamesList = gameService.GetGamesList();
-            }
-            catch (TimeoutException e)
-            {
-                logger.Fatal(e, "Connection failed:");
-                communicator.Disconnect();
-                return;
-            }
-            catch (SocketException e)
-            {
-                logger.Fatal(e, "Connection failed:");
-                communicator.Disconnect();
-                return;
-            }
-            catch (IOException e)
-            {
-                logger.Fatal(e.Message);
-                communicator.Disconnect();
-                return;
-            }
-            catch (OperationCanceledException e)
-            {
-                logger.Fatal(e.Message);
-                communicator.Disconnect();
-                return;
-            }
+                try
+                {
+                    gameService = new GameService(communicator);
+                    gamesList = gameService.GetGamesList();
+                }
+                catch (TimeoutException e)
+                {
+                    logger.Fatal(e, "Connection failed:");
+                    return;
+                }
+                catch (SocketException e)
+                {
+                    logger.Fatal(e, "Connection failed:");
+                    return;
+                }
+                catch (IOException e)
+                {
+                    logger.Fatal(e.Message);
+                    return;
+                }
+                catch (OperationCanceledException e)
+                {
+                    logger.Fatal(e.Message);
+                    return;
+                }
 
-            if (gamesList.Count == 0)
-            {
-                logger.Info("There are no games available.");
-                communicator.Disconnect();
-                return;
+                if (gamesList.Count == 0)
+                {
+                    logger.Info("There are no games available.");
+                    return;
+                }
+                Console.WriteLine("GAMES LIST:");
+                foreach (var game in gamesList)
+                {
+                    Console.WriteLine(new string('-', 60));
+                    Console.WriteLine(game);
+                }
             }
-            Console.WriteLine("GAMES LIST:");
-            foreach (var game in gamesList)
-            {
-                Console.WriteLine(new string('-', 60));
-                Console.WriteLine(game);
-            }
-            communicator.Disconnect();
             return;
         }
         static void StartGame(Arguments args)
         {
-            PlayerConfig configObject;
+            PlayerConfig playerConfig;
             try
             {
-                configObject = new ConfigFileReader().ReadConfigFile(args.ConfigPath);
+                playerConfig = new ConfigFileReader().ReadConfigFile(args.ConfigPath);
             }
             catch (FileNotFoundException)
             {
@@ -112,51 +108,48 @@ namespace Player
                 logger.Fatal(e.Message);
                 return;
             }
-            configObject.GameName = args.GameName;
+            playerConfig.GameName = args.GameName;
 
-            var communicator = new Communicator(args.CommunicationServerAddress, args.CommunicationServerPort);
-            var gameService = new GameService(communicator);
-            var player = new Player(communicator, configObject, gameService, new MessageProvider(communicator));
+            using (var communicator = new Communicator(args.CommunicationServerAddress, args.CommunicationServerPort))
+            {
+                var gameService = new GameService(communicator);
+                var playerState = new PlayerState(playerConfig);
+                var messageProvider = new MessageProvider(playerState, communicator);
+                var actionExecutor = new ActionExecutor(messageProvider, playerState);
+                var player = new Player(playerConfig, gameService, messageProvider, playerState, actionExecutor);
 
-            try
-            {
-                player.Start();
-            }
-            catch (PlayerRejectedException e)
-            {
-                logger.Fatal("Connection rejected: " + e.Message);
-                player.Disconnect();
-                return;
-            }
-            catch (OperationCanceledException e)
-            {
-                logger.Fatal(e.Message);
-                player.Disconnect();
-                return;
-            }
-            catch (TimeoutException e)
-            {
-                logger.Fatal(e.Message);
-                player.Disconnect();
-                return;
-            }
-            catch (SocketException e)
-            {
-                logger.Fatal("Connection failed: " + e.Message);
-                player.Disconnect();
-                return;
-            }
-            catch (IOException e)
-            {
-                logger.Fatal(e.Message);
-                player.Disconnect();
-                return;
-            }
-            catch (GameAlreadyFinishedException e)
-            {
-                logger.Info(e.Message);
-                player.Disconnect();
-                return;
+                try
+                {
+                    player.Start();
+                }
+                catch (PlayerRejectedException e)
+                {
+                    logger.Fatal("Connection rejected: " + e.Message);
+                }
+                catch (OperationCanceledException e)
+                {
+                    logger.Fatal(e.Message);
+                }
+                catch (TimeoutException e)
+                {
+                    logger.Fatal(e.Message);
+                }
+                catch (SocketException e)
+                {
+                    logger.Fatal("Connection failed: " + e.Message);
+                }
+                catch (IOException e)
+                {
+                    logger.Fatal(e.Message);
+                }
+                catch (GameAlreadyFinishedException e)
+                {
+                    logger.Info(e.Message);
+                }
+                finally
+                {
+                    logger.Info("Player disconnected.");
+                }
             }
         }
 

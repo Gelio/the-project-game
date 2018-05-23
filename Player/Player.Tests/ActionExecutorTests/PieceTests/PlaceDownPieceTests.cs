@@ -19,9 +19,9 @@ namespace Player.Tests.PieceTests
         static string _assignedPlayerId = Guid.NewGuid().ToString();
         PlayerConfig _playerConfig;
         GameInfo _game;
-        Mock<ICommunicator> _communicator;
         Mock<IGameService> _gameService;
         Mock<IMessageProvider> _messageProvider;
+        PlayerState _playerState;
 
         static Message<PlaceDownPieceResponsePayload> _scoreMsg = new Message<PlaceDownPieceResponsePayload>()
         {
@@ -67,7 +67,6 @@ namespace Player.Tests.PieceTests
         [SetUp]
         public void Setup()
         {
-            _communicator = new Mock<ICommunicator>();
             _playerConfig = new PlayerConfig
             {
                 AskLevel = 10,
@@ -78,6 +77,7 @@ namespace Player.Tests.PieceTests
             };
             _gameService = new Mock<IGameService>();
             _messageProvider = new Mock<IMessageProvider>();
+            _playerState = new PlayerState(_playerConfig);
             _game = new GameInfo()
             {
                 BoardSize = new BoardSize
@@ -87,40 +87,35 @@ namespace Player.Tests.PieceTests
                     X = 20
                 }
             };
+            _playerState.Game = _game;
+            _playerState.Id = _assignedPlayerId;
+            _playerState.Board = new Board(_game.BoardSize);
         }
 
         public static IEnumerable<TestCaseData> PlaceDownPieceSuccessTestCases
         {
             get
             {
-                yield return new TestCaseData(_scoreMsg, 2, 2, true, Player.PlaceDownPieceResult.Score).SetName("Score");
-                yield return new TestCaseData(_noScoreMsg, 2, 2, true, Player.PlaceDownPieceResult.NoScore).SetName("NoScore");
-                yield return new TestCaseData(_shamMsg, 2, 2, true, Player.PlaceDownPieceResult.Sham).SetName("Sham");
-                yield return new TestCaseData(_taskAreaMsg, 2, 21, true, Player.PlaceDownPieceResult.TaskArea).SetName("TaskArea");
+                yield return new TestCaseData(_scoreMsg, 2, 2, true, PlaceDownPieceResult.Score).SetName("Score");
+                yield return new TestCaseData(_noScoreMsg, 2, 2, true, PlaceDownPieceResult.NoScore).SetName("NoScore");
+                yield return new TestCaseData(_shamMsg, 2, 2, true, PlaceDownPieceResult.Sham).SetName("Sham");
+                yield return new TestCaseData(_taskAreaMsg, 2, 21, true, PlaceDownPieceResult.TaskArea).SetName("TaskArea");
             }
         }
 
         [TestCaseSource("PlaceDownPieceSuccessTestCases")]
-        public void PlaceDownPieceSuccess(Message<PlaceDownPieceResponsePayload> expectedMessage, int assignedX, int assignedY, bool? expectedBoolResult, Player.PlaceDownPieceResult exceptedEnumResult)
+        public void PlaceDownPieceSuccess(Message<PlaceDownPieceResponsePayload> expectedMessage, int assignedX, int assignedY, bool? expectedBoolResult, PlaceDownPieceResult exceptedEnumResult)
         {
             //-------------
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Returns(new Message<ActionValidPayload>());
             _messageProvider.Setup(x => x.Receive<PlaceDownPieceResponsePayload>()).Returns(expectedMessage);
 
-            // ------------------------
+            _playerState.X = assignedX;
+            _playerState.Y = assignedY;
+            _playerState.HeldPiece = new Piece();
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
-            {
-                Id = _assignedPlayerId,
-                X = assignedX,
-                Y = assignedY,
-                Game = _game,
-                Board = new Board(_game.BoardSize)
-            };
-            player.HeldPiece = new Piece();
-
-
-            (var boolResult, var enumResult) = player.PlaceDownPiece();
+            var actionExecutor = new ActionExecutor(_messageProvider.Object, _playerState);
+            (var boolResult, var enumResult) = actionExecutor.PlaceDownPiece();
 
             // ------------------------
             Assert.That(boolResult, Is.EqualTo(expectedBoolResult));
@@ -132,9 +127,8 @@ namespace Player.Tests.PieceTests
         {
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Throws(new ActionInvalidException());
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object);
-
-            (var boolResult, var enumResult) = player.PlaceDownPiece();
+            var actionExecutor = new ActionExecutor(_messageProvider.Object, _playerState);
+            (var boolResult, var enumResult) = actionExecutor.PlaceDownPiece();
 
             Assert.That(boolResult, Is.False);
             Assert.That(enumResult, Is.EqualTo(PlaceDownPieceResult.NoScore));
@@ -154,13 +148,9 @@ namespace Player.Tests.PieceTests
             _messageProvider.Setup(x => x.Receive<PlaceDownPieceResponsePayload>()).Returns(msg2);
 
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
-            {
-                Id = _assignedPlayerId,
-                Game = _game
-            };
+            var actionExecutor = new ActionExecutor(_messageProvider.Object, _playerState);
 
-            Assert.Throws<NoPayloadException>(() => player.PlaceDownPiece());
+            Assert.Throws<NoPayloadException>(() => actionExecutor.PlaceDownPiece());
         }
     }
 }

@@ -17,21 +17,16 @@ namespace Player
     {
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private Queue<Message<CommunicationPayload>> _communicationRequests;
-        private Queue<Message<CommunicationResponsePayload>> _communicationResponses;
+        public PlayerState PlayerState;
         private ICommunicator _communicator;
 
-        public MessageProvider(ICommunicator communicator)
+        public MessageProvider(PlayerState playerState, ICommunicator communicator)
         {
-            _communicationRequests = new Queue<Message<CommunicationPayload>>();
-            _communicationResponses = new Queue<Message<CommunicationResponsePayload>>();
+            PlayerState = playerState;
             _communicator = communicator;
         }
-
-        public bool HasPendingRequests => _communicationRequests.Count > 0;
-        public bool HasPendingResponses => _communicationResponses.Count > 0;
-        public Message<CommunicationPayload> GetPendingRequest() => _communicationRequests.Dequeue();
-        public Message<CommunicationResponsePayload> GetPendingResponse() => _communicationResponses.Dequeue();
+        
+       
         public Message<P> Receive<P>() where P : IPayload, new()
         {
             CheckConnection();
@@ -62,9 +57,9 @@ namespace Player
                 if (message.Type == Consts.CommunicationRequest)
                 {
                     var request = JsonConvert.DeserializeObject<Message<CommunicationPayload>>(serializedMessage);
-                    _communicationRequests.Enqueue(request);
+                    PlayerState.PutRequest(request);
                     logger.Info($"Received communication request from {request.Payload.SenderPlayerId}");
-                    logger.Debug($"Pending requests: {_communicationRequests.Count}, Pending responses: {_communicationResponses.Count}");
+                    logger.Debug($"Pending requests: {PlayerState.HasPendingRequests}, Pending responses: {PlayerState.HasPendingResponses}");
                     continue;
                 }
                 else if (message.Type == Consts.CommunicationResponse)
@@ -72,14 +67,14 @@ namespace Player
                     var response = JsonConvert.DeserializeObject<Message<CommunicationResponsePayload>>(serializedMessage);
                     if (response.Payload.Accepted)
                     {
-                        _communicationResponses.Enqueue(response);
+                        PlayerState.PutResponse(response);
                         logger.Info($"Received accepted communication response from {response.Payload.SenderPlayerId}");
                     }
                     else
                     {
                         logger.Info($"Received rejected communication response from {response.Payload.SenderPlayerId}");
                     }
-                    logger.Debug($"Pending requests: {_communicationRequests.Count}, Pending responses: {_communicationResponses.Count}");
+                    logger.Debug($"Pending requests: {PlayerState.HasPendingRequests}, Pending responses: {PlayerState.HasPendingResponses}");
                     continue;
                 }
                 else
