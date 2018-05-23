@@ -53,7 +53,8 @@ namespace Player.Strategy
                     {
                         logger.Info("Trying to place down piece");
                         (var result, var resultEnum) = _actionExecutor.PlaceDownPiece();
-                        _actionExecutor.SendCommunicationRequest(_playerState.LeaderId);
+                        if (_playerState.Id != _playerState.LeaderId)
+                            _actionExecutor.SendCommunicationRequest(_playerState.LeaderId);
                     }
                     else
                     {
