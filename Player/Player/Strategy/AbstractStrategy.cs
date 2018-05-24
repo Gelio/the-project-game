@@ -5,6 +5,7 @@ using Player.Interfaces;
 using Player.Messages.DTO;
 using Player.Messages.Responses;
 using System;
+using System.Collections.Generic;
 
 namespace Player.Strategy
 {
@@ -12,6 +13,17 @@ namespace Player.Strategy
     {
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
+        protected static Dictionary<(int, int), List<string>> _naturalDirections = new Dictionary<(int, int), List<string>>()
+            {
+                {(1, 0), new List<string>{"right"}},
+                {(-1, 0), new List<string>{"left"}},
+                {(0, 1), new List<string>{"down"}},
+                {(0, -1), new List<string>{"up"}},
+                {(1, 1),  new List<string>{"right", "down"}},
+                {(1, -1), new List<string>{"right", "up"}},
+                {(-1, -1),new List<string>{"left" ,"up"}},
+                {(-1, 1), new List<string>{"left" ,"down"}}
+            };
         protected PlayerState _playerState;
         protected IActionExecutor _actionExecutor;
         protected Random _random = new Random(System.DateTime.Now.Millisecond);

@@ -22,29 +22,27 @@ namespace Player.Strategy
                 _actionExecutor.RefreshBoardState();
                 UpdateBoard();
                 GoToEnemyArea();
+                GuardEdge();
             }
         }
+
 
         private void GoToEnemyArea()
         {
             int targetX = _playerState.Game.BoardSize.X / 2;
             int targetY = _playerState.GoalAreaDirection == "up" ? _playerState.Game.BoardSize.TaskArea + _playerState.Game.BoardSize.GoalArea - 1 : _playerState.Game.BoardSize.GoalArea;
-            logger.Info($"Going to enemy area, to ({targetX}, {targetY})!");
+            logger.Info($"Going to edge near the enemy area, to ({targetX}, {targetY})!");
 
             while (_playerState.X != targetX || _playerState.Y != targetY)
             {
-                List<(int x, int y)> path = FindPathUsingAStar(targetX, targetY);
+                List<(int x, int y)> path = FindPathUsingAStar(targetX, targetY, ManhattanDistance, 2);
                 if (path == null)
                 {
                     RemoveCachedInfo();
-                    path = FindPathUsingAStar(targetX, targetY);
+                    path = FindPathUsingAStar(targetX, targetY, ManhattanDistance, 2);
                 }
                 if (path == null)
                     return;
-
-                string stringPath = $"Path: ({_playerState.X}, {_playerState.Y}) ";
-                path.ForEach(tup => stringPath += $"-> ({tup.x}, {tup.y}) ");
-                logger.Trace(stringPath);
 
                 // Move along calculated path until conflict
                 foreach (var target in path)
@@ -59,7 +57,44 @@ namespace Player.Strategy
                         break;
                     }
             }
-            logger.Info("I'm in enemy area!");
+            logger.Info("I'm right next to enemy area!");
+        }
+
+        private void GuardEdge()
+        {
+            logger.Debug("Time to guard the enemy edge!");
+            List<(int x, int y)> path;
+            int targetY = _playerState.Y;
+
+            int targetX = 0;
+            while (true)
+            {
+                path = FindPathUsingAStar(targetX, targetY, ManhattanDistance, 2);
+                if (path == null)
+                {
+                    RemoveCachedInfo();
+                    path = FindPathUsingAStar(targetX, targetY, ManhattanDistance, 2);
+                }
+                while (path == null)
+                {
+                    Task.Delay(_random.Next(0, 2000));
+                    path = FindPathUsingAStar(targetX, targetY, ManhattanDistance, 2);
+                }
+
+                foreach (var target in path)
+                    if (!MoveOneStep(target.x, target.y))
+                    {
+                        // try to move one more time
+                        Task.Delay(_random.Next(0, 2000));
+                        if (MoveOneStep(target.x, target.y))
+                            continue;
+                        // if it fails 2nd time, update board and calculate new path
+                        _actionExecutor.Discover();
+                        break;
+                    }
+                if (_playerState.X == targetX)
+                    targetX = targetX == 0 ? _playerState.Board.SizeX - 1 : 0;
+            }
         }
 
         private bool MoveOneStep(int targetX, int targetY)
@@ -83,45 +118,7 @@ namespace Player.Strategy
             _playerState.Board.Reset();
         }
 
-
-        private bool MoveToTileWithoutDiscovery(int targetX, int targetY)
-        {
-            while (_playerState.X != targetX || _playerState.Y != targetY)
-            {
-                bool moved = false;
-                var directions = PickNaturalDirections(targetX, targetY);
-                foreach (var direction in directions)
-                    if (_actionExecutor.Move(direction))
-                    {
-                        moved = true;
-                        break;
-                    }
-                if (moved)
-                    continue;
-            }
-            return true;
-        }
-
-        private List<string> PickNaturalDirections(int targetX, int targetY)
-        {
-            int dxSign = targetX - _playerState.X > 0 ? 1 : targetX - _playerState.X < 0 ? -1 : 0;
-            int dySign = targetY - _playerState.Y > 0 ? 1 : targetY - _playerState.Y < 0 ? -1 : 0;
-
-            return _naturalDirections[(dxSign, dySign)];
-        }
-        private static Dictionary<(int, int), List<string>> _naturalDirections = new Dictionary<(int, int), List<string>>()
-            {
-                {(1, 0), new List<string>{"right"}},
-                {(-1, 0), new List<string>{"left"}},
-                {(0, 1), new List<string>{"down"}},
-                {(0, -1), new List<string>{"up"}},
-                {(1, 1),  new List<string>{"right", "down"}},
-                {(1, -1), new List<string>{"right", "up"}},
-                {(-1, -1),new List<string>{"left" ,"up"}},
-                {(-1, 1), new List<string>{"left" ,"down"}}
-            };
-
-        private List<(int x, int y)> FindPathUsingAStar(int targetX, int targetY)
+        private List<(int x, int y)> FindPathUsingAStar(int targetX, int targetY, Func<(int x, int y), (int x, int y), int> heuristicFunc, int weight)
         {
             logger.Debug("Running A* computation");
             (int x, int y) start = (_playerState.X, _playerState.Y);
@@ -132,7 +129,6 @@ namespace Player.Strategy
             var cameFrom = new Dictionary<(int, int), (int, int)>();
             var closedSet = new HashSet<(int, int)>();
             var openSet = new HashSet<(int, int)>();
-            const int weight = 1;
 
             openSet.Add(start);
             f.Add(start, 0);
@@ -157,7 +153,7 @@ namespace Player.Strategy
                         openSet.Add(neighbour);
 
                     var gScore = g[current] + 1;
-                    var hScore = weight * ManhattanDistance(neighbour, target);
+                    var hScore = weight * heuristicFunc(neighbour, target);
                     var fScore = gScore + hScore;
 
                     if (g.ContainsKey(neighbour) && gScore >= g[neighbour])
@@ -183,7 +179,13 @@ namespace Player.Strategy
                     path.Add(current); // adds to end
                 }
                 path.Reverse();
-                return path.Skip(1).ToList();
+                var result = path.Skip(1).ToList();
+
+                string stringPath = $"Path: ({_playerState.X}, {_playerState.Y}) ";
+                result.ForEach(tup => stringPath += $"-> ({tup.x}, {tup.y}) ");
+                logger.Trace(stringPath);
+
+                return result;
             }
 
             IEnumerable<(int x, int y)> Neighbours((int x, int y) current)
@@ -214,5 +216,7 @@ namespace Player.Strategy
         {
             return Math.Abs(start.x - end.x) + Math.Abs(start.y - end.y);
         }
+
+
     }
 }
