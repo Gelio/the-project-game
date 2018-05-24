@@ -17,5 +17,7 @@ function globPromise(pattern: string): Promise<string[]> {
 export async function readGlobbedJSONFiles(pattern: string): Promise<object[]> {
   // Oh Haskell monad syntax, where are you (╯°□°）╯︵ ┻━┻
   // globPromise pattern >>= fmap readJSONFile
-  return globPromise(pattern).then(files => Promise.all(files.map(readJSONFile)));
+  return globPromise(pattern).then(files =>
+    Promise.all(files.map(fileName => readJSONFile(fileName, undefined)))
+  );
 }
