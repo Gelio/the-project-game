@@ -32,16 +32,16 @@ function parseGMArguments(): GMArguments {
 
 const parsedArguments = parseGMArguments();
 
-let uiController: IUIController;
-if (parsedArguments.no_ui) {
-  uiController = new EmptyUIController();
-} else {
-  const screen = createBlessedScreen();
-  uiController = new UIController(screen, blessed.box);
-}
-
 const loggerFactory = new LoggerFactory();
 loggerFactory.logLevel = getLogLevel(parsedArguments);
 
-const gameMaster = new GameMaster(config, uiController, loggerFactory);
+let uiController: IUIController;
+if (parsedArguments.no_ui) {
+  uiController = new EmptyUIController(loggerFactory);
+} else {
+  const screen = createBlessedScreen();
+  uiController = new UIController(screen, blessed.box, loggerFactory);
+}
+
+const gameMaster = new GameMaster(config, uiController);
 gameMaster.init();

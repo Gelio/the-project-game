@@ -2,7 +2,15 @@ import { Service } from '../../interfaces/Service';
 
 import { UIController as IUIController } from './IUIController';
 
+import { LoggerFactory } from '../../common/logging/LoggerFactory';
+
 export class EmptyUIController implements Service, IUIController {
+  private readonly loggerFactory: LoggerFactory;
+
+  constructor(loggerFactory: LoggerFactory) {
+    this.loggerFactory = loggerFactory;
+  }
+
   public init() {
     // Left empty intentionally
   }
@@ -15,16 +23,15 @@ export class EmptyUIController implements Service, IUIController {
     // Left empty intentionally
   }
 
-  public log(lines: string | string[]) {
-    // tslint:disable-next-line:no-console
-    console.log(lines);
-  }
-
   public updateBoard() {
     // Left empty intentionally
   }
 
   public updateGameInfo() {
     // Left empty intentionally
+  }
+
+  public createLogger() {
+    return this.loggerFactory.createConsoleLogger();
   }
 }
