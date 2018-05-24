@@ -28,6 +28,8 @@ namespace Player.Strategy
         protected IActionExecutor _actionExecutor;
         protected Random _random = new Random(System.DateTime.Now.Millisecond);
 
+        public AbstractStrategy() { }
+
         public AbstractStrategy(PlayerState playerState, IActionExecutor actionExecutor)
         {
             _playerState = playerState;
