@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://the-project-game.net/schema/configs/communication-server-config.json",
+
+  "type": "object",
+  "title": "CommunicationServerConfig",
+
+  "properties": {
+    "hostname": {
+      "type": "string",
+      "format": "hostname"
+    },
+    "port": {
+      "$ref": "../common/common-defs.json#/definitions/port"
+    }
+  },
+  "required": ["hostname", "port"]
+}
