@@ -12,6 +12,7 @@ namespace Player
         public int ServerPort { get; set; }
         public bool IsLeader { get; set; }
         public int TeamNumber { get; set; }
+        public string Strategy { get; set; }
 
         public bool Equals(PlayerConfig other)
         {
@@ -22,7 +23,8 @@ namespace Player
                 && other.ServerHostname == ServerHostname
                 && other.ServerPort == ServerPort
                 && other.TeamNumber == TeamNumber
-                && other.Timeout == Timeout);
+                && other.Timeout == Timeout
+                && other.Strategy == Strategy);
         }
     }
 }

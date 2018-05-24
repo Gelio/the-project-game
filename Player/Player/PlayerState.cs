@@ -11,12 +11,12 @@ namespace Player
     public class PlayerState
     {
         public string Id;
-        public IList<string> TeamMembersIds;
+        public List<string> TeamMembersIds;
         public string LeaderId;
 
         public int X;
         public int Y;
-
+        public Tile CurrentTile => Board.At(X, Y);
         public Board Board;
         public Piece HeldPiece;
         public string GoalAreaDirection;
@@ -58,5 +58,31 @@ namespace Player
             Board = new Board(Game.BoardSize);
         }
 
+        public void PrintBoard()
+        {
+            int i = 0;
+            for (int y = 0; y < Board.SizeY; y++)
+            {
+                for (int x = 0; x < Board.SizeX; x++, i++)
+                {
+                    // var character = Board.At(i).PlayerId == null ? " " : "p";
+                    string character;
+                    switch (Board.At(i).GoalStatus)
+                    {
+                        case GoalStatusEnum.CompletedGoal:
+                            character = "F";
+                            break;
+                        case GoalStatusEnum.NoGoal:
+                            character = "x";
+                            break;
+                        default:
+                            character = " ";
+                            break;
+                    }
+                    Console.Write($"[{character}]");
+                    Console.WriteLine();
+                }
+            }
+        }
     }
 }

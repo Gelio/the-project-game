@@ -23,15 +23,17 @@ namespace Player
         private IMessageProvider _messageProvider;
         private PlayerConfig _playerConfig;
         private PlayerState _playerState;
+        private AbstractStrategy _strategy;
 
 
-        public Player(PlayerConfig playerConfig, IGameService gameService, IMessageProvider messageProvider, PlayerState playerState, IActionExecutor actionExecutor)
+        public Player(PlayerConfig playerConfig, IGameService gameService, IMessageProvider messageProvider, PlayerState playerState, IActionExecutor actionExecutor, AbstractStrategy strategy)
         {
             _gameService = gameService;
             _messageProvider = messageProvider;
             _playerConfig = playerConfig;
             _playerState = playerState;
             _actionExecutor = actionExecutor;
+            _strategy = strategy;
         }
 
 
@@ -121,7 +123,7 @@ namespace Player
                 }
             }
 
-            _playerState.TeamMembersIds = message.Payload.TeamInfo[_playerConfig.TeamNumber].Players;
+            _playerState.TeamMembersIds = message.Payload.TeamInfo[_playerConfig.TeamNumber].Players.ToList();
             _playerState.TeamMembersIds.Remove(_playerState.Id);
             _playerState.TeamMembersIds.ToList().ForEach(id => _playerState.WaitingForResponse.Add(id, false));
             _playerState.LeaderId = message.Payload.TeamInfo[_playerConfig.TeamNumber].LeaderId;
@@ -130,8 +132,7 @@ namespace Player
 
         public void Play()
         {
-            var trivialStrategy = new BlockerStrategy(_playerState, _actionExecutor);
-            trivialStrategy.Play();
+            _strategy.Play();
         }
 
         public void RoundFinished(string receivedMessageSerialized)

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Player.Common;
 using Player.GameObjects;
 using Player.Interfaces;
@@ -244,6 +245,8 @@ namespace Player
             bool gotOwnInfo = false;
             if (received.Payload.PlayerPositions == null)
                 throw new WrongPayloadException();
+
+            var playerIds = received.Payload.PlayerPositions.Select(dto => dto.PlayerId).ToList();
             foreach (var playerInfo in received.Payload.PlayerPositions)
             {
                 // TODO: Remove all (outdated) PlayerId attributes from board tiles
@@ -259,6 +262,7 @@ namespace Player
                         _playerState.Board.At(_playerState.X, _playerState.Y).Piece = new Piece();
                 }
             }
+            _playerState.Board.RemoveCachedPlayerIds(playerIds, received.Payload.Timestamp);
 
             if (!gotOwnInfo)
                 throw new InvalidOperationException("No info about player");
