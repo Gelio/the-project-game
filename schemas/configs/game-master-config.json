@@ -54,9 +54,6 @@
     "piecesLimit": {
       "$ref": "../common/common-defs.json#/definitions/positiveInteger"
     },
-    "resultFileName": {
-      "type": "string"
-    },
     "actionDelays": {
       "$ref": "../common/action-delays.json#"
     },
@@ -83,7 +80,6 @@
     "shamChance",
     "generatePiecesInterval",
     "piecesLimit",
-    "resultFileName",
     "actionDelays",
     "timeout",
     "registrationTriesLimit",
