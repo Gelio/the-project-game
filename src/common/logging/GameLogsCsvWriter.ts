@@ -5,7 +5,6 @@ import { promisify } from 'util';
 import { GameLog } from '../../interfaces/GameLog';
 import { Service } from '../../interfaces/Service';
 
-import { config } from '../../config';
 import { getFormattedDate } from '../formatting/getFormattedDate';
 
 const promisifiedOpen = promisify(open);
@@ -19,15 +18,11 @@ export class GameLogsCsvWriter implements Service {
   private readonly logsDirectory: string;
   private readonly logsExtension = 'csv';
 
-  constructor(gameName: string) {
-    try {
-      const sanitizedGameName = sanitize(gameName);
-      this.logsDirectory = sanitize(config.logsDirectory);
-      this.fileName = `${this.logsDirectory}/${sanitizedGameName}-${getFormattedDate(new Date())}`;
-      this.fileNameWithExtension = `${this.fileName}.${this.logsExtension}`;
-    } catch (error) {
-      throw new Error(`Invalid config.ts. error: ${error.message}`);
-    }
+  constructor(gameName: string, logsDirectory: string) {
+    const sanitizedGameName = sanitize(gameName);
+    this.logsDirectory = sanitize(logsDirectory);
+    this.fileName = `${this.logsDirectory}/${sanitizedGameName}-${getFormattedDate(new Date())}`;
+    this.fileNameWithExtension = `${this.fileName}.${this.logsExtension}`;
   }
 
   public async init(): Promise<any> {

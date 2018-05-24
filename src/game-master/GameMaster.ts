@@ -43,7 +43,7 @@ export interface GameMasterOptions {
   shamChance: number;
   generatePiecesInterval: number;
   piecesLimit: number;
-  resultFileName: string;
+  logsDirectory: string;
   actionDelays: ActionDelays;
   timeout: number;
   registrationTriesLimit: number;

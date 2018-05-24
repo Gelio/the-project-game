@@ -54,7 +54,7 @@
     "piecesLimit": {
       "$ref": "../common/common-defs.json#/definitions/positiveInteger"
     },
-    "resultFileName": {
+    "logsDirectory": {
       "type": "string"
     },
     "actionDelays": {
@@ -83,7 +83,7 @@
     "shamChance",
     "generatePiecesInterval",
     "piecesLimit",
-    "resultFileName",
+    "logsDirectory",
     "actionDelays",
     "timeout",
     "registrationTriesLimit",

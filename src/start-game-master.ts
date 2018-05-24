@@ -61,13 +61,7 @@ function parseGMArguments(): GMArguments {
     const screen = createBlessedScreen();
     uiController = new UIController(screen, blessed.box, loggerFactory);
   }
-  try {
-    const gameLogsCsvWriter = new GameLogsCsvWriter(config.gameName);
-    const gameMaster = new GameMaster(config, uiController, gameLogsCsvWriter);
-    gameMaster.init();
-  } catch (error) {
-    const logger = loggerFactory.createConsoleLogger();
-
-    logger.error(error.message);
-  }
+  const gameLogsCsvWriter = new GameLogsCsvWriter(config.gameName, config.logsDirectory);
+  const gameMaster = new GameMaster(config, uiController, gameLogsCsvWriter);
+  gameMaster.init();
 })();
