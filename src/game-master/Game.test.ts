@@ -30,7 +30,7 @@ import { GameState } from './GameState';
 import { Player } from './Player';
 import { InvalidMessageResult } from './ProcessMessageResult';
 
-import { UIController } from './ui/UIController';
+import { UIController } from './ui/IUIController';
 
 import { PeriodicPieceGenerator } from './board-generation/PeriodicPieceGenerator';
 
@@ -76,7 +76,7 @@ describe('[GM] Game', () => {
   const boardSize: BoardSize = {
     x: 30,
     goalArea: 50,
-    taskArea: 300
+    taskArea: 301
   };
   const actionDelays: ActionDelays = {
     communicationAccept: 4000,
