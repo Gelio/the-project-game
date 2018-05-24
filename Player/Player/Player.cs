@@ -130,7 +130,7 @@ namespace Player
 
         public void Play()
         {
-            var trivialStrategy = new TrivialStrategy(_playerState, _actionExecutor);
+            var trivialStrategy = new BlockerStrategy(_playerState, _actionExecutor);
             trivialStrategy.Play();
         }
 

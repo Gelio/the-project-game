@@ -14,6 +14,7 @@ namespace Player.Strategy
 
         protected PlayerState _playerState;
         protected IActionExecutor _actionExecutor;
+        protected Random _random = new Random(System.DateTime.Now.Millisecond);
 
         public AbstractStrategy(PlayerState playerState, IActionExecutor actionExecutor)
         {
@@ -27,6 +28,7 @@ namespace Player.Strategy
         {
             _actionExecutor.RefreshBoardState();
             _playerState.GoalAreaDirection = _playerState.Y < _playerState.Game.BoardSize.GoalArea ? Consts.Up : Consts.Down;
+            logger.Debug($"Player's goal area direction: {_playerState.GoalAreaDirection}");
             logger.Debug($"Player's init position: {_playerState.X} {_playerState.Y}");
         }
 
