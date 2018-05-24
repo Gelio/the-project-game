@@ -1,6 +1,7 @@
 import { ArgumentParser } from 'argparse';
 import * as blessed from 'blessed';
 
+import { GameLogsCsvWriter } from './common/logging/GameLogsCsvWriter';
 import { LoggerFactory } from './common/logging/LoggerFactory';
 
 import { createBlessedScreen } from './createBlessedScreen';
@@ -14,6 +15,7 @@ import { GMArguments } from './interfaces/arguments/GMArguments';
 
 import { addSharedArguments } from './arguments/addSharedArguments';
 import { getLogLevel } from './arguments/getLogLevel';
+
 import { validateGameMasterConfig } from './game-master/validation/validateGameMasterConfig';
 
 // tslint:disable-next-line no-require-imports no-var-requires
@@ -59,7 +61,13 @@ function parseGMArguments(): GMArguments {
     const screen = createBlessedScreen();
     uiController = new UIController(screen, blessed.box, loggerFactory);
   }
+  try {
+    const gameLogsCsvWriter = new GameLogsCsvWriter(config.gameName);
+    const gameMaster = new GameMaster(config, uiController, gameLogsCsvWriter);
+    gameMaster.init();
+  } catch (error) {
+    const logger = loggerFactory.createConsoleLogger();
 
-  const gameMaster = new GameMaster(config, uiController);
-  gameMaster.init();
+    logger.error(error.message);
+  }
 })();

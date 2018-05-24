@@ -5,10 +5,12 @@ import { bindObjectMethods } from '../common/bindObjectMethods';
 import { Communicator } from '../common/Communicator';
 import { createDelay } from '../common/createDelay';
 import { GAME_MASTER_ID } from '../common/EntityIds';
+import { GameLogsCsvWriter } from '../common/logging/GameLogsCsvWriter';
 
 import { ActionDelays } from '../interfaces/ActionDelays';
 import { BoardSize } from '../interfaces/BoardSize';
 import { TeamSizes } from '../interfaces/GameDefinition';
+import { GameLog } from '../interfaces/GameLog';
 import { Message } from '../interfaces/Message';
 import { Service } from '../interfaces/Service';
 
@@ -25,6 +27,7 @@ import { PeriodicPieceGeneratorOptions } from './board-generation/PeriodicPieceG
 import { Game } from './Game';
 import { GameState } from './GameState';
 import { mapOptionsToGameDefinition } from './mapOptionsToGameDefinition';
+import { Player } from './Player';
 
 import { UIController } from './ui/IUIController';
 
@@ -54,6 +57,7 @@ export class GameMaster implements Service {
 
   private readonly uiController: UIController;
   private logger: LoggerInstance;
+  private gameLogsCsvWriter: GameLogsCsvWriter;
 
   private failedRegistrations = 0;
   private currentRound = 0;
@@ -63,9 +67,14 @@ export class GameMaster implements Service {
     PLAYER_DISCONNECTED: this.handlePlayerDisconnectedMessage
   };
 
-  constructor(options: GameMasterOptions, uiController: UIController) {
+  constructor(
+    options: GameMasterOptions,
+    uiController: UIController,
+    gameLogsCsvWriter: GameLogsCsvWriter
+  ) {
     this.options = options;
     this.uiController = uiController;
+    this.gameLogsCsvWriter = gameLogsCsvWriter;
 
     bindObjectMethods(this.messageHandlers, this);
     this.destroy = this.destroy.bind(this);
@@ -95,6 +104,12 @@ export class GameMaster implements Service {
 
     this.communicator.once('close', this.handleServerDisconnection.bind(this));
 
+    try {
+      await this.gameLogsCsvWriter.init();
+    } catch (error) {
+      this.logger.error(error.message);
+    }
+
     this.createNewGame();
   }
 
@@ -109,6 +124,12 @@ export class GameMaster implements Service {
 
     this.communicator.destroy();
     this.uiController.destroy();
+
+    try {
+      await this.gameLogsCsvWriter.destroy();
+    } catch (error) {
+      this.logger.error(error.message);
+    }
   }
 
   private initUI() {
@@ -224,7 +245,8 @@ export class GameMaster implements Service {
       this.communicator,
       createPeriodicPieceGenerator(periodicPieceGeneratorOptions, this.logger),
       this.onPointsLimitReached.bind(this),
-      this.updateUI.bind(this)
+      this.updateUI.bind(this),
+      this.writeCsvLog.bind(this)
     );
     this.currentRound++;
     this.updateUI();
@@ -299,5 +321,18 @@ export class GameMaster implements Service {
       this.game.scoreboard,
       this.game.playersContainer
     );
+  }
+
+  private async writeCsvLog(
+    message: Message<any>,
+    player: Player,
+    isValid: boolean
+  ): Promise<void> {
+    const log = new GameLog(message, player, this.currentRound, isValid);
+    try {
+      await this.gameLogsCsvWriter.writeLog(log);
+    } catch (error) {
+      this.logger.error(`Failed to write log, error: ${error.message}`);
+    }
   }
 }

@@ -40,6 +40,12 @@ import { PeriodicPieceGenerator } from './board-generation/PeriodicPieceGenerato
 import { CommunicationRequestsStore } from './communication/CommunicationRequestsStore';
 import { getGameStartedMessagePayload } from './communication/getGameStartedMessagePayload';
 
+export type WriteCsvLogFn = (
+  message: Message<any>,
+  player: Player,
+  valid: boolean
+) => Promise<void>;
+
 export class Game {
   public board: Board;
   public readonly playersContainer: PlayersContainer;
@@ -52,6 +58,7 @@ export class Game {
   private readonly communicator: Communicator;
   private readonly uiController: UIController;
   private readonly updateUI: Function;
+  private readonly writeCsvLog: WriteCsvLogFn;
   private _state = GameState.Registered;
 
   public get state() {
@@ -65,7 +72,8 @@ export class Game {
     communicator: Communicator,
     periodicPieceGeneratorFactory: PeriodicPieceGeneratorFactory,
     onPointsLimitReached: Function,
-    updateUI: Function
+    updateUI: Function,
+    writeCsvLog: WriteCsvLogFn
   ) {
     this.definition = gameDefinition;
     this.board = new Board(this.definition.boardSize, this.definition.goalLimit);
@@ -75,6 +83,7 @@ export class Game {
     this.playersContainer = new PlayersContainer();
     this.communicator = communicator;
     this.updateUI = updateUI;
+    this.writeCsvLog = writeCsvLog;
     this.periodicPieceGenerator = periodicPieceGeneratorFactory(this.board);
 
     this.playerMessageHandler = new PlayerMessageHandler(
@@ -111,6 +120,8 @@ export class Game {
   }
 
   public async handleMessage(message: Message<any>) {
+    const player = this.playersContainer.getPlayerById(message.senderId);
+
     const result = this.processPlayerMessage(message);
     if (!result.valid) {
       const actionInvalidMessage: ActionInvalidMessage = {
@@ -121,6 +132,12 @@ export class Game {
           reason: result.reason
         }
       };
+
+      if (player) {
+        this.writeCsvLog(message, player, false);
+      } else {
+        this.logger.warn(`Player ${message.senderId} not found. Could not save csv log`);
+      }
 
       return this.sendIngameMessage(actionInvalidMessage);
     }
@@ -133,6 +150,8 @@ export class Game {
         delay: result.delay
       }
     };
+
+    this.writeCsvLog(message, <Player>player, true);
 
     this.updateUI();
     this.sendIngameMessage(actionValidMessage);
