@@ -17,7 +17,7 @@
   "shamChance": 0.8,
   "generatePiecesInterval": 3000,
   "piecesLimit": 5,
-  "resultFileName": "result.json",
+  "logsDirectory": "logs",
   "actionDelays": {
     "move": 350,
     "pick": 1000,
