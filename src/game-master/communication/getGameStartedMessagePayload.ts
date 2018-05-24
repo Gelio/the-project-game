@@ -1,10 +1,10 @@
-import { PlayersContainer } from '../game-master/PlayersContainer';
-import { GameStartedMessagePayload } from '../interfaces/messages/GameStartedMessage';
+import { PlayersContainer } from '../PlayersContainer';
+
+import { GameStartedMessagePayload } from '../../interfaces/messages/GameStartedMessage';
 
 export function getGameStartedMessagePayload(
   playersContainer: PlayersContainer
 ): GameStartedMessagePayload {
-  // TODO: add unit tests
   const team1Players = playersContainer.getPlayersFromTeam(1);
   const team2Players = playersContainer.getPlayersFromTeam(2);
   const team1Leader = team1Players.find(player => player.isLeader);

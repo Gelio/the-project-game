@@ -22,7 +22,14 @@ The board legend:
 
 ## Stats
 
-TODO: add stats and their description
+The box in the top-right contains game stats, including:
+
+* the current round number
+* total number of rounds to be played
+* team scores
+* the number of players in each team
+* teams capacities
+* the number of pieces (total, shams, picked up) on the board
 
 ## Logs
 

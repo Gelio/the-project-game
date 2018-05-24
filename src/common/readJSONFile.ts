@@ -1,6 +1,12 @@
-import { readFile } from 'fs';
+import { readFile as fsReadFile } from 'fs';
 
-export function readJSONFile(filePath: string): Promise<object> {
+type ReadFileFn = (
+  path: string,
+  options: { encoding: string; flag?: string } | string,
+  callback: (err: NodeJS.ErrnoException, data: string) => void
+) => void;
+
+export function readJSONFile(filePath: string, readFile: ReadFileFn = fsReadFile): Promise<object> {
   return new Promise((resolve, reject) => {
     readFile(filePath, { encoding: 'utf8' }, (readError, data) => {
       if (readError) {
