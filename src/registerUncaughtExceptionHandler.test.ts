@@ -28,4 +28,13 @@ describe('registerUncaughtExceptionHandler', () => {
 
     expect(process.removeListener).toHaveBeenCalled();
   });
+
+  it('should register a handler that logs uncaught exceptions', () => {
+    spyOn(logger, 'error');
+    registerUncaughtExceptionHandler(logger);
+
+    process.emit('uncaughtException', new Error('test'));
+
+    expect(logger.error).toHaveBeenCalled();
+  });
 });
