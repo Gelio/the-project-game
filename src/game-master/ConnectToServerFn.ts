@@ -9,7 +9,7 @@ export function ConnectToServer(
 ) {
   const socket = createConnection({ host: serverHostname, port: serverPort });
   const connectedPromise = new Promise(resolve => {
-    socket.once('connected', resolve);
+    socket.once('connect', resolve);
   });
 
   const communicator = new Communicator(socket, logger);
