@@ -6,6 +6,7 @@ import { LoggerFactory } from './common/logging/LoggerFactory';
 
 import { createBlessedScreen } from './createBlessedScreen';
 
+import { ConnectToServer } from './game-master/ConnectToServerFn';
 import { GameMaster } from './game-master/GameMaster';
 import { EmptyUIController } from './game-master/ui/EmptyUIController';
 import { UIController as IUIController } from './game-master/ui/IUIController';
@@ -61,7 +62,10 @@ function parseGMArguments(): GMArguments {
     const screen = createBlessedScreen();
     uiController = new UIController(screen, blessed.box, loggerFactory);
   }
+
+  const connectToServer = ConnectToServer;
+
   const gameLogsCsvWriter = new GameLogsCsvWriter(config.gameName, config.logsDirectory);
-  const gameMaster = new GameMaster(config, uiController, gameLogsCsvWriter);
+  const gameMaster = new GameMaster(config, uiController, gameLogsCsvWriter, connectToServer);
   gameMaster.init();
 })();

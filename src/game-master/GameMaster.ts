@@ -1,4 +1,3 @@
-import { createConnection } from 'net';
 import { LoggerInstance } from 'winston';
 
 import { bindObjectMethods } from '../common/bindObjectMethods';
@@ -58,6 +57,7 @@ export class GameMaster implements Service {
   private readonly uiController: UIController;
   private logger: LoggerInstance;
   private gameLogsCsvWriter: GameLogsCsvWriter;
+  private connectToServer: Function;
 
   private failedRegistrations = 0;
   private currentRound = 0;
@@ -70,11 +70,13 @@ export class GameMaster implements Service {
   constructor(
     options: GameMasterOptions,
     uiController: UIController,
-    gameLogsCsvWriter: GameLogsCsvWriter
+    gameLogsCsvWriter: GameLogsCsvWriter,
+    connectToServer: Function
   ) {
     this.options = options;
     this.uiController = uiController;
     this.gameLogsCsvWriter = gameLogsCsvWriter;
+    this.connectToServer = connectToServer;
 
     bindObjectMethods(this.messageHandlers, this);
     this.destroy = this.destroy.bind(this);
@@ -88,19 +90,21 @@ export class GameMaster implements Service {
     const { serverHostname, serverPort } = this.options;
 
     this.logger.verbose('Connecting to the server');
-    const socket = createConnection(
-      {
-        host: serverHostname,
-        port: serverPort
-      },
-      () => {
-        this.logger.info(`Connected to the server at ${serverHostname}:${serverPort}`);
-        this.createNewGame();
-        this.registerGame();
-      }
+
+    const { communicator, connectedPromise } = this.connectToServer(
+      serverHostname,
+      serverPort,
+      this.logger
     );
 
-    this.communicator = new Communicator(socket, this.logger);
+    this.communicator = communicator;
+
+    connectedPromise.then(() => {
+      this.logger.info(`Connected to the server at ${serverHostname}:${serverPort}`);
+      this.createNewGame();
+      this.registerGame();
+    });
+
     this.communicator.bindListeners();
 
     this.communicator.once('close', this.handleServerDisconnection.bind(this));
