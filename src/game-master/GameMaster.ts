@@ -115,7 +115,7 @@ export class GameMaster implements Service {
   public async destroy() {
     this.logger.verbose('Destroying GM');
 
-    if (this.game.state === GameState.InProgress) {
+    if (this.game && this.game.state === GameState.InProgress) {
       this.logger.verbose('Stopping and unregistering the game');
       this.game.stop();
       await this.game.unregister();
