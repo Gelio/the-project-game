@@ -38,13 +38,11 @@ function createMockUiController(logger: LoggerInstance): UIController {
 }
 
 function createLogger(): LoggerInstance {
-  const bool = false;
-
   return <any>{
-    warn: bool ? console.log : jest.fn(),
-    info: bool ? console.log : jest.fn(),
-    verbose: bool ? console.log : jest.fn(),
-    error: bool ? console.log : jest.fn()
+    warn: jest.fn(),
+    info: jest.fn(),
+    verbose: jest.fn(),
+    error: jest.fn()
   };
 }
 
@@ -433,8 +431,7 @@ describe('[GM] GameMaster', () => {
         expect(communicator.sendMessage).toHaveBeenLastCalledWith(registerGameMessage);
       });
 
-      //tslint:disable
-      it.only('should not register the game again after rounds limit is reached', async () => {
+      it('should not register the game again after rounds limit is reached', async () => {
         for (let round = 0; round < gameMasterOptions.gamesLimit + 1; ++round) {
           const firstPlayerHelloMessage = getPlayerHelloMessage(gameMasterOptions, 'p11', true, 1);
           const secondPlayerHelloMessage = getPlayerHelloMessage(gameMasterOptions, 'p21', true, 2);
