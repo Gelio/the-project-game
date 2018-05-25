@@ -46,6 +46,12 @@ function createLogger(): LoggerInstance {
   };
 }
 
+async function resolvePromises() {
+  for (let i = 0; i < 100; ++i) {
+    await Promise.resolve();
+  }
+}
+
 function getPlayerHelloMessage(
   gameMasterOptions: GameMasterOptions,
   senderId: string,
@@ -154,28 +160,7 @@ describe('[GM] GameMaster', () => {
     place: 4000
   };
 
-  const gameMasterOptions: GameMasterOptions = {
-    serverHostname: 'localhost',
-    serverPort: 4000,
-    gameName: 'test game',
-    gameDescription: 'description',
-    gamesLimit: 5,
-    teamSizes: {
-      1: 1,
-      2: 1
-    },
-    pointsLimit: 0,
-    boardSize: boardSize,
-    shamChance: 0.5,
-    generatePiecesInterval: 1500,
-    piecesLimit: 5,
-    logsDirectory: 'logs',
-    actionDelays: actionDelays,
-    timeout: 5000,
-    registrationTriesLimit: 5,
-    registerGameInterval: 300
-  };
-
+  let gameMasterOptions: GameMasterOptions;
   let gameMaster: GameMaster;
   let uiController: UIController;
   let communicator: Communicator;
@@ -204,6 +189,28 @@ describe('[GM] GameMaster', () => {
         communicator: communicator,
         connectedPromise: Promise.resolve()
       };
+    };
+
+    gameMasterOptions = {
+      serverHostname: 'localhost',
+      serverPort: 4000,
+      gameName: 'test game',
+      gameDescription: 'description',
+      gamesLimit: 5,
+      teamSizes: {
+        1: 1,
+        2: 1
+      },
+      pointsLimit: 0,
+      boardSize: boardSize,
+      shamChance: 0.5,
+      generatePiecesInterval: 1500,
+      piecesLimit: 5,
+      logsDirectory: 'logs',
+      actionDelays: actionDelays,
+      timeout: 5000,
+      registrationTriesLimit: 5,
+      registerGameInterval: 0
     };
 
     gameMaster = new GameMaster(
@@ -257,36 +264,35 @@ describe('[GM] GameMaster', () => {
 
       it('should try to register the game again after given interval if request was rejected', async () => {
         jest.useFakeTimers();
+        gameMasterOptions.registerGameInterval = 500;
 
         const registerGameResponse = getRegisterGameResponse(false);
 
         communicator.waitForSpecificMessage = () => <any>Promise.resolve(registerGameResponse);
         await gameMaster.init();
-        expect(communicator.sendMessage).toHaveBeenCalledTimes(1);
-        jest.advanceTimersByTime(gameMasterOptions.registerGameInterval);
 
-        await Promise.resolve();
+        expect(communicator.sendMessage).toHaveBeenCalledTimes(1);
+
+        await resolvePromises();
+
+        jest.advanceTimersByTime(gameMasterOptions.registerGameInterval + 1);
+
+        await resolvePromises();
 
         expect(communicator.sendMessage).toHaveBeenCalledTimes(2);
         jest.useRealTimers();
       });
 
       it('should try to register the game again up to 5 times', async () => {
-        jest.useFakeTimers();
-
         const registerGameResponse = getRegisterGameResponse(false);
 
         communicator.waitForSpecificMessage = () => <any>Promise.resolve(registerGameResponse);
         await gameMaster.init();
-        for (let i = 0; i < 10; ++i) {
-          jest.advanceTimersByTime(gameMasterOptions.registerGameInterval);
-          await Promise.resolve();
-        }
+        await createDelay(60);
+
         expect(communicator.sendMessage).toHaveBeenCalledTimes(
           gameMasterOptions.registrationTriesLimit
         );
-
-        jest.useRealTimers();
       });
     });
   });
