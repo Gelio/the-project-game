@@ -288,7 +288,7 @@ describe('[GM] GameMaster', () => {
 
         communicator.waitForSpecificMessage = () => <any>Promise.resolve(registerGameResponse);
         await gameMaster.init();
-        await createDelay(60);
+        await createDelay(180);
 
         expect(communicator.sendMessage).toHaveBeenCalledTimes(
           gameMasterOptions.registrationTriesLimit
