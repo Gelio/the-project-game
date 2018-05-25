@@ -16,15 +16,14 @@ namespace Player.Tests
     [TestFixture]
     class RefreshStateBoardTests
     {
-        Mock<ICommunicator> _communicator;
         PlayerConfig _playerConfig;
         Mock<IGameService> _gameService;
         Mock<IMessageProvider> _messageProvider;
+        PlayerState _playerState;
 
         [SetUp]
         public void Setup()
         {
-            _communicator = new Mock<ICommunicator>();
             _playerConfig = new PlayerConfig
             {
                 AskLevel = 10,
@@ -35,6 +34,7 @@ namespace Player.Tests
             };
             _gameService = new Mock<IGameService>();
             _messageProvider = new Mock<IMessageProvider>();
+            _playerState = new PlayerState(_playerConfig);
         }
 
 
@@ -43,9 +43,9 @@ namespace Player.Tests
         {
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Throws(new ActionInvalidException());
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object);
+            var actionExecutor = new ActionExecutor(_messageProvider.Object, _playerState);
 
-            var result = player.RefreshBoardState();
+            var result = actionExecutor.RefreshBoardState();
 
             Assert.That(result, Is.False);
         }
@@ -65,12 +65,10 @@ namespace Player.Tests
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Returns(new Message<ActionValidPayload>());
             _messageProvider.Setup(x => x.Receive<RefreshStateResponsePayload>()).Returns(msg2);
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
-            {
-                Id = assignedPlayerId,
-            };
+            var actionExecutor = new ActionExecutor(_messageProvider.Object, _playerState);
+            _playerState.Id = assignedPlayerId;
 
-            Assert.Throws<NoPayloadException>(() => player.RefreshBoardState());
+            Assert.Throws<NoPayloadException>(() => actionExecutor.RefreshBoardState());
         }
 
         [Test]
@@ -117,14 +115,12 @@ namespace Player.Tests
                     X = 20
                 }
             };
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
-            {
-                Id = assignedPlayerId,
-                Game = game,
-                Board = new Board(game.BoardSize)
-            };
+            _playerState.Game = game;
+            _playerState.Board = new Board(game.BoardSize);
+            _playerState.Id = assignedPlayerId;
 
-            Assert.Throws<InvalidOperationException>(() => player.RefreshBoardState());
+            var actionExecutor = new ActionExecutor(_messageProvider.Object, _playerState);
+            Assert.Throws<InvalidOperationException>(() => actionExecutor.RefreshBoardState());
         }
 
         [Test]
@@ -178,26 +174,26 @@ namespace Player.Tests
                     X = 20
                 }
             };
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
-            {
-                Id = assignedPlayerId,
-                Game = game,
-                Board = new Board(game.BoardSize)
-            };
-            var result = player.RefreshBoardState();
+            _playerState.Game = game;
+            _playerState.Board = new Board(game.BoardSize);
+            _playerState.Id = assignedPlayerId;
+
+            var actionExecutor = new ActionExecutor(_messageProvider.Object, _playerState);
+
+            var result = actionExecutor.RefreshBoardState();
 
             Assert.That(result, Is.True);
-            (int foundX, int foundY) = player.Board.FindPlayerPosition(assignedPlayerId);
+            (int foundX, int foundY) = _playerState.Board.FindPlayerPosition(assignedPlayerId);
             Assert.That(foundX, Is.Not.Negative);
             Assert.That(foundY, Is.Not.Negative);
-            Assert.That(player.Board.At(foundX, foundY).DistanceToClosestPiece, Is.EqualTo(msg2.Payload.CurrentPositionDistanceToClosestPiece));
-            Assert.That(player.X, Is.EqualTo(playerPos1.X));
-            Assert.That(player.Y, Is.EqualTo(playerPos1.Y));
+            Assert.That(_playerState.Board.At(foundX, foundY).DistanceToClosestPiece, Is.EqualTo(msg2.Payload.CurrentPositionDistanceToClosestPiece));
+            Assert.That(_playerState.X, Is.EqualTo(playerPos1.X));
+            Assert.That(_playerState.Y, Is.EqualTo(playerPos1.Y));
 
             foreach (var p in playerPositions)
             {
-                Assert.That(player.Board.At(p.X, p.Y).PlayerId, Is.EqualTo(p.PlayerId));
-                Assert.That(player.Board.At(p.X, p.Y).Timestamp, Is.EqualTo(msg2.Payload.Timestamp));
+                Assert.That(_playerState.Board.At(p.X, p.Y).PlayerId, Is.EqualTo(p.PlayerId));
+                Assert.That(_playerState.Board.At(p.X, p.Y).Timestamp, Is.EqualTo(msg2.Payload.Timestamp));
             }
         }
     }

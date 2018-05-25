@@ -18,6 +18,12 @@
       "text": "NOTE:",
       "backgroundColor": "green",
       "color": "#ffcccc"
+    },
+    {
+      "text": "CAUTION:",
+      "backgroundColor": "yellow",
+      "color": "#001100",
+      "overviewRulerColor": "yellow"
     }
   ],
   "editor.formatOnSave": true

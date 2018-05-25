@@ -8,10 +8,10 @@ namespace Player.Messages.Responses
 {
     public class CommunicationResponsePayload : IPayload
     {
-        [JsonProperty("senderPlayerId")]
+        [JsonProperty("senderPlayerId", NullValueHandling = NullValueHandling.Ignore)]
         public string SenderPlayerId;
 
-        [JsonProperty("targetPlayerId")]
+        [JsonProperty("targetPlayerId", NullValueHandling = NullValueHandling.Ignore)]
         public string TargetPlayerId;
 
         [JsonProperty("accepted")]

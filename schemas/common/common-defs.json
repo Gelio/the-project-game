@@ -15,9 +15,10 @@
       "type": "number",
       "minimum": 0
     },
-    "nonNegativeInteger": {
+    "port": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 1,
+      "maximum": 49151
     }
   }
 }

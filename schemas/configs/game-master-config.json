@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://the-project-game.net/schema/configs/game-master-config.json",
+
+  "type": "object",
+  "title": "GameMasterConfig",
+
+  "properties": {
+    "serverHostname": {
+      "type": "string",
+      "format": "hostname"
+    },
+    "serverPort": {
+      "$ref": "../common/common-defs.json#/definitions/port"
+    },
+    "gameName": {
+      "type": "string"
+    },
+    "gameDescription": {
+      "type": "string"
+    },
+    "gamesLimit": {
+      "$ref": "../common/common-defs.json#/definitions/positiveInteger"
+    },
+    "teamSizes": {
+      "$ref": "../common/team-sizes.json#"
+    },
+    "pointsLimit": {
+      "$ref": "../common/common-defs.json#/definitions/positiveInteger"
+    },
+    "boardSize": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "$ref": "../common/common-defs.json#/definitions/positiveInteger"
+        },
+        "taskArea": {
+          "$ref": "../common/common-defs.json#/definitions/positiveInteger"
+        },
+        "goalArea": {
+          "$ref": "../common/common-defs.json#/definitions/positiveInteger"
+        }
+      },
+      "required": ["x", "taskArea", "goalArea"]
+    },
+    "shamChance": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "generatePiecesInterval": {
+      "$ref": "../common/common-defs.json#/definitions/positiveInteger"
+    },
+    "piecesLimit": {
+      "$ref": "../common/common-defs.json#/definitions/positiveInteger"
+    },
+    "logsDirectory": {
+      "type": "string"
+    },
+    "actionDelays": {
+      "$ref": "../common/action-delays.json#"
+    },
+    "timeout": {
+      "$ref": "../common/common-defs.json#/definitions/positiveInteger"
+    },
+    "registrationTriesLimit": {
+      "$ref": "../common/common-defs.json#/definitions/positiveInteger"
+    },
+    "registerGameInterval": {
+      "$ref": "../common/common-defs.json#/definitions/positiveInteger"
+    }
+  },
+
+  "required": [
+    "serverHostname",
+    "serverPort",
+    "gameName",
+    "gameDescription",
+    "gamesLimit",
+    "teamSizes",
+    "pointsLimit",
+    "boardSize",
+    "shamChance",
+    "generatePiecesInterval",
+    "piecesLimit",
+    "logsDirectory",
+    "actionDelays",
+    "timeout",
+    "registrationTriesLimit",
+    "registerGameInterval"
+  ]
+}

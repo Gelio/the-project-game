@@ -25,12 +25,12 @@ import { RegisterGameResponse } from '../interfaces/responses/RegisterGameRespon
 import { TestPieceResponse } from '../interfaces/responses/TestPieceResponse';
 import { UnregisterGameResponse } from '../interfaces/responses/UnregisterGameResponse';
 
-import { Game } from './Game';
+import { Game, WriteCsvLogFn } from './Game';
 import { GameState } from './GameState';
 import { Player } from './Player';
 import { InvalidMessageResult } from './ProcessMessageResult';
 
-import { UIController } from './ui/UIController';
+import { UIController } from './ui/IUIController';
 
 import { PeriodicPieceGenerator } from './board-generation/PeriodicPieceGenerator';
 
@@ -76,7 +76,7 @@ describe('[GM] Game', () => {
   const boardSize: BoardSize = {
     x: 30,
     goalArea: 50,
-    taskArea: 300
+    taskArea: 301
   };
   const actionDelays: ActionDelays = {
     communicationAccept: 4000,
@@ -108,6 +108,7 @@ describe('[GM] Game', () => {
   let player: Player;
   let otherPlayer: Player;
   let updateUIFn: Function;
+  let writeCsvLog: WriteCsvLogFn;
 
   beforeEach(() => {
     periodicPieceGenerator = <any>createMockPeriodicPieceGenerator();
@@ -118,6 +119,7 @@ describe('[GM] Game', () => {
     loggerInstance = loggerFactory.createEmptyLogger();
 
     updateUIFn = jest.fn();
+    writeCsvLog = jest.fn();
 
     game = new Game(
       gameDefinition,
@@ -126,7 +128,8 @@ describe('[GM] Game', () => {
       communicator,
       () => periodicPieceGenerator,
       jest.fn(),
-      updateUIFn
+      updateUIFn,
+      writeCsvLog
     );
 
     player = new Player();
@@ -134,7 +137,6 @@ describe('[GM] Game', () => {
     player.teamId = 1;
     player.isLeader = true;
     player.isBusy = false;
-    player.isConnected = true;
     game.addPlayer(player);
 
     otherPlayer = new Player();
@@ -142,7 +144,6 @@ describe('[GM] Game', () => {
     otherPlayer.teamId = 2;
     otherPlayer.isLeader = true;
     otherPlayer.isBusy = false;
-    otherPlayer.isConnected = true;
     game.addPlayer(otherPlayer);
   });
 
@@ -175,6 +176,18 @@ describe('[GM] Game', () => {
       };
 
       expect(sendIngameMessageSpy).toHaveBeenCalledWith(actionInvalidMessage);
+    });
+
+    it('should save csv log', () => {
+      const message: DiscoveryRequest = {
+        senderId: player.playerId,
+        type: 'DISCOVERY_REQUEST',
+        payload: undefined
+      };
+
+      game.handleMessage(message);
+
+      expect(writeCsvLog).toBeCalled();
     });
 
     it('should reject message with unknown type', () => {
@@ -377,8 +390,6 @@ describe('[GM] Game', () => {
     anotherPlayer.teamId = 2;
     anotherPlayer.isLeader = true;
     anotherPlayer.isBusy = false;
-    anotherPlayer.isConnected = true;
-
     game.addPlayer(anotherPlayer);
 
     expect(game.playersContainer.getPlayerById(player.playerId)).toBe(player);
@@ -408,14 +419,14 @@ describe('[GM] Game', () => {
       expect(game.playersContainer.getPlayerById(player.playerId)).toBeUndefined();
     });
 
-    it('should mark the player as disconnected', () => {
+    it('should remove the player when the game has started', () => {
       game.start();
 
       const message = getPlayerDisconnectedMessage(player);
 
       game.handlePlayerDisconnectedMessage(message);
 
-      expect(player.isConnected).toBe(false);
+      expect(game.playersContainer.getPlayerById(player.playerId)).toBeUndefined();
     });
   });
 

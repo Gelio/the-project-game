@@ -11,21 +11,34 @@ import { Scoreboard } from '../models/Scoreboard';
 
 import { BoardFormatter } from './BoardFormatter';
 
+import { UIController as IUIController } from './IUIController';
+
+import { LoggerFactory } from '../../common/logging/LoggerFactory';
+import { UITransport } from '../../common/logging/UITransport';
+
 export type BoxFactoryFn = (options: blessed.Widgets.BoxOptions) => blessed.Widgets.BoxElement;
 
-export class UIController implements Service {
+export class UIController implements Service, IUIController {
   private readonly screen: blessed.Widgets.Screen;
   private readonly boardFormatter: BoardFormatter;
   private readonly boxFactoryFn: BoxFactoryFn;
+  private readonly loggerFactory: LoggerFactory;
 
   private boardBox: blessed.Widgets.BoxElement;
   private infoBox: blessed.Widgets.BoxElement;
   private logsBox: blessed.Widgets.BoxElement;
 
-  constructor(screen: blessed.Widgets.Screen, boxFactoryFn: BoxFactoryFn) {
+  constructor(
+    screen: blessed.Widgets.Screen,
+    boxFactoryFn: BoxFactoryFn,
+    loggerFactory: LoggerFactory
+  ) {
     this.screen = screen;
     this.boardFormatter = new BoardFormatter();
     this.boxFactoryFn = boxFactoryFn;
+    this.loggerFactory = loggerFactory;
+
+    this.log = this.log.bind(this);
   }
 
   public init() {
@@ -77,12 +90,6 @@ export class UIController implements Service {
     this.screen.render();
   }
 
-  public log(lines: string | string[]) {
-    this.logsBox.pushLine(lines);
-    this.logsBox.setScrollPerc(100);
-    this.render();
-  }
-
   public updateBoard(board: Board) {
     this.boardBox.setContent(`${config.uiLabelStyle}Board{/}`);
     const tiles = board.tiles;
@@ -129,6 +136,18 @@ export class UIController implements Service {
       `Pieces: ${board.pieces.length} (${pickedUpPiecesCount} picked up, ${shamCount} shams)`
     );
 
+    this.render();
+  }
+
+  public createLogger() {
+    const uiTransport = new UITransport(this.log);
+
+    return this.loggerFactory.createLogger([uiTransport]);
+  }
+
+  private log(message: string) {
+    this.logsBox.pushLine(message);
+    this.logsBox.setScrollPerc(100);
     this.render();
   }
 }

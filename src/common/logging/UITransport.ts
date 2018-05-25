@@ -19,7 +19,7 @@ export class UITransport extends Transport {
     debug: '{cyan-fg}',
     silly: '{white-fg}'
   };
-  private readonly defaultLevelColor: '{white-fg}';
+  private readonly defaultLevelColor = '{white-fg}';
 
   constructor(logFunction: LogFunction) {
     super();

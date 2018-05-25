@@ -17,16 +17,16 @@ namespace Player.Tests
     [TestFixture]
     class PlayerTests
     {
-        Mock<ICommunicator> _communicator;
+        Mock<IActionExecutor> _actionExecutor;
         PlayerConfig _playerConfig;
         Mock<IGameService> _gameService;
         Mock<IMessageProvider> _messageProvider;
-
+        PlayerState _playerState;
 
         [SetUp]
         public void Setup()
         {
-            _communicator = new Mock<ICommunicator>();
+            _actionExecutor = new Mock<IActionExecutor>();
             _playerConfig = new PlayerConfig
             {
                 AskLevel = 10,
@@ -37,6 +37,7 @@ namespace Player.Tests
             };
             _gameService = new Mock<IGameService>();
             _messageProvider = new Mock<IMessageProvider>();
+            _playerState = new PlayerState(_playerConfig);
         }
 
         [Test]
@@ -44,7 +45,7 @@ namespace Player.Tests
         {
             _messageProvider.Setup(x => x.AssertPlayerStatus(_playerConfig.Timeout)).Throws(new PlayerRejectedException());
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object);
+            var player = new Player(_playerConfig, _gameService.Object, _messageProvider.Object, _playerState, _actionExecutor.Object);
             Assert.Throws<PlayerRejectedException>(() => player.ConnectToServer());
         }
 
@@ -84,14 +85,14 @@ namespace Player.Tests
                             .Throws(new WrongPayloadException())
                             .Returns(msg3);
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object);
+            var player = new Player(_playerConfig, _gameService.Object, _messageProvider.Object, _playerState, _actionExecutor.Object);
 
             // When
             player.WaitForGameStart();
 
             //Then
-            Assert.That(player.LeaderId, Is.EqualTo(expectedLeaderId));
-            Assert.That(player.TeamMembersIds, Is.EquivalentTo(expectedTeamMembersIds));
+            Assert.That(_playerState.LeaderId, Is.EqualTo(expectedLeaderId));
+            Assert.That(_playerState.TeamMembersIds, Is.EquivalentTo(expectedTeamMembersIds));
         }
 
         [Test]
@@ -165,11 +166,11 @@ namespace Player.Tests
 
             _gameService.Setup(x => x.GetGamesList()).Returns(gamesList);
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object);
+            var player = new Player(_playerConfig, _gameService.Object, _messageProvider.Object, _playerState, _actionExecutor.Object);
             player.GetGameInfo();
 
-            Assert.That(player.Game, Is.Not.Null);
-            Assert.That(player.Game.Name, Is.EqualTo(_playerConfig.GameName));
+            Assert.That(_playerState.Game, Is.Not.Null);
+            Assert.That(_playerState.Game.Name, Is.EqualTo(_playerConfig.GameName));
         }
 
         [Test]
@@ -179,7 +180,7 @@ namespace Player.Tests
 
             _gameService.Setup(x => x.GetGamesList()).Returns(gamesList);
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object);
+            var player = new Player(_playerConfig, _gameService.Object, _messageProvider.Object, _playerState, _actionExecutor.Object);
             Assert.Throws<OperationCanceledException>(() => player.GetGameInfo());
         }
     }

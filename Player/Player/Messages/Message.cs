@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Newtonsoft.Json;
 
 namespace Player.Interfaces
@@ -9,11 +6,11 @@ namespace Player.Interfaces
     {
         [JsonProperty("type")]
         public string Type;
-        [JsonProperty("senderId")]
+        [JsonProperty("senderId", NullValueHandling = NullValueHandling.Ignore)]
         public string SenderId;
-        [JsonProperty("recipientId")]
+        [JsonProperty("recipientId", NullValueHandling = NullValueHandling.Ignore)]
         public string RecipientId;
-        [JsonProperty("payload")]
+        [JsonProperty("payload", NullValueHandling = NullValueHandling.Ignore)]
         public T Payload;
     }
 
@@ -21,9 +18,9 @@ namespace Player.Interfaces
     {
         [JsonProperty("type")]
         public string Type;
-        [JsonProperty("senderId")]
+        [JsonProperty("senderId", NullValueHandling = NullValueHandling.Ignore)]
         public string SenderId;
-        [JsonProperty("recipientId")]
+        [JsonProperty("recipientId", NullValueHandling = NullValueHandling.Ignore)]
         public string RecipientId;
     }
 }

@@ -5,12 +5,12 @@ import { bindObjectMethods } from '../common/bindObjectMethods';
 import { Communicator } from '../common/Communicator';
 import { createDelay } from '../common/createDelay';
 import { GAME_MASTER_ID } from '../common/EntityIds';
-import { LoggerFactory } from '../common/logging/LoggerFactory';
-import { UITransport } from '../common/logging/UITransport';
+import { GameLogsCsvWriter } from '../common/logging/GameLogsCsvWriter';
 
 import { ActionDelays } from '../interfaces/ActionDelays';
 import { BoardSize } from '../interfaces/BoardSize';
 import { TeamSizes } from '../interfaces/GameDefinition';
+import { GameLog } from '../interfaces/GameLog';
 import { Message } from '../interfaces/Message';
 import { Service } from '../interfaces/Service';
 
@@ -27,8 +27,9 @@ import { PeriodicPieceGeneratorOptions } from './board-generation/PeriodicPieceG
 import { Game } from './Game';
 import { GameState } from './GameState';
 import { mapOptionsToGameDefinition } from './mapOptionsToGameDefinition';
+import { Player } from './Player';
 
-import { UIController } from './ui/UIController';
+import { UIController } from './ui/IUIController';
 
 export interface GameMasterOptions {
   serverHostname: string;
@@ -42,7 +43,7 @@ export interface GameMasterOptions {
   shamChance: number;
   generatePiecesInterval: number;
   piecesLimit: number;
-  resultFileName: string;
+  logsDirectory: string;
   actionDelays: ActionDelays;
   timeout: number;
   registrationTriesLimit: number;
@@ -55,8 +56,8 @@ export class GameMaster implements Service {
   private game: Game;
 
   private readonly uiController: UIController;
-  private readonly loggerFactory: LoggerFactory;
   private logger: LoggerInstance;
+  private gameLogsCsvWriter: GameLogsCsvWriter;
 
   private failedRegistrations = 0;
   private currentRound = 0;
@@ -69,11 +70,11 @@ export class GameMaster implements Service {
   constructor(
     options: GameMasterOptions,
     uiController: UIController,
-    loggerFactory: LoggerFactory
+    gameLogsCsvWriter: GameLogsCsvWriter
   ) {
     this.options = options;
     this.uiController = uiController;
-    this.loggerFactory = loggerFactory;
+    this.gameLogsCsvWriter = gameLogsCsvWriter;
 
     bindObjectMethods(this.messageHandlers, this);
     this.destroy = this.destroy.bind(this);
@@ -103,6 +104,12 @@ export class GameMaster implements Service {
 
     this.communicator.once('close', this.handleServerDisconnection.bind(this));
 
+    try {
+      await this.gameLogsCsvWriter.init();
+    } catch (error) {
+      this.logger.error(error.message);
+    }
+
     this.createNewGame();
   }
 
@@ -117,6 +124,12 @@ export class GameMaster implements Service {
 
     this.communicator.destroy();
     this.uiController.destroy();
+
+    try {
+      await this.gameLogsCsvWriter.destroy();
+    } catch (error) {
+      this.logger.error(error.message);
+    }
   }
 
   private initUI() {
@@ -128,8 +141,7 @@ export class GameMaster implements Service {
       throw new Error('Cannot create logger without UI controller');
     }
 
-    const uiTransport = new UITransport(this.uiController.log.bind(this.uiController));
-    this.logger = this.loggerFactory.createLogger([uiTransport]);
+    this.logger = this.uiController.createLogger();
     registerUncaughtExceptionHandler(this.logger);
     this.logger.info('Logger initialized');
   }
@@ -189,8 +201,8 @@ export class GameMaster implements Service {
     this.logger.info(`Player ${message.payload.playerId} disconnected`);
     this.game.handlePlayerDisconnectedMessage(message);
 
-    const connectedPlayers = this.game.playersContainer.getConnectedPlayers();
-    if (connectedPlayers.length === 0) {
+    const players = this.game.playersContainer.players;
+    if (players.length === 0) {
       this.logger.info('All players disconnected');
 
       if (this.game.state === GameState.InProgress) {
@@ -233,7 +245,8 @@ export class GameMaster implements Service {
       this.communicator,
       createPeriodicPieceGenerator(periodicPieceGeneratorOptions, this.logger),
       this.onPointsLimitReached.bind(this),
-      this.updateUI.bind(this)
+      this.updateUI.bind(this),
+      this.writeCsvLog.bind(this)
     );
     this.currentRound++;
     this.updateUI();
@@ -308,5 +321,18 @@ export class GameMaster implements Service {
       this.game.scoreboard,
       this.game.playersContainer
     );
+  }
+
+  private async writeCsvLog(
+    message: Message<any>,
+    player: Player,
+    isValid: boolean
+  ): Promise<void> {
+    const log = new GameLog(message, player, this.currentRound, isValid);
+    try {
+      await this.gameLogsCsvWriter.writeLog(log);
+    } catch (error) {
+      this.logger.error(`Failed to write log, error: ${error.message}`);
+    }
   }
 }

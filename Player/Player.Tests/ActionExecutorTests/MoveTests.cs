@@ -1,13 +1,9 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using Moq;
-using Newtonsoft.Json;
 using NUnit.Framework;
 using Player.Common;
 using Player.GameObjects;
 using Player.Interfaces;
-using Player.Messages.DTO;
 using Player.Messages.Responses;
 
 namespace Player.Tests
@@ -18,16 +14,15 @@ namespace Player.Tests
         PlayerConfig _playerConfig;
         GameInfo _game;
 
-        Mock<ICommunicator> _communicator;
         Mock<IGameService> _gameService;
         Mock<IMessageProvider> _messageProvider;
+        PlayerState _playerState;
 
         string Up = "up";
 
         [SetUp]
         public void Setup()
         {
-            _communicator = new Mock<ICommunicator>();
             _messageProvider = new Mock<IMessageProvider>();
             _playerConfig = new PlayerConfig
             {
@@ -38,6 +33,7 @@ namespace Player.Tests
                 TeamNumber = 1
             };
             _gameService = new Mock<IGameService>();
+            _playerState = new PlayerState(_playerConfig);
 
             _game = new GameInfo()
             {
@@ -48,6 +44,8 @@ namespace Player.Tests
                     X = 20
                 }
             };
+            _playerState.Game = _game;
+            _playerState.Board = new Board(_game.BoardSize);
         }
 
         [Test]
@@ -56,12 +54,9 @@ namespace Player.Tests
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Returns(new Message<ActionValidPayload>());
             _messageProvider.Setup(x => x.Receive<MoveResponsePayload>()).Throws(new WrongPayloadException());
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
-            {
-                Game = _game
-            };
+            var actionExecutor = new ActionExecutor(_messageProvider.Object, _playerState);
 
-            Assert.Throws<WrongPayloadException>(() => player.Move(Up));
+            Assert.Throws<WrongPayloadException>(() => actionExecutor.Move(Up));
         }
 
         [Test]
@@ -69,12 +64,8 @@ namespace Player.Tests
         {
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Throws(new ActionInvalidException());
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
-            {
-                Game = _game
-            };
-
-            var result = player.Move(Up);
+            var actionExecutor = new ActionExecutor(_messageProvider.Object, _playerState);
+            var result = actionExecutor.Move(Up);
 
             Assert.That(result, Is.False);
         }
@@ -124,26 +115,21 @@ namespace Player.Tests
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Returns(new Message<ActionValidPayload>());
             _messageProvider.Setup(x => x.Receive<MoveResponsePayload>()).Returns(msg2);
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
-            {
-                Id = assignedPlayerId,
-                X = assignedX,
-                Y = assignedY,
-                Game = _game,
-                Board = new Board(_game.BoardSize)
-            };
-            player.Board.At(indexBeforeMove).PlayerId = assignedPlayerId;
+            _playerState.X = assignedX;
+            _playerState.Y = assignedY;
+            _playerState.Id = assignedPlayerId;
+            _playerState.Board.At(indexBeforeMove).PlayerId = assignedPlayerId;
 
-
-            var result = player.Move(direction);
+            var actionExecutor = new ActionExecutor(_messageProvider.Object, _playerState);
+            var result = actionExecutor.Move(direction);
 
             Assert.That(result, Is.True);
-            Assert.That(player.Board.At(indexBeforeMove).PlayerId, Is.Null);
-            Assert.That(player.Board.At(indexAfterMove).PlayerId, Is.EqualTo(assignedPlayerId));
-            Assert.That(player.Board.At(indexAfterMove).DistanceToClosestPiece, Is.EqualTo(msg2.Payload.DistanceToPiece));
-            Assert.That(player.Board.At(indexAfterMove).Timestamp, Is.EqualTo(msg2.Payload.TimeStamp));
-            Assert.That(player.X, Is.EqualTo(newX));
-            Assert.That(player.Y, Is.EqualTo(newY));
+            Assert.That(_playerState.Board.At(indexBeforeMove).PlayerId, Is.Null);
+            Assert.That(_playerState.Board.At(indexAfterMove).PlayerId, Is.EqualTo(assignedPlayerId));
+            Assert.That(_playerState.Board.At(indexAfterMove).DistanceToClosestPiece, Is.EqualTo(msg2.Payload.DistanceToPiece));
+            Assert.That(_playerState.Board.At(indexAfterMove).Timestamp, Is.EqualTo(msg2.Payload.TimeStamp));
+            Assert.That(_playerState.X, Is.EqualTo(newX));
+            Assert.That(_playerState.Y, Is.EqualTo(newY));
         }
 
         [Test]
@@ -159,12 +145,9 @@ namespace Player.Tests
             _messageProvider.Setup(x => x.Receive<ActionValidPayload>()).Returns(new Message<ActionValidPayload>());
             _messageProvider.Setup(x => x.Receive<MoveResponsePayload>()).Returns(msg2);
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object)
-            {
-                Game = _game
-            };
+            var actionExecutor = new ActionExecutor(_messageProvider.Object, _playerState);
 
-            Assert.Throws<NoPayloadException>(() => player.Move(Up));
+            Assert.Throws<NoPayloadException>(() => actionExecutor.Move(Up));
         }
 
         [Test]
@@ -172,9 +155,8 @@ namespace Player.Tests
         {
             var invalidDirection = "top left";
 
-            var player = new Player(_communicator.Object, _playerConfig, _gameService.Object, _messageProvider.Object);
-
-            var result = player.Move(invalidDirection);
+            var actionExecutor = new ActionExecutor(_messageProvider.Object, _playerState);
+            var result = actionExecutor.Move(invalidDirection);
 
             Assert.That(result, Is.False);
         }

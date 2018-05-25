@@ -2,6 +2,8 @@
 import { getMessageValidator } from '../src/common/getMessageValidator';
 import { readJSONFile } from '../src/common/readJSONFile';
 
+import { stringifySchemaValidationErrors } from '../src/common/logging/stringifySchemaValidationErrors';
+
 (async () => {
   if (process.argv.length < 3) {
     console.log('Please provide the file name as an argument');
@@ -26,7 +28,8 @@ import { readJSONFile } from '../src/common/readJSONFile';
     const isValid = messageValidator(message);
     console.log('Valid:', isValid);
     if (!isValid) {
-      console.error('Errors:', messageValidator.errors);
+      const stringifiedErrors = stringifySchemaValidationErrors(messageValidator.errors);
+      console.error('Errors:', stringifiedErrors);
     }
   });
 })();

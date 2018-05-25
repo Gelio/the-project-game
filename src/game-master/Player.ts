@@ -5,7 +5,6 @@ import { TeamId } from '../common/TeamId';
 import { Piece } from './models/Piece';
 
 export class Player {
-  public isConnected: boolean;
   public teamId: TeamId;
   public isLeader: boolean;
   public isBusy = false;

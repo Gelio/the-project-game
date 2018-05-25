@@ -27,18 +27,24 @@ import { Scoreboard } from './models/Scoreboard';
 import { GameState } from './GameState';
 import { ProcessMessageResult } from './ProcessMessageResult';
 
-import { UIController } from './ui/UIController';
+import { UIController } from './ui/IUIController';
 
 import { PlayerMessageHandler } from './game-logic/PlayerMessageHandler';
 
 import { Communicator } from '../common/Communicator';
 import { COMMUNICATION_SERVER_ID, GAME_MASTER_ID } from '../common/EntityIds';
-import { getGameStartedMessagePayload } from '../common/getGameStartedMessagePayload';
 
 import { PeriodicPieceGeneratorFactory } from './board-generation/createPeriodicPieceGenerator';
 import { PeriodicPieceGenerator } from './board-generation/PeriodicPieceGenerator';
 
 import { CommunicationRequestsStore } from './communication/CommunicationRequestsStore';
+import { getGameStartedMessagePayload } from './communication/getGameStartedMessagePayload';
+
+export type WriteCsvLogFn = (
+  message: Message<any>,
+  player: Player,
+  valid: boolean
+) => Promise<void>;
 
 export class Game {
   public board: Board;
@@ -52,6 +58,7 @@ export class Game {
   private readonly communicator: Communicator;
   private readonly uiController: UIController;
   private readonly updateUI: Function;
+  private readonly writeCsvLog: WriteCsvLogFn;
   private _state = GameState.Registered;
 
   public get state() {
@@ -65,7 +72,8 @@ export class Game {
     communicator: Communicator,
     periodicPieceGeneratorFactory: PeriodicPieceGeneratorFactory,
     onPointsLimitReached: Function,
-    updateUI: Function
+    updateUI: Function,
+    writeCsvLog: WriteCsvLogFn
   ) {
     this.definition = gameDefinition;
     this.board = new Board(this.definition.boardSize, this.definition.goalLimit);
@@ -75,6 +83,7 @@ export class Game {
     this.playersContainer = new PlayersContainer();
     this.communicator = communicator;
     this.updateUI = updateUI;
+    this.writeCsvLog = writeCsvLog;
     this.periodicPieceGenerator = periodicPieceGeneratorFactory(this.board);
 
     this.playerMessageHandler = new PlayerMessageHandler(
@@ -111,6 +120,8 @@ export class Game {
   }
 
   public async handleMessage(message: Message<any>) {
+    const player = this.playersContainer.getPlayerById(message.senderId);
+
     const result = this.processPlayerMessage(message);
     if (!result.valid) {
       const actionInvalidMessage: ActionInvalidMessage = {
@@ -121,6 +132,12 @@ export class Game {
           reason: result.reason
         }
       };
+
+      if (player) {
+        this.writeCsvLog(message, player, false);
+      } else {
+        this.logger.warn(`Player ${message.senderId} not found. Could not save csv log`);
+      }
 
       return this.sendIngameMessage(actionInvalidMessage);
     }
@@ -133,6 +150,8 @@ export class Game {
         delay: result.delay
       }
     };
+
+    this.writeCsvLog(message, <Player>player, true);
 
     this.updateUI();
     this.sendIngameMessage(actionValidMessage);
@@ -180,23 +199,14 @@ export class Game {
   }
 
   public handlePlayerDisconnectedMessage(message: PlayerDisconnectedMessage) {
-    // NOTE: it is possible that the player should be removed from the board
     const disconnectedPlayer = this.playersContainer.getPlayerById(message.payload.playerId);
-
-    if (this.state === GameState.Registered) {
-      if (disconnectedPlayer) {
-        this.removePlayer(disconnectedPlayer);
-        this.uiController.updateBoard(this.board);
-      }
-
-      return;
-    }
 
     if (!disconnectedPlayer) {
       return;
     }
 
-    disconnectedPlayer.isConnected = false;
+    this.removePlayer(disconnectedPlayer);
+    this.uiController.updateBoard(this.board);
   }
 
   public removePlayer(disconnectedPlayer: Player) {
@@ -268,22 +278,7 @@ export class Game {
     const teamPlayers = this.playersContainer.getPlayersFromTeam(message.payload.teamId);
 
     if (this.state === GameState.InProgress) {
-      /**
-       * NOTE: possibly when game is in progress no player should be able to join
-       * See https://trello.com/c/62WrxI35
-       */
-
-      const disconnectedPlayer = teamPlayers.find(
-        player => !player.isConnected && player.isLeader === message.payload.isLeader
-      );
-
-      if (!disconnectedPlayer) {
-        throw new Error('Game already started and no more slots free');
-      }
-
-      disconnectedPlayer.isConnected = true;
-
-      return;
+      throw new Error('Game already started');
     }
 
     if (teamPlayers.length >= this.definition.teamSizes[message.payload.teamId]) {
@@ -308,14 +303,13 @@ export class Game {
     newPlayer.teamId = message.payload.teamId;
     newPlayer.isLeader = message.payload.isLeader;
     newPlayer.isBusy = false;
-    newPlayer.isConnected = true;
 
     this.addPlayer(newPlayer);
   }
 
   private sendGameStartedMessageToPlayers() {
     const gameStartedMessagePayload = getGameStartedMessagePayload(this.playersContainer);
-    this.playersContainer.getConnectedPlayers().forEach(player => {
+    this.playersContainer.players.forEach(player => {
       const message: GameStartedMessage = {
         senderId: GAME_MASTER_ID,
         recipientId: player.playerId,
@@ -333,7 +327,7 @@ export class Game {
       team2Score: this.scoreboard.team2Score
     };
 
-    this.playersContainer.getConnectedPlayers().forEach(player => {
+    this.playersContainer.players.forEach(player => {
       const gameFinishedMessage: GameFinishedMessage = {
         type: 'GAME_FINISHED',
         senderId: GAME_MASTER_ID,

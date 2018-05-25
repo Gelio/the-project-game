@@ -12,7 +12,7 @@ namespace Player
 
             consoleLog.Layout = @"${date:format=yyyy-MM-dd HH\:mm\:ss} | ${pad:padding=-5:inner=${level:uppercase=true}} | ${logger} | ${message} ${exception:format=message}";
 
-            config.LoggingRules.Add(new NLog.Config.LoggingRule("*", LogLevel.Info, consoleLog));
+            config.LoggingRules.Add(new NLog.Config.LoggingRule("*", LogLevel.Trace, consoleLog));
 
             NLog.LogManager.Configuration = config;
         }
