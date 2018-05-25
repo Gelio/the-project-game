@@ -1,23 +1,30 @@
+import { EventEmitter } from 'events';
 import { LoggerInstance } from 'winston';
 
 import { Communicator } from '../common/Communicator';
+import { createDelay } from '../common/createDelay';
 import { createMockCommunicator } from '../common/createMockCommunicator';
+import { COMMUNICATION_SERVER_ID, GAME_MASTER_ID, PlayerId } from '../common/EntityIds';
+import { TeamId } from '../common/TeamId';
+
+import { GameLogsCsvWriter } from '../common/logging/GameLogsCsvWriter';
 
 import { ActionDelays } from '../interfaces/ActionDelays';
 import { BoardSize } from '../interfaces/BoardSize';
+import { GameDefinition } from '../interfaces/GameDefinition';
 
 import { UIController } from './ui/IUIController';
 
 import { GameMaster, GameMasterOptions } from './GameMaster';
-import { GAME_MASTER_ID, PlayerId, COMMUNICATION_SERVER_ID } from '../common/EntityIds';
 import { mapOptionsToGameDefinition } from './mapOptionsToGameDefinition';
-import { GameLogsCsvWriter } from '../common/logging/GameLogsCsvWriter';
-import { PlayerHelloMessage } from '../interfaces/messages/PlayerHelloMessage';
-import { TeamId } from '../common/TeamId';
+
 import { PlayerAcceptedMessage } from '../interfaces/messages/PlayerAcceptedMessage';
-import { PlayerRejectedMessage } from '../interfaces/messages/PlayerRejectedMessage';
 import { PlayerDisconnectedMessage } from '../interfaces/messages/PlayerDisconnectedMessage';
+import { PlayerHelloMessage } from '../interfaces/messages/PlayerHelloMessage';
+import { PlayerRejectedMessage } from '../interfaces/messages/PlayerRejectedMessage';
+import { RegisterGameRequest } from '../interfaces/requests/RegisterGameRequest';
 import { UnregisterGameRequest } from '../interfaces/requests/UnregisterGameRequest';
+import { RegisterGameResponse } from '../interfaces/responses/RegisterGameResponse';
 import { UnregisterGameResponse } from '../interfaces/responses/UnregisterGameResponse';
 
 function createMockUiController(logger: LoggerInstance): UIController {
@@ -31,7 +38,7 @@ function createMockUiController(logger: LoggerInstance): UIController {
 }
 
 function createLogger(): LoggerInstance {
-  let bool = false;
+  const bool = false;
 
   return <any>{
     warn: bool ? console.log : jest.fn(),
@@ -111,6 +118,27 @@ function getUnregisterGameResponse(unregistered: boolean): UnregisterGameRespons
   };
 }
 
+function getRegisterGameResponse(registered: boolean): RegisterGameResponse {
+  return {
+    type: 'REGISTER_GAME_RESPONSE',
+    senderId: COMMUNICATION_SERVER_ID,
+    recipientId: GAME_MASTER_ID,
+    payload: {
+      registered
+    }
+  };
+}
+
+function getRegisterGameRequest(gameDefinition: GameDefinition): RegisterGameRequest {
+  return {
+    type: 'REGISTER_GAME_REQUEST',
+    senderId: GAME_MASTER_ID,
+    payload: {
+      game: gameDefinition
+    }
+  };
+}
+
 describe('[GM] GameMaster', () => {
   const boardSize: BoardSize = {
     x: 30,
@@ -158,6 +186,8 @@ describe('[GM] GameMaster', () => {
   let logger: LoggerInstance;
 
   beforeEach(() => {
+    EventEmitter.defaultMaxListeners = 500;
+
     communicator = createMockCommunicator();
 
     logger = createLogger();
@@ -185,14 +215,14 @@ describe('[GM] GameMaster', () => {
       connectToServer
     );
 
-    const registeredGameMessage = {
+    const registerGameResponse = {
       type: 'REGISTER_GAME_RESPONSE',
       payload: {
         registered: true
       }
     };
 
-    communicator.waitForSpecificMessage = () => <any>Promise.resolve(registeredGameMessage);
+    communicator.waitForSpecificMessage = () => <any>Promise.resolve(registerGameResponse);
   });
 
   describe('init', () => {
@@ -200,13 +230,7 @@ describe('[GM] GameMaster', () => {
       it('should send REGISTER_GAME_REQUEST', async () => {
         const gameDefinition = mapOptionsToGameDefinition(gameMasterOptions);
 
-        const registerGameMessage = {
-          type: 'REGISTER_GAME_REQUEST',
-          senderId: GAME_MASTER_ID,
-          payload: {
-            game: gameDefinition
-          }
-        };
+        const registerGameMessage = getRegisterGameRequest(gameDefinition);
 
         await gameMaster.init();
 
@@ -220,6 +244,52 @@ describe('[GM] GameMaster', () => {
       expect(uiController.init).toHaveBeenCalled();
       expect(communicator.bindListeners).toHaveBeenCalled();
       expect(gameLogsCsvWriter.init).toHaveBeenCalled();
+    });
+
+    describe('registerGame', () => {
+      it('should send REGISTER_GAME_REQUEST', async () => {
+        const gameDefinition = mapOptionsToGameDefinition(gameMasterOptions);
+
+        const registerGameMessage = getRegisterGameRequest(gameDefinition);
+
+        await gameMaster.init();
+
+        expect(communicator.sendMessage).toHaveBeenCalledWith(registerGameMessage);
+      });
+
+      it('should try to register the game again after given interval if request was rejected', async () => {
+        jest.useFakeTimers();
+
+        const registerGameResponse = getRegisterGameResponse(false);
+
+        communicator.waitForSpecificMessage = () => <any>Promise.resolve(registerGameResponse);
+        await gameMaster.init();
+        expect(communicator.sendMessage).toHaveBeenCalledTimes(1);
+        jest.advanceTimersByTime(gameMasterOptions.registerGameInterval);
+
+        await Promise.resolve();
+
+        expect(communicator.sendMessage).toHaveBeenCalledTimes(2);
+        jest.useRealTimers();
+      });
+
+      it('should try to register the game again up to 5 times', async () => {
+        jest.useFakeTimers();
+
+        const registerGameResponse = getRegisterGameResponse(false);
+
+        communicator.waitForSpecificMessage = () => <any>Promise.resolve(registerGameResponse);
+        await gameMaster.init();
+        for (let i = 0; i < 10; ++i) {
+          jest.advanceTimersByTime(gameMasterOptions.registerGameInterval);
+          await Promise.resolve();
+        }
+        expect(communicator.sendMessage).toHaveBeenCalledTimes(
+          gameMasterOptions.registrationTriesLimit
+        );
+
+        jest.useRealTimers();
+      });
     });
   });
 
@@ -313,65 +383,6 @@ describe('[GM] GameMaster', () => {
       });
     });
 
-    describe('registerGame', () => {
-      it('should send REGISTER_GAME_REQUEST', async () => {
-        const gameDefinition = mapOptionsToGameDefinition(gameMasterOptions);
-
-        const registerGameMessage = {
-          type: 'REGISTER_GAME_REQUEST',
-          senderId: GAME_MASTER_ID,
-          payload: {
-            game: gameDefinition
-          }
-        };
-
-        await gameMaster.init();
-
-        expect(communicator.sendMessage).toHaveBeenCalledWith(registerGameMessage);
-      });
-    });
-
-    // it.only('should try to register the game again after given interval if request was rejected', async () => {
-    //   jest.useFakeTimers();
-
-    //   const registeredGameMessage = {
-    //     type: 'REGISTER_GAME_RESPONSE',
-    //     payload: {
-    //       registered: false
-    //     }
-    //   };
-
-    //   communicator.waitForSpecificMessage = () => <any>Promise.resolve(registeredGameMessage);
-    //   await gameMaster.init();
-    //   expect(communicator.sendMessage).toHaveBeenCalledTimes(1);
-
-    //   jest.advanceTimersByTime(gameMasterOptions.registerGameInterval * 2);
-
-    //   expect(communicator.sendMessage).toHaveBeenCalledTimes(2);
-
-    //   jest.useRealTimers();
-    // });
-
-    // it('should try to register the game again up to 5 times', async () => {
-    //   jest.useFakeTimers();
-
-    //   const registeredGameMessage = {
-    //     type: 'REGISTER_GAME_RESPONSE',
-    //     payload: {
-    //       registered: false
-    //     }
-    //   };
-
-    //   communicator.waitForSpecificMessage = () => <any>Promise.resolve(registeredGameMessage);
-    //   await gameMaster.init();
-    //   expect(communicator.sendMessage).toHaveBeenCalledTimes(1);
-
-    //   jest.advanceTimersByTime(gameMasterOptions.registerGameInterval * 10);
-    //   expect(communicator.sendMessage).toHaveBeenCalledTimes(5);
-
-    //   jest.useRealTimers();
-    // });
-
     describe('ending the game', () => {
       it('should unregister the game', () => {
         const firstPlayerHelloMessage = getPlayerHelloMessage(gameMasterOptions, 'p11', true, 1);
@@ -384,6 +395,7 @@ describe('[GM] GameMaster', () => {
         );
         const gameUnregisteredMessage = getUnregisterGameResponse(true);
         const gameUnregisteredResponse = getUnregisterGameRequest(gameMasterOptions.gameName);
+
         communicator.waitForSpecificMessage = () => <any>Promise.resolve(gameUnregisteredMessage);
 
         communicator.emit('message', firstPlayerHelloMessage);
@@ -394,23 +406,55 @@ describe('[GM] GameMaster', () => {
         expect(communicator.sendMessage).toHaveBeenLastCalledWith(gameUnregisteredResponse);
       });
 
-      // it('should finish the game', async () => {
-      //   const firstPlayerHelloMessage = getPlayerHelloMessage(gameMasterOptions, 'p11', true, 1);
-      //   const secondPlayerHelloMessage = getPlayerHelloMessage(gameMasterOptions, 'p21', true, 2);
-      //   const firstPlayerDisconnectedMessage = getPlayerDisconnectedMessage(
-      //     firstPlayerHelloMessage.senderId
-      //   );
-      //   const secondPlayerDisconnectedMessage = getPlayerDisconnectedMessage(
-      //     secondPlayerHelloMessage.senderId
-      //   );
-      //   const gameUnregisteredMessage = getUnregisterGameResponse(gameMasterOptions.gameName, true);
-      //   communicator.waitForSpecificMessage = () => <any>Promise.resolve(gameUnregisteredMessage);
-      //   communicator.emit('message', firstPlayerHelloMessage);
-      //   communicator.emit('message', secondPlayerHelloMessage);
-      //   communicator.emit('message', firstPlayerDisconnectedMessage);
-      //   communicator.emit('message', secondPlayerDisconnectedMessage);
-      //   expect(logger.info).toHaveBeenCalledWith('Round 1 finished');
-      // });
+      it('should register the game again', async () => {
+        const firstPlayerHelloMessage = getPlayerHelloMessage(gameMasterOptions, 'p11', true, 1);
+        const secondPlayerHelloMessage = getPlayerHelloMessage(gameMasterOptions, 'p21', true, 2);
+        const firstPlayerDisconnectedMessage = getPlayerDisconnectedMessage(
+          firstPlayerHelloMessage.senderId
+        );
+        const secondPlayerDisconnectedMessage = getPlayerDisconnectedMessage(
+          secondPlayerHelloMessage.senderId
+        );
+        const gameUnregisteredMessage = getUnregisterGameResponse(true);
+
+        communicator.waitForSpecificMessage = () => <any>Promise.resolve(gameUnregisteredMessage);
+
+        communicator.emit('message', firstPlayerHelloMessage);
+        communicator.emit('message', secondPlayerHelloMessage);
+        communicator.emit('message', firstPlayerDisconnectedMessage);
+        communicator.emit('message', secondPlayerDisconnectedMessage);
+
+        await createDelay(0);
+
+        const gameDefinition = mapOptionsToGameDefinition(gameMasterOptions);
+
+        const registerGameMessage = getRegisterGameRequest(gameDefinition);
+
+        expect(communicator.sendMessage).toHaveBeenLastCalledWith(registerGameMessage);
+      });
+
+      it('should finish the game', async () => {
+        const firstPlayerHelloMessage = getPlayerHelloMessage(gameMasterOptions, 'p11', true, 1);
+        const secondPlayerHelloMessage = getPlayerHelloMessage(gameMasterOptions, 'p21', true, 2);
+        const firstPlayerDisconnectedMessage = getPlayerDisconnectedMessage(
+          firstPlayerHelloMessage.senderId
+        );
+        const secondPlayerDisconnectedMessage = getPlayerDisconnectedMessage(
+          secondPlayerHelloMessage.senderId
+        );
+        const gameUnregisteredMessage = getUnregisterGameResponse(true);
+
+        communicator.waitForSpecificMessage = () => <any>Promise.resolve(gameUnregisteredMessage);
+
+        communicator.emit('message', firstPlayerHelloMessage);
+        communicator.emit('message', secondPlayerHelloMessage);
+        communicator.emit('message', firstPlayerDisconnectedMessage);
+        communicator.emit('message', secondPlayerDisconnectedMessage);
+
+        await createDelay(0);
+
+        expect(logger.info).toHaveBeenCalledWith('Round 1 finished');
+      });
     });
   });
 });
