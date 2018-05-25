@@ -60,7 +60,9 @@
       "!**/*.d.ts",
       "!**/node_modules/**",
       "!**/vendor/**",
-      "!**/coverage/**"
+      "!**/coverage/**",
+      "!**/config.ts",
+      "!**/tools/**"
     ]
   },
   "lint-staged": {
