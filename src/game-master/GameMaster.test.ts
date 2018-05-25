@@ -433,6 +433,31 @@ describe('[GM] GameMaster', () => {
         expect(communicator.sendMessage).toHaveBeenLastCalledWith(registerGameMessage);
       });
 
+      //tslint:disable
+      it.only('should not register the game again after rounds limit is reached', async () => {
+        for (let round = 0; round < gameMasterOptions.gamesLimit + 1; ++round) {
+          const firstPlayerHelloMessage = getPlayerHelloMessage(gameMasterOptions, 'p11', true, 1);
+          const secondPlayerHelloMessage = getPlayerHelloMessage(gameMasterOptions, 'p21', true, 2);
+          const firstPlayerDisconnectedMessage = getPlayerDisconnectedMessage(
+            firstPlayerHelloMessage.senderId
+          );
+          const secondPlayerDisconnectedMessage = getPlayerDisconnectedMessage(
+            secondPlayerHelloMessage.senderId
+          );
+          const gameUnregisteredMessage = getUnregisterGameResponse(true);
+
+          communicator.waitForSpecificMessage = () => <any>Promise.resolve(gameUnregisteredMessage);
+
+          communicator.emit('message', firstPlayerHelloMessage);
+          communicator.emit('message', secondPlayerHelloMessage);
+          communicator.emit('message', firstPlayerDisconnectedMessage);
+          communicator.emit('message', secondPlayerDisconnectedMessage);
+
+          await createDelay(0);
+        }
+        expect(logger.info).toHaveBeenCalledWith('Rounds limit reached');
+      });
+
       it('should finish the game', async () => {
         const firstPlayerHelloMessage = getPlayerHelloMessage(gameMasterOptions, 'p11', true, 1);
         const secondPlayerHelloMessage = getPlayerHelloMessage(gameMasterOptions, 'p21', true, 2);
