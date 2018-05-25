@@ -136,7 +136,9 @@ export class Game {
       if (player) {
         this.writeCsvLog(message, player, false);
       } else {
-        this.logger.warn(`Player ${message.senderId} not found. Could not save csv log`);
+        this.logger.warn(
+          `Player ${message.senderId} not found. Could not save csv log for message ${message.type}`
+        );
       }
 
       return this.sendIngameMessage(actionInvalidMessage);
