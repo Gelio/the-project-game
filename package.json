@@ -62,7 +62,9 @@
       "!**/vendor/**",
       "!**/coverage/**",
       "!**/config.ts",
-      "!**/tools/**"
+      "!**/tools/**",
+      "!**/start-communication-server.ts",
+      "!**/start-game-master.ts"
     ]
   },
   "lint-staged": {
