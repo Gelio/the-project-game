@@ -95,6 +95,7 @@ export class GameMaster implements Service {
       },
       () => {
         this.logger.info(`Connected to the server at ${serverHostname}:${serverPort}`);
+        this.createNewGame();
         this.registerGame();
       }
     );
@@ -109,14 +110,12 @@ export class GameMaster implements Service {
     } catch (error) {
       this.logger.error(error.message);
     }
-
-    this.createNewGame();
   }
 
   public async destroy() {
     this.logger.verbose('Destroying GM');
 
-    if (this.game.state === GameState.InProgress) {
+    if (this.game && this.game.state === GameState.InProgress) {
       this.logger.verbose('Stopping and unregistering the game');
       this.game.stop();
       await this.game.unregister();
@@ -280,6 +279,7 @@ export class GameMaster implements Service {
       this.communicator.on('message', this.handleMessage);
     } catch (error) {
       this.failedRegistrations++;
+      this.logger.verbose('Register error:', error.message);
 
       if (this.options.registrationTriesLimit === this.failedRegistrations) {
         this.logger.error('Failed to register new game, limit of tries reached');
