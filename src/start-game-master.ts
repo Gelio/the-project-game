@@ -1,6 +1,8 @@
 import { ArgumentParser } from 'argparse';
 import * as blessed from 'blessed';
 
+import { createDelay } from './common/createDelay';
+
 import { GameLogsCsvWriter } from './common/logging/GameLogsCsvWriter';
 import { LoggerFactory } from './common/logging/LoggerFactory';
 
@@ -63,9 +65,28 @@ function parseGMArguments(): GMArguments {
     uiController = new UIController(screen, blessed.box, loggerFactory);
   }
 
-  const connectToServer = ConnectToServer;
+  const { connectedPromise, socket } = ConnectToServer(config.serverHostname, config.serverPort);
+
+  try {
+    await connectedPromise;
+  } catch (error) {
+    uiController.init();
+    const logger = uiController.createLogger();
+
+    logger.error(
+      `Failed to establish connection to the server ${config.serverHostname}:${config.serverPort}`
+    );
+
+    logger.error(`Exiting in ${config.crashTimeout} ms.`);
+
+    await createDelay(config.crashTimeout);
+
+    uiController.destroy();
+
+    return;
+  }
 
   const gameLogsCsvWriter = new GameLogsCsvWriter(config.gameName, config.logsDirectory);
-  const gameMaster = new GameMaster(config, uiController, gameLogsCsvWriter, connectToServer);
+  const gameMaster = new GameMaster(config, uiController, gameLogsCsvWriter, socket);
   gameMaster.init();
 })();
