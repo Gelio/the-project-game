@@ -1,0 +1,23 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`[GM] validateGameMasterConfig should throw an error when pieces limit is too large 1`] = `[Error: There cannot be more pieces on the board than there are tiles in the task area]`;
+
+exports[`[GM] validateGameMasterConfig should throw an error when team 1 size is too large 1`] = `[Error: Team 1 has a greater capacity than there are tiles in its area]`;
+
+exports[`[GM] validateGameMasterConfig should throw an error when team 2 size is too large 1`] = `[Error: Team 2 has a greater capacity than there are tiles in its area]`;
+
+exports[`[GM] validateGameMasterConfig should validate config against a schema 1`] = `
+Array [
+  Object {
+    "dataPath": ".serverPort",
+    "keyword": "maximum",
+    "message": "should be <= 49151",
+    "params": Object {
+      "comparison": "<=",
+      "exclusive": false,
+      "limit": 49151,
+    },
+    "schemaPath": "../common/common-defs.json#/definitions/port/maximum",
+  },
+]
+`;

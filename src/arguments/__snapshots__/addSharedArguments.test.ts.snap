@@ -1,0 +1,30 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`addSharedArguments should match snapshot 1`] = `
+Array [
+  Array [
+    Array [
+      "-v",
+      "--verbose",
+    ],
+    Object {
+      "nargs": 0,
+    },
+  ],
+  Array [
+    Array [
+      "--log-level",
+    ],
+    Object {
+      "choices": Array [
+        "error",
+        "warn",
+        "info",
+        "verbose",
+        "debug",
+        "silly",
+      ],
+    },
+  ],
+]
+`;

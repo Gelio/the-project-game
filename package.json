@@ -60,7 +60,11 @@
       "!**/*.d.ts",
       "!**/node_modules/**",
       "!**/vendor/**",
-      "!**/coverage/**"
+      "!**/coverage/**",
+      "!**/config.ts",
+      "!**/tools/**",
+      "!**/start-communication-server.ts",
+      "!**/start-game-master.ts"
     ]
   },
   "lint-staged": {
