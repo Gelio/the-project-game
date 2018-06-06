@@ -1,4 +1,3 @@
-import { Socket } from 'net';
 import { LoggerInstance } from 'winston';
 
 import { bindObjectMethods } from '../common/bindObjectMethods';

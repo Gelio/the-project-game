@@ -47,9 +47,7 @@ function createLogger(): LoggerInstance {
 }
 
 async function resolvePromises() {
-  for (let i = 0; i < 100; ++i) {
-    await Promise.resolve();
-  }
+  return new Promise(res => process.nextTick(res));
 }
 
 function getPlayerHelloMessage(
@@ -164,7 +162,6 @@ describe('[GM] GameMaster', () => {
   let gameMaster: GameMaster;
   let uiController: UIController;
   let communicator: Communicator;
-  let connectToServer: Function;
   let gameLogsCsvWriter: GameLogsCsvWriter;
   let logger: LoggerInstance;
 
@@ -182,13 +179,6 @@ describe('[GM] GameMaster', () => {
       destroy: jest.fn(),
       writeLog: jest.fn(),
       error: jest.fn()
-    };
-
-    connectToServer = () => {
-      return {
-        communicator: communicator,
-        connectedPromise: Promise.resolve()
-      };
     };
 
     gameMasterOptions = {
@@ -213,12 +203,7 @@ describe('[GM] GameMaster', () => {
       registerGameInterval: 0
     };
 
-    gameMaster = new GameMaster(
-      gameMasterOptions,
-      uiController,
-      <any>gameLogsCsvWriter,
-      connectToServer
-    );
+    gameMaster = new GameMaster(gameMasterOptions, uiController, gameLogsCsvWriter, communicator);
 
     const registerGameResponse = {
       type: 'REGISTER_GAME_RESPONSE',
@@ -391,12 +376,14 @@ describe('[GM] GameMaster', () => {
       it('should unregister the game', () => {
         const firstPlayerHelloMessage = getPlayerHelloMessage(gameMasterOptions, 'p11', true, 1);
         const secondPlayerHelloMessage = getPlayerHelloMessage(gameMasterOptions, 'p21', true, 2);
+
         const firstPlayerDisconnectedMessage = getPlayerDisconnectedMessage(
           firstPlayerHelloMessage.senderId
         );
         const secondPlayerDisconnectedMessage = getPlayerDisconnectedMessage(
           secondPlayerHelloMessage.senderId
         );
+
         const gameUnregisteredMessage = getUnregisterGameResponse(true);
         const gameUnregisteredResponse = getUnregisterGameRequest(gameMasterOptions.gameName);
 
