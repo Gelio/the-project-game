@@ -65,7 +65,11 @@ function parseGMArguments(): GMArguments {
     uiController = new UIController(screen, blessed.box, loggerFactory);
   }
 
-  const { connectedPromise, socket } = ConnectToServer(config.serverHostname, config.serverPort);
+  const { connectedPromise, communicator } = ConnectToServer(
+    config.serverHostname,
+    config.serverPort,
+    uiController.createLogger()
+  );
 
   try {
     await connectedPromise;
@@ -87,6 +91,6 @@ function parseGMArguments(): GMArguments {
   }
 
   const gameLogsCsvWriter = new GameLogsCsvWriter(config.gameName, config.logsDirectory);
-  const gameMaster = new GameMaster(config, uiController, gameLogsCsvWriter, socket);
+  const gameMaster = new GameMaster(config, uiController, gameLogsCsvWriter, communicator);
   gameMaster.init();
 })();

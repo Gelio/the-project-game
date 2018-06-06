@@ -58,7 +58,6 @@ export class GameMaster implements Service {
   private readonly uiController: UIController;
   private logger: LoggerInstance;
   private gameLogsCsvWriter: GameLogsCsvWriter;
-  private socket: Socket;
 
   private failedRegistrations = 0;
   private currentRound = 0;
@@ -72,12 +71,12 @@ export class GameMaster implements Service {
     options: GameMasterOptions,
     uiController: UIController,
     gameLogsCsvWriter: GameLogsCsvWriter,
-    socket: Socket
+    communicator: Communicator
   ) {
     this.options = options;
     this.uiController = uiController;
     this.gameLogsCsvWriter = gameLogsCsvWriter;
-    this.socket = socket;
+    this.communicator = communicator;
 
     bindObjectMethods(this.messageHandlers, this);
     this.destroy = this.destroy.bind(this);
@@ -88,9 +87,7 @@ export class GameMaster implements Service {
     this.initUI();
     this.initLogger();
 
-    this.logger.verbose('Connecting to the server');
-
-    this.communicator = new Communicator(this.socket, this.logger);
+    this.logger.verbose('Connected to the server');
 
     this.createNewGame();
     this.registerGame();
