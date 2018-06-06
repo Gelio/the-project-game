@@ -17,6 +17,7 @@ namespace Player.Tests
     {
         PlayerState playerState;
         Dijkstra dijkstra;
+        private object[] testSource;
 
         [SetUp]
         public void SetUp()
@@ -29,30 +30,41 @@ namespace Player.Tests
                 GoalArea = 4,
                 TaskArea = 10
             };
-            
+
             playerState.Board = new Board(bs);
             playerState.X = 3;
             playerState.Y = 9;
             playerState.GoalAreaDirection = Common.Consts.Down;
 
             dijkstra = new Dijkstra(playerState);
-
         }
 
-        [TestCase(3,4)]
-        public void TestOutput(int targetX, int targetY)
+        public static IEnumerable<TestCaseData> PlaceDownPieceSuccessTestCases
         {
-            List<int> obstacles = new List<int>()
+            get
             {
-                33, 37, 50
-            };
+                yield return new TestCaseData(3, 9, 1, 4, Common.Consts.Down, new List<int>() { 33,34,35, 36,37, 38, 50 }); // in task area
+             //   yield return new TestCaseData(3, 9, 1, 1, Common.Consts.Down, new List<int>() { 69, 70, 75 }); // in goal area
+               // yield return new TestCaseData(2, 6, 3, 4, Common.Consts.Up, new List<int>() { 69, 70, 75 }); // in task area
+                //yield return new TestCaseData(2, 6, 4, 16, Common.Consts.Up, new List<int>() { 69, 70, 75 }); // in goal area
+            }
+        }
+
+        [TestCaseSource("PlaceDownPieceSuccessTestCases")]
+        public void TestOutputUpperTeam(int playerX, int playerY, int targetX, int targetY, string goalDirection, List<int> obstacles)
+        {
+            playerState.X = playerX;
+            playerState.Y = playerY;
+
+            playerState.GoalAreaDirection = goalDirection;
+
             dijkstra.DijkstraAlgorithm(obstacles);
 
             Console.WriteLine($"Target: {targetY},{targetX}. Index: {targetX + targetY * playerState.Board.SizeX}");
             Console.WriteLine("Tablica previous:");
 
             Stack<int> previous = dijkstra.ShortestPath(targetX + targetY * playerState.Board.SizeX);
-            while(previous.Count > 0)
+            while (previous.Count > 0)
             {
                 Console.Write(previous.Pop());
                 Console.Write(" ");
