@@ -68,6 +68,8 @@ namespace Player.Common
             shortestPath.Push(targetIndex);
 
             int w = targetIndex;
+            if (Distances[w] == int.MaxValue - 1)
+                return new Stack<int>();
             while (w != _playerVerticle)
             {
                 shortestPath.Push(Previous[w]);
