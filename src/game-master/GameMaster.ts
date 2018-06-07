@@ -86,8 +86,6 @@ export class GameMaster implements Service {
     this.initUI();
     this.initLogger();
 
-    this.logger.verbose('Connected to the server');
-
     this.createNewGame();
     this.registerGame();
 
