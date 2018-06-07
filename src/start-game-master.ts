@@ -72,7 +72,8 @@ function parseGMArguments(): GMArguments {
     logger.error(
       `Failed to establish connection to the server ${config.serverHostname}:${config.serverPort}`
     );
-    logger.error(error.message);
+
+    logger.verbose(error.message);
 
     return;
   }
