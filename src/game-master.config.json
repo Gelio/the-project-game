@@ -30,6 +30,5 @@
   },
   "timeout": 10000,
   "registrationTriesLimit": 5,
-  "registerGameInterval": 10000,
-  "crashTimeout": 5000
+  "registerGameInterval": 10000
 }

@@ -63,9 +63,6 @@
     "timeout": {
       "$ref": "../common/common-defs.json#/definitions/positiveInteger"
     },
-    "crashTimeout": {
-      "$ref": "../common/common-defs.json#/definitions/positiveInteger"
-    },
     "registrationTriesLimit": {
       "$ref": "../common/common-defs.json#/definitions/positiveInteger"
     },
@@ -89,7 +86,6 @@
     "logsDirectory",
     "actionDelays",
     "timeout",
-    "crashTimeout",
     "registrationTriesLimit",
     "registerGameInterval"
   ]
