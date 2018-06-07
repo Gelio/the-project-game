@@ -29,7 +29,11 @@ namespace Player
 
             for (int i = 0; i < _playerState.Game.BoardSize.Area; i++)
             {
-                boardToSend.Add(AutoMapper.Mapper.Map<Tile, TileCommunicationDTO>(_playerState.Board.At(i)));
+                var tile = _playerState.Board[i];
+                var tileDTO = AutoMapper.Mapper.Map<Tile, TileCommunicationDTO>(tile);
+                if (IsInGoalArea(i) && tile.GoalStatus == GoalStatusEnum.NoInfo)
+                    tileDTO.TimeStamp = 0; // Critical for SectorStrategy to let the receiver know this tile was not checked!
+                boardToSend.Add(tileDTO);
             }
 
             _messageProvider.SendMessage(new Message<IPayload>()
@@ -113,6 +117,13 @@ namespace Player
             {
                 throw new InvalidTypeReceivedException($"Expected: ACTION_VALID/INVALID Received: {e.Message}");
             }
+        }
+
+        public bool IsInGoalArea(int index)
+        {
+            return (_playerState.GoalAreaDirection == "up")
+                        ? index < _playerState.Board.SizeX * _playerState.Board.GoalAreaSize
+                        : index >= _playerState.Board.SizeX * _playerState.Board.SecondGoalAreaTopY;
         }
 
         public bool Move(string direction)
@@ -343,6 +354,12 @@ namespace Player
             logger.Info($"Held piece is {pieceResult}!");
 
             return true;
+        }
+
+        ///<summary>This method will block forever if no communication response is received!</summary>
+        public void WaitForAnyResponse()
+        {
+            _messageProvider.Receive<CommunicationResponsePayload>();
         }
     }
 }

@@ -122,5 +122,17 @@ namespace Player.GameObjects
             for (int i = 0; i < SizeX * SizeY; i++)
                 _tiles.Add(new Tile());
         }
+
+        public Tile this[int k]
+        {
+            get
+            {
+                return _tiles[k];
+            }
+            set
+            {
+                _tiles[k] = value;
+            }
+        }
     }
 }
