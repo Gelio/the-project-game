@@ -6,5 +6,6 @@
   "teamNumber": 1,
   "isLeader": true,
   "timeout": 10000,
-  "gameName": "Default"
+  "gameName": "Default",
+  "strategy": "sector"
 }

@@ -7,5 +7,5 @@
   "isLeader": false,
   "timeout": 10000,
   "gameName": "Default",
-  "strategy": "blocker"
+  "strategy": "sector"
 }

@@ -6,6 +6,5 @@
   "teamNumber": 2,
   "isLeader": true,
   "timeout": 10000,
-  "gameName": "Default",
-  "strategy": "blocker"
+  "gameName": "Default"
 }

@@ -123,6 +123,9 @@ namespace Player
                     case "blocker":
                         strategy = new BlockerStrategy(playerState, actionExecutor);
                         break;
+                    case "sector":
+                        strategy = new SectorStrategy(playerState, actionExecutor);
+                        break;
                     default:
                         strategy = new TrivialStrategy(playerState, actionExecutor);
                         break;
