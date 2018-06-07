@@ -1,14 +1,15 @@
 import { ArgumentParser } from 'argparse';
 import * as blessed from 'blessed';
-
-import { createDelay } from './common/createDelay';
+import { Socket } from 'net';
 
 import { GameLogsCsvWriter } from './common/logging/GameLogsCsvWriter';
 import { LoggerFactory } from './common/logging/LoggerFactory';
 
+import { Communicator } from './common/Communicator';
+
 import { createBlessedScreen } from './createBlessedScreen';
 
-import { ConnectToServer } from './game-master/ConnectToServerFn';
+import { connectToServer } from './game-master/connectToServerFn';
 import { GameMaster } from './game-master/GameMaster';
 import { EmptyUIController } from './game-master/ui/EmptyUIController';
 import { UIController as IUIController } from './game-master/ui/IUIController';
@@ -57,6 +58,18 @@ function parseGMArguments(): GMArguments {
     return;
   }
 
+  let socket: Socket;
+
+  try {
+    socket = await connectToServer(config.serverHostname, config.serverPort);
+  } catch (error) {
+    const logger = loggerFactory.createConsoleLogger();
+
+    logger.error(error.message);
+
+    return;
+  }
+
   let uiController: IUIController;
   if (parsedArguments.no_ui) {
     uiController = new EmptyUIController(loggerFactory);
@@ -65,30 +78,7 @@ function parseGMArguments(): GMArguments {
     uiController = new UIController(screen, blessed.box, loggerFactory);
   }
 
-  const { connectedPromise, communicator } = ConnectToServer(
-    config.serverHostname,
-    config.serverPort,
-    uiController.createLogger()
-  );
-
-  try {
-    await connectedPromise;
-  } catch (error) {
-    uiController.init();
-    const logger = uiController.createLogger();
-
-    logger.error(
-      `Failed to establish connection to the server ${config.serverHostname}:${config.serverPort}`
-    );
-
-    logger.error(`Exiting in ${config.crashTimeout} ms.`);
-
-    await createDelay(config.crashTimeout);
-
-    uiController.destroy();
-
-    return;
-  }
+  const communicator = new Communicator(socket, uiController.createLogger());
 
   const gameLogsCsvWriter = new GameLogsCsvWriter(config.gameName, config.logsDirectory);
   const gameMaster = new GameMaster(config, uiController, gameLogsCsvWriter, communicator);
