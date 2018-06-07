@@ -58,13 +58,20 @@ function parseGMArguments(): GMArguments {
     return;
   }
 
-  let socket: Socket;
+  let gmSocket: Socket;
 
   try {
-    socket = await connectToServer(config.serverHostname, config.serverPort);
+    const { socket, connectedPromise } = connectToServer(config.serverHostname, config.serverPort);
+
+    await connectedPromise;
+
+    gmSocket = socket;
   } catch (error) {
     const logger = loggerFactory.createConsoleLogger();
 
+    logger.error(
+      `Failed to establish connection to the server ${config.serverHostname}:${config.serverPort}`
+    );
     logger.error(error.message);
 
     return;
@@ -78,7 +85,8 @@ function parseGMArguments(): GMArguments {
     uiController = new UIController(screen, blessed.box, loggerFactory);
   }
 
-  const communicator = new Communicator(socket, uiController.createLogger());
+  const communicator = new Communicator(gmSocket, uiController.createLogger());
+  communicator.bindListeners();
 
   const gameLogsCsvWriter = new GameLogsCsvWriter(config.gameName, config.logsDirectory);
   const gameMaster = new GameMaster(config, uiController, gameLogsCsvWriter, communicator);

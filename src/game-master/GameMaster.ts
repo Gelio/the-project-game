@@ -89,8 +89,6 @@ export class GameMaster implements Service {
     this.createNewGame();
     this.registerGame();
 
-    this.communicator.bindListeners();
-
     this.communicator.once('close', this.handleServerDisconnection.bind(this));
 
     try {
