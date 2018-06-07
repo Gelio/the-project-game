@@ -9,6 +9,7 @@ namespace Player.GameObjects
         private readonly BoardSize _size;
         private List<Tile> _tiles;
 
+        public int Count => _tiles.Count;
         public int SizeX { get; private set; }
         public int SizeY { get; private set; }
         public int GoalAreaSize { get; private set; }
@@ -29,6 +30,10 @@ namespace Player.GameObjects
             Reset();
         }
 
+        public List<Tile> GetTiles()
+        {
+            return _tiles;
+        }
         /// <summary>
         /// Return reference to <c>Tile</c> at position (<paramref name="x"/>, <paramref name="y"/>)
         /// </summary>
@@ -133,6 +138,12 @@ namespace Player.GameObjects
             {
                 _tiles[k] = value;
             }
+        }
+
+        public IEnumerable<Tile> GetEnumerator()
+        {
+            foreach (var t in _tiles)
+                yield return t;
         }
     }
 }

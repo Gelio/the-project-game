@@ -78,7 +78,7 @@ namespace Player.Strategy
             {
                 for (int x = 0; x < _playerState.Game.BoardSize.X; x++, i++)
                 {
-                    var character = _playerState.Board.At(i).HasInfo == false ? " " : "+";
+                    var character = _playerState.Board.At(i).GoalStatus == GoalStatusEnum.NoInfo ? " " : "+";
                     Console.Write($"[{character}]");
                 }
                 Console.WriteLine();

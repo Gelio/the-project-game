@@ -12,16 +12,29 @@ namespace Player.Common
         public int[] Distances { get; private set; }
         bool[] IgnoreDistance;
         public int[] Previous { get; private set; }
-        int _playerVerticle;
-
+        int _playerVertex;
+        List<int> _allForbiddenTiles;
 
         public Dijkstra(PlayerState playerState)
         {
             _playerState = playerState;
-            Distances = new int[_playerState.Board.SizeX * (_playerState.Board.GoalAreaSize + _playerState.Board.TaskAreaSize)];
-            IgnoreDistance = new bool[_playerState.Board.SizeX * (_playerState.Board.GoalAreaSize + _playerState.Board.TaskAreaSize)];
-            Previous = new int[_playerState.Board.SizeX * (_playerState.Board.GoalAreaSize + _playerState.Board.TaskAreaSize)];
-            _playerVerticle = _playerState.Y * _playerState.Board.SizeX + _playerState.Y;
+            Distances = new int[_playerState.Board.Count];
+            IgnoreDistance = new bool[_playerState.Board.Count];
+            Previous = new int[_playerState.Board.Count];
+            _playerVertex = _playerState.Y * _playerState.Board.SizeX + _playerState.Y;
+            _allForbiddenTiles = new List<int>();
+            if (isInUpperTeam())
+            {
+                for (int i = _playerState.Board.SizeX * (_playerState.Board.GoalAreaSize + _playerState.Board.TaskAreaSize); i < _playerState.Board.Count; i++)
+                    _allForbiddenTiles.Add(i);
+                // _allForbiddenTiles.AddRange(Enumerable.Range(_playerState.Board.SizeX * _playerState.Board.GoalAreaSize, _playerState.Board.Count).ToList());
+            }
+            else
+            {
+                for (int i = 0; i < _playerState.Board.SizeX * _playerState.Board.GoalAreaSize; i++)
+                    _allForbiddenTiles.Add(i);
+                // _allForbiddenTiles.AddRange(Enumerable.Range(0, _playerState.Board.SizeX * _playerState.Board.GoalAreaSize - 1).ToList());
+            }
         }
 
         bool isInUpperTeam()
@@ -29,27 +42,26 @@ namespace Player.Common
             return _playerState.GoalAreaDirection == Common.Consts.Up ? false : true;
         }
 
-
         public void DijkstraAlgorithm(List<int> forbiddenTiles)
         {
-            FillVerices(forbiddenTiles);
+            FillVertices(forbiddenTiles);
 
-            for (int i = 0; i < _playerState.Board.SizeX * (_playerState.Board.GoalAreaSize + _playerState.Board.TaskAreaSize); i++)
+            for (int i = 0; i < _playerState.Board.Count; i++)
             {
                 Distances[i] = int.MaxValue - 1;
                 Previous[i] = -1;
             }
 
-            Distances[_playerVerticle] = 0;
+            Distances[_playerVertex] = 0;
 
             while (vertices.Count > 0)
             {
-                int u = VerticleWithSmallestDistance();
+                int u = VertexWithSmallestDistance();
 
                 List<int> uEdges = vertices[u];
                 vertices.Remove(u);
                 IgnoreDistance[u] = true;
-                
+
 
                 for (int j = 0; j < uEdges.Count; j++)
                 {
@@ -70,7 +82,7 @@ namespace Player.Common
             int w = targetIndex;
             if (Distances[w] == int.MaxValue - 1)
                 return new Stack<int>();
-            while (w != _playerVerticle)
+            while (w != _playerVertex)
             {
                 shortestPath.Push(Previous[w]);
                 w = Previous[w];
@@ -81,37 +93,35 @@ namespace Player.Common
         }
 
 
-        private void FillVerices(List<int> forbiddenTiles)
+        private void FillVertices(List<int> forbiddenTiles)
         {
+            _allForbiddenTiles.AddRange(forbiddenTiles);
             List<int> edges = new List<int>();
 
-            int firstTile;
-            int lastTile;
 
-            if (isInUpperTeam())
-            {
-                firstTile = 0;
-                lastTile = _playerState.Board.SizeX * (_playerState.Board.GoalAreaSize + _playerState.Board.TaskAreaSize) - 1;
-            }
-            else
-            {
-                firstTile = _playerState.Board.SizeX * _playerState.Board.GoalAreaSize;
-                lastTile = _playerState.Board.SizeX * (_playerState.Board.GoalAreaSize + _playerState.Board.TaskAreaSize) - 1;
-            }
+            //   if (isInUpperTeam())
+            //   {
+
+            //_playerState.Board.SizeX * (_playerState.Board.GoalAreaSize + _playerState.Board.TaskAreaSize) - 1;
+            //    }
+            //    else
+            //    {
+            //        firstTile = _playerState.Board.SizeX * _playerState.Board.GoalAreaSize;
+            //        lastTile = _playerState.Board.SizeX * (_playerState.Board.GoalAreaSize + _playerState.Board.TaskAreaSize) - 1;
+            //   }
 
 
-            for (int i = firstTile; i <= lastTile; i++)
+            for (int i = 0; i < _playerState.Board.Count; i++)
             {
-                if (!forbiddenTiles.Contains(i))
+                if (!_allForbiddenTiles.Contains(i))
                 {
-                    // TODO: dla drugiej druzyny na dole
-                    if (i - _playerState.Board.SizeX >=0 && !forbiddenTiles.Contains(i - _playerState.Board.SizeX))
+                    if (i - _playerState.Board.SizeX >= 0 && !_allForbiddenTiles.Contains(i - _playerState.Board.SizeX))
                         edges.Add(i - _playerState.Board.SizeX);
-                    if (i + _playerState.Board.SizeX < _playerState.Board.SizeX * (_playerState.Board.TaskAreaSize + _playerState.Board.GoalAreaSize) && !forbiddenTiles.Contains(i + _playerState.Board.SizeX))
+                    if (i + _playerState.Board.SizeX < _playerState.Board.SizeX * (_playerState.Board.TaskAreaSize + _playerState.Board.GoalAreaSize) && !_allForbiddenTiles.Contains(i + _playerState.Board.SizeX))
                         edges.Add(i + _playerState.Board.SizeX);
-                    if (i % _playerState.Board.SizeX != 0 && !forbiddenTiles.Contains(i - 1))
+                    if (i % _playerState.Board.SizeX != 0 && !_allForbiddenTiles.Contains(i - 1))
                         edges.Add(i - 1);
-                    if ((i + 1) % _playerState.Board.SizeX != 0 && !forbiddenTiles.Contains(i + 1))
+                    if ((i + 1) % _playerState.Board.SizeX != 0 && !_allForbiddenTiles.Contains(i + 1))
                         edges.Add(i + 1);
 
                     vertices.Add(i, edges);
@@ -119,10 +129,9 @@ namespace Player.Common
                     edges = new List<int>();
                 }
             }
-
         }
 
-        private int VerticleWithSmallestDistance()
+        private int VertexWithSmallestDistance()
         {
             int min = int.MaxValue;
             int index = -1;
@@ -139,7 +148,5 @@ namespace Player.Common
             }
             return index;
         }
-
-
     }
 }

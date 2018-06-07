@@ -15,8 +15,13 @@ namespace Player.Strategy
         private int _sectorId;
         private List<string> _sectorOwners;
         private HashSet<(int x, int y)> _goalsToCheck;
+        private Dijkstra _dijkstra;
 
         public SectorStrategy(PlayerState playerState, IActionExecutor actionExecutor) : base(playerState, actionExecutor)
+        {
+        }
+
+        private void InitSectorStrategy()
         {
             _sectorOwners = new List<string>(_playerState.TeamMembersIds);
             _sectorOwners.Add(_playerState.Id);
@@ -26,12 +31,15 @@ namespace Player.Strategy
             logger.Info($"Registered to sector no. {_sectorId}");
 
             CreateGoalsToCheck();
+
+            _dijkstra = new Dijkstra(_playerState);
         }
 
         public override void Play()
         {
             InitGoalAreaDirection();
             _actionExecutor.RefreshBoardState();
+            InitSectorStrategy();
             UpdateBoard();
             while (true)
             {
@@ -41,7 +49,7 @@ namespace Player.Strategy
                 {
                     if (!_playerState.HeldPiece.WasTested)
                     {
-                        logger.Info("Testing the piece");
+                        logger.Debug("Testing the piece");
                         _actionExecutor.TestPiece();
                         if (_playerState.HeldPiece.IsSham)
                         {
@@ -55,13 +63,18 @@ namespace Player.Strategy
                     {
                         logger.Info("Trying to place down piece");
                         (var result, var resultEnum) = _actionExecutor.PlaceDownPiece();
-                        if (result) _goalsToCheck.Remove((_playerState.X, _playerState.Y));
+                        if (result)
+                        {
+                            _goalsToCheck.Remove((_playerState.X, _playerState.Y));
+                            PrintBoard();
+                        }
                     }
                     else
                     {
                         var nextGoal = GetNextGoal();
                         var path = FindPathUsingAStar(nextGoal.x, nextGoal.y, ManhattanDistance);
-
+                        if (path == null)
+                            continue;
                         // Move along calculated path until conflict
                         foreach (var target in path)
                             if (!MoveOneStep(target.x, target.y))
@@ -83,6 +96,7 @@ namespace Player.Strategy
                 else // Find a piece
                 {
                     _actionExecutor.Discover();
+
                     if (_playerState.Board.IsGoalArea(_playerState.X, _playerState.Y))
                     {
                         string dir = _playerState.GoalAreaDirection == "up" ? "down" : "up";
@@ -92,36 +106,66 @@ namespace Player.Strategy
                             _actionExecutor.Move(PickRandomMovementHorizontalDirection());
                         }
                     }
-                    // go to the task area, then proceed to move to the closest piece
-                    var bestTile = GetBestTile();
-                    var path = FindPathUsingAStar(bestTile.x, bestTile.y, ManhattanDistance, 2);
+                    else
+                    {
+                        /// TODO: IF WE GET DIJKSTRA TO WORK:
 
-                    // Move along calculated path until conflict
-                    foreach (var target in path)
-                        if (!MoveOneStep(target.x, target.y))
-                        {
-                            // try to move one more time
-                            Task.Delay(_random.Next(0, 2000));
-                            if (MoveOneStep(target.x, target.y))
-                                continue;
-                            break;
-                        }
+                        // // go to the task area, then proceed to move to the closest piece
+                        // var path = GetPathUsingDijkstra();
+                        // if (path == null)
+                        //     continue;
+
+                        // //Move along calculated path until conflict
+                        // foreach (var target in path)
+                        //     if (!MoveOneStep(target.x, target.y))
+                        //     {
+                        //         // try to move one more time
+                        //         Task.Delay(_random.Next(0, 2000));
+                        //         if (MoveOneStep(target.x, target.y))
+                        //             continue;
+                        //         break;
+                        //     }
+                        if (!_actionExecutor.Move(PickClosestPieceDirection()))
+                            _actionExecutor.Move(PickRandomMovementDirection());
+                    }
                 }
             }
         }
 
-        private (int x, int y) GetBestTile()
+        private List<(int x, int y)> GetPathUsingDijkstra()
         {
-            int bestIndex = 0, bestDist = int.MaxValue;
-            for (int i = 0; i < _playerState.Board.SizeX * _playerState.Board.SizeY; i++)
+            var obstacles = new List<int>();
+
+            for (int i = 0; i < _playerState.Board.Count; i++)
+                if (_playerState.Board[i].PlayerId != null)
+                {
+                    obstacles.Add(i);
+                    logger.Warn(i);
+                }
+
+            _dijkstra.DijkstraAlgorithm(obstacles);
+            foreach (var x in _dijkstra.Previous)
+                logger.Warn(x);
+            foreach (var x in _dijkstra.Distances)
+                logger.Warn(x);
+            int bestIndex = -1, bestDist = int.MaxValue;
+            for (int i = 0; i < _playerState.Board.Count; i++)
             {
+                if (_dijkstra.Previous[i] == -1)
+                    continue;
+                if (bestIndex == -1)
+                {
+                    bestIndex = i;
+                    continue;
+                }
                 if (_playerState.Board[i].DistanceToClosestPiece != -1
                     && _playerState.Board[i].DistanceToClosestPiece < bestDist)
                 {
                     bestIndex = i;
                 }
             }
-            return ConvertIndex(bestIndex);
+            logger.Warn(bestIndex);
+            return _dijkstra.ShortestPath(bestIndex).Select(i => ConvertIndex(i)).ToList();
         }
 
 
