@@ -4,142 +4,29 @@ import { LoggerInstance } from 'winston';
 import { Communicator } from '../common/Communicator';
 import { createDelay } from '../common/createDelay';
 import { createMockCommunicator } from '../common/createMockCommunicator';
-import { COMMUNICATION_SERVER_ID, GAME_MASTER_ID, PlayerId } from '../common/EntityIds';
-import { TeamId } from '../common/TeamId';
 
 import { GameLogsCsvWriter } from '../common/logging/GameLogsCsvWriter';
 
 import { ActionDelays } from '../interfaces/ActionDelays';
 import { BoardSize } from '../interfaces/BoardSize';
-import { GameDefinition } from '../interfaces/GameDefinition';
 
 import { UIController } from './ui/IUIController';
 
 import { GameMaster, GameMasterOptions } from './GameMaster';
 import { mapOptionsToGameDefinition } from './mapOptionsToGameDefinition';
 
-import { PlayerAcceptedMessage } from '../interfaces/messages/PlayerAcceptedMessage';
-import { PlayerDisconnectedMessage } from '../interfaces/messages/PlayerDisconnectedMessage';
-import { PlayerHelloMessage } from '../interfaces/messages/PlayerHelloMessage';
-import { PlayerRejectedMessage } from '../interfaces/messages/PlayerRejectedMessage';
-import { RegisterGameRequest } from '../interfaces/requests/RegisterGameRequest';
-import { UnregisterGameRequest } from '../interfaces/requests/UnregisterGameRequest';
-import { RegisterGameResponse } from '../interfaces/responses/RegisterGameResponse';
-import { UnregisterGameResponse } from '../interfaces/responses/UnregisterGameResponse';
+import { createLogger } from '../test-utils/createLogger';
+import { createMockUiController } from '../test-utils/createMockUiController';
+import { resolvePromises } from '../test-utils/resolvePromises';
 
-function createMockUiController(logger: LoggerInstance): UIController {
-  return <any>{
-    updateBoard: jest.fn(),
-    init: jest.fn(),
-    destroy: jest.fn(),
-    createLogger: () => logger,
-    updateGameInfo: jest.fn()
-  };
-}
-
-function createLogger(): LoggerInstance {
-  return <any>{
-    warn: jest.fn(),
-    info: jest.fn(),
-    verbose: jest.fn(),
-    error: jest.fn()
-  };
-}
-
-async function resolvePromises() {
-  return new Promise(res => process.nextTick(res));
-}
-
-function getPlayerHelloMessage(
-  gameMasterOptions: GameMasterOptions,
-  senderId: string,
-  isLeader: boolean,
-  teamId: TeamId
-): PlayerHelloMessage {
-  return {
-    type: 'PLAYER_HELLO',
-    senderId,
-    payload: {
-      game: gameMasterOptions.gameName,
-      teamId,
-      isLeader
-    }
-  };
-}
-
-function getPlayerAcceptedMessage(recipientId: PlayerId): PlayerAcceptedMessage {
-  return {
-    type: 'PLAYER_ACCEPTED',
-    senderId: GAME_MASTER_ID,
-    recipientId,
-    payload: undefined
-  };
-}
-
-function getPlayerRejectedMessage(recipientId: PlayerId, reason: string): PlayerRejectedMessage {
-  return {
-    type: 'PLAYER_REJECTED',
-    senderId: GAME_MASTER_ID,
-    recipientId,
-    payload: {
-      reason
-    }
-  };
-}
-
-function getPlayerDisconnectedMessage(playerId: PlayerId): PlayerDisconnectedMessage {
-  return {
-    type: 'PLAYER_DISCONNECTED',
-    senderId: COMMUNICATION_SERVER_ID,
-    recipientId: GAME_MASTER_ID,
-    payload: {
-      playerId
-    }
-  };
-}
-
-function getUnregisterGameRequest(gameName: string): UnregisterGameRequest {
-  return {
-    type: 'UNREGISTER_GAME_REQUEST',
-    senderId: GAME_MASTER_ID,
-    recipientId: COMMUNICATION_SERVER_ID,
-    payload: {
-      gameName
-    }
-  };
-}
-
-function getUnregisterGameResponse(unregistered: boolean): UnregisterGameResponse {
-  return {
-    type: 'UNREGISTER_GAME_RESPONSE',
-    senderId: COMMUNICATION_SERVER_ID,
-    recipientId: GAME_MASTER_ID,
-    payload: {
-      unregistered
-    }
-  };
-}
-
-function getRegisterGameResponse(registered: boolean): RegisterGameResponse {
-  return {
-    type: 'REGISTER_GAME_RESPONSE',
-    senderId: COMMUNICATION_SERVER_ID,
-    recipientId: GAME_MASTER_ID,
-    payload: {
-      registered
-    }
-  };
-}
-
-function getRegisterGameRequest(gameDefinition: GameDefinition): RegisterGameRequest {
-  return {
-    type: 'REGISTER_GAME_REQUEST',
-    senderId: GAME_MASTER_ID,
-    payload: {
-      game: gameDefinition
-    }
-  };
-}
+import { getPlayerAcceptedMessage } from '../test-utils/messages/getPlayerAcceptedMessage';
+import { getPlayerDisconnectedMessage } from '../test-utils/messages/getPlayerDisconnectedMessage';
+import { getPlayerHelloMessage } from '../test-utils/messages/getPlayerHelloMessage';
+import { getPlayerRejectedMessage } from '../test-utils/messages/getPlayerRejectedMessage';
+import { getRegisterGameRequest } from '../test-utils/messages/getRegisterGameRequest';
+import { getRegisterGameResponse } from '../test-utils/messages/getRegisterGameResponse';
+import { getUnregisterGameRequest } from '../test-utils/messages/getUnregisterGameRequest';
+import { getUnregisterGameResponse } from '../test-utils/messages/getUnregisterGameResponse';
 
 describe('[GM] GameMaster', () => {
   const boardSize: BoardSize = {
@@ -316,12 +203,7 @@ describe('[GM] GameMaster', () => {
 
     describe('handlePlayerHelloMessage', () => {
       it('should send player accepted message', () => {
-        const playerHelloMessage: PlayerHelloMessage = getPlayerHelloMessage(
-          gameMasterOptions,
-          'p1',
-          true,
-          1
-        );
+        const playerHelloMessage = getPlayerHelloMessage(gameMasterOptions, 'p1', true, 1);
 
         communicator.emit('message', playerHelloMessage);
 
@@ -331,12 +213,7 @@ describe('[GM] GameMaster', () => {
       });
 
       it('should send player rejected message', () => {
-        const playerHelloMessage: PlayerHelloMessage = getPlayerHelloMessage(
-          gameMasterOptions,
-          'p1',
-          false,
-          1
-        );
+        const playerHelloMessage = getPlayerHelloMessage(gameMasterOptions, 'p1', false, 1);
 
         communicator.emit('message', playerHelloMessage);
 
