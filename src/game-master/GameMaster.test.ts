@@ -102,106 +102,90 @@ describe('[GM] GameMaster', () => {
     communicator.waitForSpecificMessage = () => <any>Promise.resolve(registerGameResponse);
   });
 
-  describe('init', () => {
-    describe('should register the game', () => {
-      it('should send REGISTER_GAME_REQUEST', async () => {
-        const gameDefinition = mapOptionsToGameDefinition(gameMasterOptions);
+  it("should initiialize gm's components", async () => {
+    await gameMaster.init();
 
-        const registerGameMessage = getRegisterGameRequest(gameDefinition);
+    expect(uiController.init).toHaveBeenCalled();
+    expect(communicator.bindListeners).toHaveBeenCalled();
+    expect(gameLogsCsvWriter.init).toHaveBeenCalled();
+  });
 
-        await gameMaster.init();
+  describe('when registering the game', () => {
+    it('should send REGISTER_GAME_REQUEST', async () => {
+      const gameDefinition = mapOptionsToGameDefinition(gameMasterOptions);
 
-        expect(communicator.sendMessage).toHaveBeenCalledWith(registerGameMessage);
-      });
-    });
+      const registerGameMessage = getRegisterGameRequest(gameDefinition);
 
-    it("should initiialize gm's components", async () => {
       await gameMaster.init();
 
-      expect(uiController.init).toHaveBeenCalled();
-      expect(communicator.bindListeners).toHaveBeenCalled();
-      expect(gameLogsCsvWriter.init).toHaveBeenCalled();
+      expect(communicator.sendMessage).toHaveBeenCalledWith(registerGameMessage);
     });
 
-    describe('registerGame', () => {
-      it('should send REGISTER_GAME_REQUEST', async () => {
-        const gameDefinition = mapOptionsToGameDefinition(gameMasterOptions);
+    it('should try to register the game again after given interval if request was rejected', async () => {
+      jest.useFakeTimers();
+      gameMasterOptions.registerGameInterval = 500;
 
-        const registerGameMessage = getRegisterGameRequest(gameDefinition);
+      const registerGameResponse = getRegisterGameResponse(false);
 
-        await gameMaster.init();
+      communicator.waitForSpecificMessage = () => <any>Promise.resolve(registerGameResponse);
+      await gameMaster.init();
 
-        expect(communicator.sendMessage).toHaveBeenCalledWith(registerGameMessage);
-      });
+      expect(communicator.sendMessage).toHaveBeenCalledTimes(1);
 
-      it('should try to register the game again after given interval if request was rejected', async () => {
-        jest.useFakeTimers();
-        gameMasterOptions.registerGameInterval = 500;
+      await resolvePromises();
 
-        const registerGameResponse = getRegisterGameResponse(false);
+      jest.advanceTimersByTime(gameMasterOptions.registerGameInterval + 1);
 
-        communicator.waitForSpecificMessage = () => <any>Promise.resolve(registerGameResponse);
-        await gameMaster.init();
+      await resolvePromises();
 
-        expect(communicator.sendMessage).toHaveBeenCalledTimes(1);
+      expect(communicator.sendMessage).toHaveBeenCalledTimes(2);
+      jest.useRealTimers();
+    });
 
-        await resolvePromises();
+    it('should try to register the game again up to 5 times', async () => {
+      const registerGameResponse = getRegisterGameResponse(false);
 
-        jest.advanceTimersByTime(gameMasterOptions.registerGameInterval + 1);
+      communicator.waitForSpecificMessage = () => <any>Promise.resolve(registerGameResponse);
+      await gameMaster.init();
+      await createDelay(180);
 
-        await resolvePromises();
-
-        expect(communicator.sendMessage).toHaveBeenCalledTimes(2);
-        jest.useRealTimers();
-      });
-
-      it('should try to register the game again up to 5 times', async () => {
-        const registerGameResponse = getRegisterGameResponse(false);
-
-        communicator.waitForSpecificMessage = () => <any>Promise.resolve(registerGameResponse);
-        await gameMaster.init();
-        await createDelay(180);
-
-        expect(communicator.sendMessage).toHaveBeenCalledTimes(
-          gameMasterOptions.registrationTriesLimit
-        );
-      });
+      expect(communicator.sendMessage).toHaveBeenCalledTimes(
+        gameMasterOptions.registrationTriesLimit
+      );
     });
   });
 
   describe('after game registration', () => {
-    beforeEach(() => {
-      gameMaster.init();
+    beforeEach(async () => {
+      await gameMaster.init();
     });
 
-    describe('handleServerDisconnection', () => {
+    describe('disconnection from the server', () => {
       it('should destroy game master', () => {
         const spy = jest.spyOn(gameMaster, 'destroy');
 
         communicator.emit('close');
 
-        expect(spy).toBeCalled();
+        expect(spy).toHaveBeenCalled();
 
         jest.restoreAllMocks();
       });
     });
 
-    describe('destroy', () => {
-      it('should destroy game master and its services', () => {
-        const spy = jest.spyOn(gameMaster, 'destroy');
+    it('should destroy game master and its services', () => {
+      const spy = jest.spyOn(gameMaster, 'destroy');
 
-        communicator.emit('close');
+      communicator.emit('close');
 
-        expect(spy).toBeCalled();
-        expect(communicator.destroy).toBeCalled();
-        expect(uiController.destroy).toBeCalled();
-        expect(gameLogsCsvWriter.destroy).toBeCalled();
+      expect(spy).toHaveBeenCalled();
+      expect(communicator.destroy).toHaveBeenCalled();
+      expect(uiController.destroy).toHaveBeenCalled();
+      expect(gameLogsCsvWriter.destroy).toHaveBeenCalled();
 
-        jest.restoreAllMocks();
-      });
+      jest.restoreAllMocks();
     });
 
-    describe('handlePlayerHelloMessage', () => {
+    describe('after receiving player hello message', () => {
       it('should send player accepted message', () => {
         const playerHelloMessage = getPlayerHelloMessage(gameMasterOptions, 'p1', true, 1);
 
@@ -226,8 +210,8 @@ describe('[GM] GameMaster', () => {
       });
     });
 
-    describe('handlePlayerDisconnectedMessage', () => {
-      it('should note that player disconnected', () => {
+    describe('when player disconnects', () => {
+      it('should note that the player has disconnected', () => {
         const playerDisconnectedMessage = getPlayerDisconnectedMessage('p1');
 
         communicator.emit('message', playerDisconnectedMessage);
@@ -236,17 +220,15 @@ describe('[GM] GameMaster', () => {
       });
     });
 
-    describe('tryStartGame', () => {
-      it('should start the game when both teams are full', () => {
-        const firstPlayerHelloMessage = getPlayerHelloMessage(gameMasterOptions, 'p1', true, 1);
-        const secondPlayerHelloMessage = getPlayerHelloMessage(gameMasterOptions, 'p2', true, 2);
+    it('should start the game when both teams are full', () => {
+      const firstPlayerHelloMessage = getPlayerHelloMessage(gameMasterOptions, 'p1', true, 1);
+      const secondPlayerHelloMessage = getPlayerHelloMessage(gameMasterOptions, 'p2', true, 2);
 
-        communicator.emit('message', firstPlayerHelloMessage);
-        communicator.emit('message', secondPlayerHelloMessage);
+      communicator.emit('message', firstPlayerHelloMessage);
+      communicator.emit('message', secondPlayerHelloMessage);
 
-        expect(logger.info).toHaveBeenCalledWith('Game is starting...');
-        expect(logger.info).toHaveBeenCalledWith('Game started');
-      });
+      expect(logger.info).toHaveBeenCalledWith('Game is starting...');
+      expect(logger.info).toHaveBeenCalledWith('Game started');
     });
 
     describe('ending the game', () => {
