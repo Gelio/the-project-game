@@ -43,15 +43,15 @@ function parseGMArguments(): GMArguments {
   const loggerFactory = new LoggerFactory();
   loggerFactory.logLevel = getLogLevel(parsedArguments);
 
-  const logger = loggerFactory.createConsoleLogger();
+  const consoleLogger = loggerFactory.createConsoleLogger();
   try {
     await validateGameMasterConfig(config);
   } catch (error) {
-    logger.error('Game Master configuration error');
+    consoleLogger.error('Game Master configuration error');
     if (error instanceof Error) {
-      logger.error(error.message);
+      consoleLogger.error(error.message);
     } else {
-      logger.error(JSON.stringify(error, null, 2));
+      consoleLogger.error(JSON.stringify(error, null, 2));
     }
 
     return;
@@ -60,17 +60,15 @@ function parseGMArguments(): GMArguments {
   let gmSocket: Socket;
 
   try {
-    const socket = await connectToServer(config.serverHostname, config.serverPort);
+    gmSocket = await connectToServer(config.serverHostname, config.serverPort);
 
-    gmSocket = socket;
-
-    logger.verbose('Connected to the server');
+    consoleLogger.info('Connected to the server');
   } catch (error) {
-    logger.error(
+    consoleLogger.error(
       `Failed to establish connection to the server ${config.serverHostname}:${config.serverPort}`
     );
 
-    logger.verbose(error.message);
+    consoleLogger.verbose(error.message);
 
     return;
   }
