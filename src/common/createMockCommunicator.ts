@@ -8,6 +8,7 @@ export function createMockCommunicator(): Communicator {
   communicator.bindListeners = jest.fn();
   communicator.destroy = jest.fn();
   communicator.sendMessage = jest.fn();
+  communicator.removeListener = jest.fn();
 
   return communicator;
 }

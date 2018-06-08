@@ -1,4 +1,3 @@
-import { createConnection } from 'net';
 import { LoggerInstance } from 'winston';
 
 import { bindObjectMethods } from '../common/bindObjectMethods';
@@ -70,11 +69,13 @@ export class GameMaster implements Service {
   constructor(
     options: GameMasterOptions,
     uiController: UIController,
-    gameLogsCsvWriter: GameLogsCsvWriter
+    gameLogsCsvWriter: GameLogsCsvWriter,
+    communicator: Communicator
   ) {
     this.options = options;
     this.uiController = uiController;
     this.gameLogsCsvWriter = gameLogsCsvWriter;
+    this.communicator = communicator;
 
     bindObjectMethods(this.messageHandlers, this);
     this.destroy = this.destroy.bind(this);
@@ -85,23 +86,8 @@ export class GameMaster implements Service {
     this.initUI();
     this.initLogger();
 
-    const { serverHostname, serverPort } = this.options;
-
-    this.logger.verbose('Connecting to the server');
-    const socket = createConnection(
-      {
-        host: serverHostname,
-        port: serverPort
-      },
-      () => {
-        this.logger.info(`Connected to the server at ${serverHostname}:${serverPort}`);
-        this.createNewGame();
-        this.registerGame();
-      }
-    );
-
-    this.communicator = new Communicator(socket, this.logger);
-    this.communicator.bindListeners();
+    this.createNewGame();
+    this.registerGame();
 
     this.communicator.once('close', this.handleServerDisconnection.bind(this));
 
