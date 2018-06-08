@@ -79,9 +79,11 @@ namespace Player
                             character = " ";
                             break;
                     }
+                    if (Board[i].PlayerId != null)
+                        character = "P";
                     Console.Write($"[{character}]");
-                    Console.WriteLine();
                 }
+                Console.WriteLine();
             }
         }
     }

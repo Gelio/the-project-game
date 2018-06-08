@@ -97,7 +97,7 @@ namespace Player
                     _playerState.Board.At(tileDTO.X, tileDTO.Y).Piece = new Piece();
                 }
             }
-            logger.Info($"Discovered {received.Payload.Tiles.Count} tiles");
+            logger.Debug($"Discovered {received.Payload.Tiles.Count} tiles");
             return true;
         }
 

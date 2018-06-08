@@ -74,14 +74,16 @@ namespace Player.Strategy
         protected void PrintBoard()
         {
             int i = 0;
+            logger.Debug("---- Goal Status (x = checked) ----");
             for (int y = 0; y < _playerState.Game.BoardSize.Y; y++)
             {
+                string line = "";
                 for (int x = 0; x < _playerState.Game.BoardSize.X; x++, i++)
                 {
                     var character = _playerState.Board.At(i).GoalStatus == GoalStatusEnum.NoInfo ? " " : "+";
-                    Console.Write($"[{character}]");
+                    line += $"[{character}]";
                 }
-                Console.WriteLine();
+                logger.Debug(line);
             }
         }
 
@@ -145,7 +147,6 @@ namespace Player.Strategy
                     if (x + dx < 0 || x + dx >= _playerState.Game.BoardSize.X || y + dy < 0 || y + dy >= _playerState.Game.BoardSize.Y)
                         continue;
                     int index = x + dx + _playerState.Game.BoardSize.X * (y + dy);
-                    logger.Debug("dx: {}, dy: {}, index: {}", dx, dy, index);
                     if (_playerState.Board.At(index).DistanceToClosestPiece != -1 && _playerState.Board.At(index).DistanceToClosestPiece < bestDistance)
                     {
                         bestDistance = _playerState.Board.At(index).DistanceToClosestPiece;

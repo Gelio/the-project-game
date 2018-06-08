@@ -65,14 +65,20 @@ namespace Player.Strategy
                         (var result, var resultEnum) = _actionExecutor.PlaceDownPiece();
                         if (result)
                         {
-                            _goalsToCheck.Remove((_playerState.X, _playerState.Y));
                             PrintBoard();
+                            _goalsToCheck.Remove((_playerState.X, _playerState.Y));
                         }
                     }
                     else
                     {
                         var nextGoal = GetNextGoal();
                         var path = FindPathUsingAStar(nextGoal.x, nextGoal.y, ManhattanDistance);
+                        if (path == null)
+                        {
+                            _playerState.Board.Reset();
+                            _actionExecutor.Discover();
+                            path = FindPathUsingAStar(nextGoal.x, nextGoal.y, ManhattanDistance);
+                        }
                         if (path == null)
                             continue;
                         // Move along calculated path until conflict
@@ -83,6 +89,7 @@ namespace Player.Strategy
                                 Task.Delay(_random.Next(0, 2000));
                                 if (MoveOneStep(target.x, target.y))
                                     continue;
+                                _actionExecutor.Discover();
                                 break;
                             }
                     }
@@ -90,7 +97,10 @@ namespace Player.Strategy
                 else if (_playerState.Board.At(_playerState.X, _playerState.Y).DistanceToClosestPiece == 0) // We stand on a piece
                 {
                     logger.Info("Trying to pick up piece...");
-                    _actionExecutor.PickUpPiece();
+
+                    if (_actionExecutor.PickUpPiece() && _playerState.HeldPiece == null)
+                        _playerState.HeldPiece = new Piece(); // We could've lost info during reset when finding path
+
                     continue;
                 }
                 else // Find a piece
@@ -174,24 +184,35 @@ namespace Player.Strategy
             _sectorId = (_sectorId + 1) % _sectorOwners.Count;
             logger.Info($"Sector changed to {_sectorId}");
 
-            _actionExecutor.SendCommunicationRequest(_sectorOwners[_sectorId]);
-            _actionExecutor.WaitForAnyResponse();
-            UpdateBoard();
+            //if (_playerState.Game.Delays.CommunicationAccept + _playerState.Game.Delays.CommunicationRequest < 10 * _playerState.Game.Delays.Move)
+            if (_playerState.PlayerConfig.AskLevel > 0)
+            {
+                _actionExecutor.SendCommunicationRequest(_sectorOwners[_sectorId]);
+                RespondOnceIfNecessary();
+                _actionExecutor.WaitForAnyResponse();
+                UpdateBoard();
+            }
             CreateGoalsToCheck();
         }
 
         private void CreateGoalsToCheck()
         {
-            int y = (_playerState.GoalAreaDirection == "up") ? 0 : _playerState.Board.SecondGoalAreaTopY;
+            int yStart = (_playerState.GoalAreaDirection == "up") ? 0 : _playerState.Board.SecondGoalAreaTopY;
             int yMax = (_playerState.GoalAreaDirection == "up") ? _playerState.Board.GoalAreaSize : _playerState.Board.SizeY;
             int x = _sectorId * (_playerState.Board.SizeX / (_sectorOwners.Count));
-            int xMax = _sectorId == _sectorOwners.Count ? _playerState.Board.SizeX : (_sectorId + 1) * (_playerState.Board.SizeX / (_sectorOwners.Count));
+            int xMax = _sectorId == (_sectorOwners.Count - 1) ? _playerState.Board.SizeX : (_sectorId + 1) * (_playerState.Board.SizeX / (_sectorOwners.Count));
 
             _goalsToCheck = new HashSet<(int x, int y)>();
             for (; x < xMax; x++)
-                for (; y < yMax; y++)
+                for (int y = yStart; y < yMax; y++)
+                {
                     if (_playerState.Board.At(x, y).GoalStatus == GoalStatusEnum.NoInfo)
                         _goalsToCheck.Add((x, y));
+                }
+
+            logger.Debug("Goals to check:");
+            foreach (var goal in _goalsToCheck)
+                logger.Debug(goal);
         }
 
         private (int x, int y) GetNextGoal()
@@ -199,9 +220,7 @@ namespace Player.Strategy
             while (_goalsToCheck.Count == 0)
                 ChangeSector();
 
-            var target = _goalsToCheck.First();
-            _goalsToCheck.Remove(target);
-            return target;
+            return _goalsToCheck.First();
         }
 
     }
