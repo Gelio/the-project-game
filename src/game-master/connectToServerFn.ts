@@ -1,11 +1,10 @@
-import { createConnection } from 'net';
+import { createConnection, Socket } from 'net';
 
-export function connectToServer(serverHostname: string, serverPort: number) {
+export function connectToServer(serverHostname: string, serverPort: number): Promise<Socket> {
   const socket = createConnection({ host: serverHostname, port: serverPort });
-  const connectedPromise = new Promise((resolve, reject) => {
-    socket.once('connect', resolve);
+
+  return new Promise((resolve, reject) => {
+    socket.once('connect', () => resolve(socket));
     socket.once('error', reject);
   });
-
-  return { socket, connectedPromise };
 }
