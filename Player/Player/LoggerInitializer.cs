@@ -12,7 +12,14 @@ namespace Player
 
             consoleLog.Layout = @"${date:format=yyyy-MM-dd HH\:mm\:ss} | ${pad:padding=-5:inner=${level:uppercase=true}} | ${logger} | ${message} ${exception:format=message}";
 
-            config.LoggingRules.Add(new NLog.Config.LoggingRule("*", LogLevel.Trace, consoleLog));
+
+            var filter = new NLog.Filters.ConditionBasedFilter();
+            filter.Condition = "equals('${logger}', 'Player.MessageProvider')";
+            filter.Action = NLog.Filters.FilterResult.Ignore;
+            var rule = new NLog.Config.LoggingRule("*", LogLevel.Debug, consoleLog);
+            rule.Filters.Add(filter);
+
+            config.LoggingRules.Add(rule);
 
             NLog.LogManager.Configuration = config;
         }

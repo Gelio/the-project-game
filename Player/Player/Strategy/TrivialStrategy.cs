@@ -9,7 +9,7 @@ namespace Player.Strategy
     {
         private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        public TrivialStrategy(PlayerState playerState, IActionExecutor actionExecuter) : base(playerState, actionExecuter) { }
+        public TrivialStrategy(PlayerState playerState, IActionExecutor actionExecutor) : base(playerState, actionExecutor) { }
 
         public override void Play()
         {
@@ -28,13 +28,13 @@ namespace Player.Strategy
                     if (_playerState.PlayerConfig.IsLeader)
                         _actionExecutor.SendCommunicationRequest(senderId);
                 }
-                if (_playerState.PlayerConfig.IsLeader && _playerState.TeamMembersIds.Count > 0)
-                {
-                    var index = new Random().Next(0, _playerState.TeamMembersIds.Count - 1);
-                    var targetId = _playerState.TeamMembersIds[index];
-                    if (targetId != null && !_playerState.WaitingForResponse[targetId])
-                        _actionExecutor.SendCommunicationRequest(targetId);
-                }
+                // if (_playerState.PlayerConfig.IsLeader && _playerState.TeamMembersIds.Count > 0)
+                // {
+                //     var index = new Random().Next(0, _playerState.TeamMembersIds.Count - 1);
+                //     var targetId = _playerState.TeamMembersIds[index];
+                //     if (targetId != null && !_playerState.WaitingForResponse[targetId])
+                //         _actionExecutor.SendCommunicationRequest(targetId);
+                // }
 
                 if (_playerState.HeldPiece != null)
                 {
@@ -53,7 +53,8 @@ namespace Player.Strategy
                     {
                         logger.Info("Trying to place down piece");
                         (var result, var resultEnum) = _actionExecutor.PlaceDownPiece();
-                        _actionExecutor.SendCommunicationRequest(_playerState.LeaderId);
+                        if (_playerState.Id != _playerState.LeaderId)
+                            _actionExecutor.SendCommunicationRequest(_playerState.LeaderId);
                     }
                     else
                     {

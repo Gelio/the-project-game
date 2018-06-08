@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Player.Common;
 using Player.GameObjects;
 using Player.Interfaces;
@@ -28,7 +29,11 @@ namespace Player
 
             for (int i = 0; i < _playerState.Game.BoardSize.Area; i++)
             {
-                boardToSend.Add(AutoMapper.Mapper.Map<Tile, TileCommunicationDTO>(_playerState.Board.At(i)));
+                var tile = _playerState.Board[i];
+                var tileDTO = AutoMapper.Mapper.Map<Tile, TileCommunicationDTO>(tile);
+                if (IsInGoalArea(i) && tile.GoalStatus == GoalStatusEnum.NoInfo)
+                    tileDTO.TimeStamp = 0; // Critical for SectorStrategy to let the receiver know this tile was not checked!
+                boardToSend.Add(tileDTO);
             }
 
             _messageProvider.SendMessage(new Message<IPayload>()
@@ -92,7 +97,7 @@ namespace Player
                     _playerState.Board.At(tileDTO.X, tileDTO.Y).Piece = new Piece();
                 }
             }
-            logger.Info($"Discovered {received.Payload.Tiles.Count} tiles");
+            logger.Debug($"Discovered {received.Payload.Tiles.Count} tiles");
             return true;
         }
 
@@ -112,6 +117,13 @@ namespace Player
             {
                 throw new InvalidTypeReceivedException($"Expected: ACTION_VALID/INVALID Received: {e.Message}");
             }
+        }
+
+        public bool IsInGoalArea(int index)
+        {
+            return (_playerState.GoalAreaDirection == "up")
+                        ? index < _playerState.Board.SizeX * _playerState.Board.GoalAreaSize
+                        : index >= _playerState.Board.SizeX * _playerState.Board.SecondGoalAreaTopY;
         }
 
         public bool Move(string direction)
@@ -244,6 +256,8 @@ namespace Player
             bool gotOwnInfo = false;
             if (received.Payload.PlayerPositions == null)
                 throw new WrongPayloadException();
+
+            var playerIds = received.Payload.PlayerPositions.Select(dto => dto.PlayerId).ToList();
             foreach (var playerInfo in received.Payload.PlayerPositions)
             {
                 // TODO: Remove all (outdated) PlayerId attributes from board tiles
@@ -259,6 +273,7 @@ namespace Player
                         _playerState.Board.At(_playerState.X, _playerState.Y).Piece = new Piece();
                 }
             }
+            _playerState.Board.RemoveCachedPlayerIds(playerIds, received.Payload.Timestamp);
 
             if (!gotOwnInfo)
                 throw new InvalidOperationException("No info about player");
@@ -339,6 +354,12 @@ namespace Player
             logger.Info($"Held piece is {pieceResult}!");
 
             return true;
+        }
+
+        ///<summary>This method will block forever if no communication response is received!</summary>
+        public void WaitForAnyResponse()
+        {
+            _messageProvider.Receive<CommunicationResponsePayload>();
         }
     }
 }

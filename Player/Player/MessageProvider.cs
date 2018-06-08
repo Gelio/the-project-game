@@ -25,13 +25,13 @@ namespace Player
             PlayerState = playerState;
             _communicator = communicator;
         }
-        
-       
+
+
         public Message<P> Receive<P>() where P : IPayload, new()
         {
             CheckConnection();
 
-            var dummyInstance = new P();
+            var expected = new P();
 
             while (true)
             {
@@ -39,17 +39,12 @@ namespace Player
                 var message = JsonConvert.DeserializeObject<Message>(serializedMessage);
 
 
-                if (dummyInstance.PayloadType() == Consts.ActionValid && message.Type == Consts.ActionInvalid)
+                if (expected.PayloadType() == Consts.ActionValid && message.Type == Consts.ActionInvalid)
                 {
                     var reason = JsonConvert.DeserializeObject<Message<ActionInvalidPayload>>(serializedMessage).Payload.Reason;
                     throw new ActionInvalidException(reason);
                 }
 
-                if (message.Type == dummyInstance.PayloadType())
-                {
-                    logger.Debug($"Received expected message type ({dummyInstance.PayloadType()})");
-                    return JsonConvert.DeserializeObject<Message<P>>(serializedMessage);
-                }
                 if (message.Type == Consts.GameFinished)
                 {
                     throw new GameAlreadyFinishedException(serializedMessage);
@@ -60,6 +55,8 @@ namespace Player
                     PlayerState.PutRequest(request);
                     logger.Info($"Received communication request from {request.Payload.SenderPlayerId}");
                     logger.Debug($"Pending requests: {PlayerState.HasPendingRequests}, Pending responses: {PlayerState.HasPendingResponses}");
+                    if (expected.PayloadType() == Consts.CommunicationRequest)
+                        return null;
                     continue;
                 }
                 else if (message.Type == Consts.CommunicationResponse)
@@ -75,7 +72,14 @@ namespace Player
                         logger.Info($"Received rejected communication response from {response.Payload.SenderPlayerId}");
                     }
                     logger.Debug($"Pending requests: {PlayerState.HasPendingRequests}, Pending responses: {PlayerState.HasPendingResponses}");
+                    if (expected.PayloadType() == Consts.CommunicationResponse)
+                        return null;
                     continue;
+                }
+                else if (message.Type == expected.PayloadType())
+                {
+                    logger.Debug($"Received expected message type ({expected.PayloadType()})");
+                    return JsonConvert.DeserializeObject<Message<P>>(serializedMessage);
                 }
                 else
                     throw new WrongPayloadException(message.Type);
