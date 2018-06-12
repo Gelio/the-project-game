@@ -135,11 +135,15 @@ on a flask icon on the left side of the window (_Activity Bar_) and starting the
 
 To run tests normally:
 
-> `dotnet test Player/Player.Tests.csproj`
+```bash
+dotnet test Player/Player.Tests.csproj
+```
 
 To generate coverage info:
 
-> `dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=lcov /p:CoverletOutput=./lcov Player/Player.Tests.csproj`
+```bash
+dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=lcov /p:CoverletOutput=./lcov Player/Player.Tests.csproj
+```
 
 #### Generating report
 
@@ -150,11 +154,15 @@ in section _Available Packages_, pick the appropriate tool, according to your .N
 The report included in this repository was created using [dotnet-reportgenerator-globaltool](https://www.nuget.org/packages/dotnet-reportgenerator-globaltool)
 for .NET Core 2.1. First, it was installed using:
 
-> `dotnet tool install -g dotnet-reportgenerator-globaltool --version 4.0.0-alpha10`
+```bash
+dotnet tool install -g dotnet-reportgenerator-globaltool --version 4.0.0-alpha10
+```
 
 and then called inside `Player/Player.Tests/` directory:
 
-> `reportgenerator -reports:player.opencover.xml -targetdir:report`
+```bash
+reportgenerator -reports:player.opencover.xml -targetdir:report
+```
 
 ## Linting
 
