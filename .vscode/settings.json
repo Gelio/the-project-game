@@ -26,5 +26,7 @@
       "overviewRulerColor": "yellow"
     }
   ],
-  "editor.formatOnSave": true
+  "editor.formatOnSave": true,
+  "dotnet-test-explorer.testProjectPath": "Player/Player.Tests",
+  "coverage-gutters.lcovname": "Player/Player.Tests/lcov.info"
 }
