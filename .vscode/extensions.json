@@ -16,6 +16,6 @@
 
     "ms-vscode.csharp",
     "formulahendry.dotnet-test-explorer",
-    "ryanluker.coverage-gutters"
+    "ryanluker.vscode-coverage-gutters"
   ]
 }
