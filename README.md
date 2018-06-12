@@ -62,10 +62,9 @@ To get info on command line arguments, run:
 npm run game-master -- -h
 ```
 
-### Players
+### Player
 
-The configuration of each Player is read from the same file inside current working directory (`player.config.json`),
-so make sure to edit it accordingly after starting each Player.
+Players' configurations are stored in `*.config.json` files in `Player/Player/`.
 
 Listing games:
 
@@ -81,9 +80,11 @@ cd Player/Player
 dotnet run <comm_server_addr> <comm_server_port> <game_name> [config_file]
 ```
 
-to start a single Player. The terminal you ran the command in should now display sent and received messages.
+to start a single Player. The terminal you ran the command in should now display the logs.
 
 ## Testing
+
+### Communication Server & Game Master (Typescript)
 
 The following command runs the tests:
 
@@ -107,6 +108,38 @@ npm run test:coverage
 ```
 
 This project uses [jest](https://facebook.github.io/jest/) as a testing framework.
+
+### Player (C#)
+
+The test project uses the [`NUnit`](http://nunit.org/) and [`Moq`](https://github.com/moq/moq4) frameworks.
+Below, there are presented 2 ways to run the tests:
+
+#### Using Visual Studio Code
+
+Open the Command Pallette (`Ctrl+Shift+P`) and pick the option: `Tasks: Run Test Task`.
+You will be provided with 2 choices:
+
+* test Player
+* test Player with coverage
+
+The [`coverlet`](https://github.com/tonerdo/coverlet) NuGet package added to `Player.Tests` project
+generates coverage info file (`lcov.info`) which can be later processed by various visualizers.
+In fact a recommended _Workspace Extension_ [`Coverage Gutters`](https://github.com/ryanluker/vscode-coverage-gutters)
+does the exact thing inside Visual Studio Code editor window.
+
+The other way to test the project is to use the recommended
+[`.NET Core Test Explorer`](https://github.com/formulahendry/vscode-dotnet-test-explorer) extension by clicking
+on a flask icon on the left side of the window (_Activity Bar_) and starting the tests with a _play_-shaped button.
+
+### Using CLI
+
+To run tests normally:
+
+> `dotnet test Player/Player.Tests.csproj`
+
+To generate coverage info:
+
+> `dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=lcov /p:CoverletOutput=./lcov Player/Player.Tests.csproj`
 
 ## Linting
 
