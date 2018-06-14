@@ -18,6 +18,8 @@ import { PlayerDisconnectedMessage } from '../interfaces/messages/PlayerDisconne
 import { PlayerHelloMessage } from '../interfaces/messages/PlayerHelloMessage';
 import { PlayerRejectedMessage } from '../interfaces/messages/PlayerRejectedMessage';
 
+import { UnregisterGameResponse } from '../interfaces/responses/UnregisterGameResponse';
+
 import { registerUncaughtExceptionHandler } from '../registerUncaughtExceptionHandler';
 
 import { createPeriodicPieceGenerator } from './board-generation/createPeriodicPieceGenerator';
@@ -63,7 +65,8 @@ export class GameMaster implements Service {
 
   private readonly messageHandlers: { [type: string]: Function } = {
     PLAYER_HELLO: this.handlePlayerHelloMessage,
-    PLAYER_DISCONNECTED: this.handlePlayerDisconnectedMessage
+    PLAYER_DISCONNECTED: this.handlePlayerDisconnectedMessage,
+    UNREGISTER_GAME_RESPONSE: this.handleUnregisterGameResponse
   };
 
   constructor(
@@ -193,6 +196,14 @@ export class GameMaster implements Service {
       if (this.game.state === GameState.InProgress) {
         this.onPointsLimitReached();
       }
+    }
+  }
+
+  private handleUnregisterGameResponse(response: UnregisterGameResponse) {
+    if (response.payload.unregistered) {
+      this.logger.info('Game has been unregistered');
+    } else {
+      this.logger.error('Game has not been unregistered');
     }
   }
 
