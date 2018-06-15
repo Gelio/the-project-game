@@ -10,7 +10,7 @@ using Player.GameObjects;
 using Player.Interfaces;
 using Player.Messages.DTO;
 using Player.Messages.Responses;
-
+using Player.Strategy;
 
 namespace Player.Tests
 {
@@ -21,6 +21,7 @@ namespace Player.Tests
         PlayerConfig _playerConfig;
         Mock<IGameService> _gameService;
         Mock<IMessageProvider> _messageProvider;
+        Mock<AbstractStrategy> _strategy;
         PlayerState _playerState;
 
         [SetUp]
@@ -37,6 +38,7 @@ namespace Player.Tests
             };
             _gameService = new Mock<IGameService>();
             _messageProvider = new Mock<IMessageProvider>();
+            _strategy = new Mock<AbstractStrategy>();
             _playerState = new PlayerState(_playerConfig);
         }
 
@@ -45,7 +47,7 @@ namespace Player.Tests
         {
             _messageProvider.Setup(x => x.AssertPlayerStatus(_playerConfig.Timeout)).Throws(new PlayerRejectedException());
 
-            var player = new Player(_playerConfig, _gameService.Object, _messageProvider.Object, _playerState, _actionExecutor.Object);
+            var player = new Player(_playerConfig, _gameService.Object, _messageProvider.Object, _playerState, _actionExecutor.Object, _strategy.Object);
             Assert.Throws<PlayerRejectedException>(() => player.ConnectToServer());
         }
 
@@ -85,7 +87,7 @@ namespace Player.Tests
                             .Throws(new WrongPayloadException())
                             .Returns(msg3);
 
-            var player = new Player(_playerConfig, _gameService.Object, _messageProvider.Object, _playerState, _actionExecutor.Object);
+            var player = new Player(_playerConfig, _gameService.Object, _messageProvider.Object, _playerState, _actionExecutor.Object, _strategy.Object);
 
             // When
             player.WaitForGameStart();
@@ -166,7 +168,7 @@ namespace Player.Tests
 
             _gameService.Setup(x => x.GetGamesList()).Returns(gamesList);
 
-            var player = new Player(_playerConfig, _gameService.Object, _messageProvider.Object, _playerState, _actionExecutor.Object);
+            var player = new Player(_playerConfig, _gameService.Object, _messageProvider.Object, _playerState, _actionExecutor.Object, _strategy.Object);
             player.GetGameInfo();
 
             Assert.That(_playerState.Game, Is.Not.Null);
@@ -180,7 +182,7 @@ namespace Player.Tests
 
             _gameService.Setup(x => x.GetGamesList()).Returns(gamesList);
 
-            var player = new Player(_playerConfig, _gameService.Object, _messageProvider.Object, _playerState, _actionExecutor.Object);
+            var player = new Player(_playerConfig, _gameService.Object, _messageProvider.Object, _playerState, _actionExecutor.Object, _strategy.Object);
             Assert.Throws<OperationCanceledException>(() => player.GetGameInfo());
         }
     }

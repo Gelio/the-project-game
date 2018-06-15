@@ -9,19 +9,31 @@ namespace Player.GameObjects
         private readonly BoardSize _size;
         private List<Tile> _tiles;
 
+        public int Count => _tiles.Count;
         public int SizeX { get; private set; }
         public int SizeY { get; private set; }
+        public int GoalAreaSize { get; private set; }
+        public int TaskAreaSize { get; private set; }
+
+        public int SecondGoalAreaTopY { get; private set; }
 
         public Board(BoardSize size)
         {
             _size = size;
             SizeX = _size.X;
             SizeY = _size.GoalArea * 2 + _size.TaskArea;
+            GoalAreaSize = _size.GoalArea;
+            TaskAreaSize = _size.TaskArea;
+            SecondGoalAreaTopY = _size.GoalArea + _size.TaskArea;
 
             _tiles = new List<Tile>();
-            InitBoard();
+            Reset();
         }
 
+        public List<Tile> GetTiles()
+        {
+            return _tiles;
+        }
         /// <summary>
         /// Return reference to <c>Tile</c> at position (<paramref name="x"/>, <paramref name="y"/>)
         /// </summary>
@@ -72,19 +84,66 @@ namespace Player.GameObjects
             return (-1, -1);
         }
 
+        /// <summary>
+        /// Get players' positions
+        /// </summary>
+        /// <param name="excluded">Id of players excluded from result</param>
+        /// <returns>List of (x, y)-coordinates of players</returns>
+        public List<(int x, int y)> GetPlayersPositions(List<string> excluded)
+        {
+            int x, y;
+            var result = new List<(int x, int y)>();
+            for (y = 0; y < SizeY; y++)
+                for (x = 0; x < SizeX; x++)
+                    if (At(x, y).PlayerId != null && !excluded.Contains(At(x, y).PlayerId))
+                        result.Add((x, y));
+
+            return result;
+        }
+
+        /// <summary>
+        /// Removes outdated playerId info
+        /// </summary>
+        public void RemoveCachedPlayerIds(List<string> idsToRemove, long latestTimestamp)
+        {
+            int x, y;
+            var result = new List<(int x, int y)>();
+            for (y = 0; y < SizeY; y++)
+                for (x = 0; x < SizeX; x++)
+                {
+                    var tile = At(x, y);
+                    if (tile.PlayerId != null && idsToRemove.Contains(tile.PlayerId) && tile.Timestamp < latestTimestamp)
+                        tile.PlayerId = null;
+                }
+        }
+
 
         /// <summary>
         /// Reset board preserving size info
         /// </summary>
         public void Reset()
         {
-            InitBoard();
+            _tiles.Clear();
+            for (int i = 0; i < SizeX * SizeY; i++)
+                _tiles.Add(new Tile());
         }
 
-        private void InitBoard()
+        public Tile this[int k]
         {
-            for (int i = 0; i < _size.X * (_size.GoalArea * 2 + _size.TaskArea); i++)
-                _tiles.Add(new Tile());
+            get
+            {
+                return _tiles[k];
+            }
+            set
+            {
+                _tiles[k] = value;
+            }
+        }
+
+        public IEnumerable<Tile> GetEnumerator()
+        {
+            foreach (var t in _tiles)
+                yield return t;
         }
     }
 }

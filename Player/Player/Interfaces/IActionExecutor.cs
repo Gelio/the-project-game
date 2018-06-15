@@ -19,10 +19,8 @@ namespace Player.Interfaces
         bool RejectCommunication(string otherId);
         bool TestPiece();
         bool DeletePiece();
-
         bool GetActionStatus();
-
-
-
+        void WaitForAnyResponse();
+        bool IsInGoalArea(int i);
     }
 }

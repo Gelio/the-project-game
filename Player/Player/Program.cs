@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using Player.Common;
 using Player.GameObjects;
 using Player.Messages.DTO;
+using Player.Strategy;
 
 namespace Player
 {
@@ -116,7 +117,20 @@ namespace Player
                 var playerState = new PlayerState(playerConfig);
                 var messageProvider = new MessageProvider(playerState, communicator);
                 var actionExecutor = new ActionExecutor(messageProvider, playerState);
-                var player = new Player(playerConfig, gameService, messageProvider, playerState, actionExecutor);
+                AbstractStrategy strategy;
+                switch (playerConfig.Strategy)
+                {
+                    case "blocker":
+                        strategy = new BlockerStrategy(playerState, actionExecutor);
+                        break;
+                    case "sector":
+                        strategy = new SectorStrategy(playerState, actionExecutor);
+                        break;
+                    default:
+                        strategy = new TrivialStrategy(playerState, actionExecutor);
+                        break;
+                }
+                var player = new Player(playerConfig, gameService, messageProvider, playerState, actionExecutor, strategy);
 
                 try
                 {

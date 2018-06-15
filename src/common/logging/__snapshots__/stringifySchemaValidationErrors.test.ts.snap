@@ -1,0 +1,16 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`stringifySchemaValidationErrors should match snapshot 1`] = `
+"[
+  {
+    \\"keyword\\": \\"foo\\",
+    \\"dataPath\\": \\"bar\\",
+    \\"message\\": \\"test\\"
+  },
+  {
+    \\"keyword\\": \\"foo1\\",
+    \\"dataPath\\": \\"bar2\\",
+    \\"message\\": \\"test\\"
+  }
+]"
+`;
