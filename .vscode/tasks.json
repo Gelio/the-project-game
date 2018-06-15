@@ -13,7 +13,7 @@
       "label": "test Player",
       "command": "dotnet",
       "type": "process",
-      "args": ["test", "${workspaceFolder}/Player/Player.Tests.csproj"],
+      "args": ["test", "${workspaceFolder}/Player/Player.Tests/Player.Tests.csproj"],
       "problemMatcher": "$msCompile",
       "group": "test"
     },

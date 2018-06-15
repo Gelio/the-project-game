@@ -131,15 +131,38 @@ The other way to test the project is to use the recommended
 [`.NET Core Test Explorer`](https://github.com/formulahendry/vscode-dotnet-test-explorer) extension by clicking
 on a flask icon on the left side of the window (_Activity Bar_) and starting the tests with a _play_-shaped button.
 
-### Using CLI
+#### Using CLI
 
 To run tests normally:
 
-> `dotnet test Player/Player.Tests.csproj`
+```bash
+dotnet test Player/Player.Tests.csproj
+```
 
 To generate coverage info:
 
-> `dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=lcov /p:CoverletOutput=./lcov Player/Player.Tests.csproj`
+```bash
+dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=lcov /p:CoverletOutput=./lcov Player/Player.Tests.csproj
+```
+
+#### Generating report
+
+Using [ReportGenerator](https://danielpalme.github.io/ReportGenerator/) you can create interactive HTML report.
+With info about usage available [here](https://github.com/danielpalme/ReportGenerator/blob/b1538b25a48a771ded4f3461259d5a562f8029a1/README.md),
+in section _Available Packages_, pick the appropriate tool, according to your .NET version.
+
+The report included in this repository was created using [dotnet-reportgenerator-globaltool](https://www.nuget.org/packages/dotnet-reportgenerator-globaltool)
+for .NET Core 2.1. First, it was installed using:
+
+```bash
+dotnet tool install -g dotnet-reportgenerator-globaltool --version 4.0.0-alpha10
+```
+
+and then called inside `Player/Player.Tests/` directory:
+
+```bash
+reportgenerator -reports:player.opencover.xml -targetdir:report
+```
 
 ## Linting
 
