@@ -1,6 +1,6 @@
 {
   "name": "the-project-game",
-  "version": "1.4.1",
+  "version": "2.0.0",
   "description": "",
   "dependencies": {
     "@types/sanitize-filename": "^1.1.28",
